@@ -1,5 +1,5 @@
 import Lottie from "lottie-react";
-import ContactUsAnimation from '../../../assets/icons/Connect with us.json'
+// import ContactUsAnimation from '../../../assets/icons/Connect with us.json'
 import './style.css'
 import { useState } from 'react';
 import Button from 'react-bootstrap/Button';
@@ -29,7 +29,7 @@ export default function ContactUs() {
 
                   <section className="content row align-items-center">
                         <section className="animation col-12 col-md-6">
-                              <Lottie animationData={ContactUsAnimation} className="animation" />
+                              {/* <Lottie animationData={ContactUsAnimation} className="animation" /> */}
                         </section>
 
                         <section className="form col-12 col-md-6">
