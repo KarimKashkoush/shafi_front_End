@@ -1,0 +1,33 @@
+:root {
+      --main-color: #4200FF;
+      --main-text-color: #404040;
+      --sub-text-color: #9A9A9A;
+      --p-100: 100px;
+}
+
+body {
+      font-family: "Tajawal", sans-serif;
+      direction: rtl;
+      font-weight: 600;
+}
+
+.section-header {
+      margin-bottom: 50px;
+      .section-title {
+            text-align: center;
+            font-weight: 700;
+            font-size: 30px;
+            margin-bottom: 15px;
+            span {
+                  color: var(--main-color);
+            }
+      }
+      
+      .section-subtitle {
+            text-align: center;
+            font-size: 16px;
+            color: var(--sub-text-color);
+            margin-bottom: 30px;
+            line-height: 1.6;
+      }
+}

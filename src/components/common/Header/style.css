@@ -1,0 +1,81 @@
+header {
+      min-height: 55px;
+}
+
+.navbar {
+      padding: 0;
+}
+
+.navbar-brand {
+      font-family: "Playpen Sans Arabic", cursive;
+      font-weight: 900;
+      font-size: 26px;
+      margin: 0;
+      margin-top: 6px;
+      color: var(--main-text-color);
+
+      span {
+            color: var(--main-color);
+      }
+}
+
+.css-1byaawp-MuiAvatar-root {
+      font-family: "Tajawal", sans-serif !important;
+}
+
+.nav-link {
+      color: var(--main-text-color);
+      margin-top: 3px;
+}
+
+.nav-link.active {
+      color: var(--main-color) !important;
+}
+
+.auth-user button {
+      border: 1px solid var(--main-color);
+      border-radius: 10px;
+      padding: 5px 10px;
+      font-size: 16px;
+      color: white;
+      background-color: var(--main-color);
+      transition: all 0.3s ease;
+      font-weight: 500;
+
+      &:first-child {
+            background-color: #fff;
+            color: var(--main-color);
+      }
+
+      &:hover {
+            background-color: #fff;
+            color: var(--main-color);
+      }
+}
+
+@media screen and (max-width: 991px) {
+      .navbar-brand {
+            font-size: 22px;
+      }
+
+      .auth-user {
+            margin-top: 30px;
+      }
+
+}
+
+.navbar-toggler {
+      border: none;
+      background-color: transparent;
+      color: var(--main-color);
+
+      span {
+            font-weight: 700;
+            width: 60px;
+      }
+
+      &:focus {
+            box-shadow: none;
+      }
+}
+
