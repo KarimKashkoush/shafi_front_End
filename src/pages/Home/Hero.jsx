@@ -1,4 +1,3 @@
-import React from 'react'
 import { CiPlay1 } from "react-icons/ci";
 import Lottie from "lottie-react";
 import heroAnimation from '../../assets/icons/File transfer loop animation.json'
