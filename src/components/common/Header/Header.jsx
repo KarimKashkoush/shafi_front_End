@@ -43,7 +43,7 @@ export default function Header() {
                                     <NavLink to="/about" className="nav-link" onClick={() => setExpanded(false)}>عن شَافِي</NavLink>
 
                                     <section className="auth-user d-flex gap-1">
-                                          <NavLink to='/profile'><Avatar/></NavLink>
+                                          <NavLink to='/profile' className="auth-img"><Avatar/></NavLink>
                                           {/* <NavLink to='/login'>تسجيل الدخول</NavLink>
                                           <NavLink to='/register'>انشاء حساب</NavLink> */}
                                     </section>
