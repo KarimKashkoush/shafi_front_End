@@ -1,0 +1,12 @@
+.navbar-brand {
+      font-family: "Playpen Sans Arabic", cursive;
+      font-weight: 900;
+      font-size: 26px;
+      margin: 0;
+      margin-top: 6px;
+      color: var(--main-text-color);
+
+      span {
+            color: var(--main-color);
+      }
+}

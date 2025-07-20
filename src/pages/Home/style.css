@@ -1,0 +1,128 @@
+
+.hero {
+      min-height: calc(100vh - 87px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding-top: 25px;
+}
+
+.content {
+      color: var(--text-color);
+
+
+      h1 {
+            font-weight: 700;
+
+            &::first-word {
+                  color: var(--main-color);
+            }
+      }
+
+      p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--sub-text-color);
+      }
+
+      .video {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+
+            h3 {
+                  font-size: 20px;
+            }
+
+            svg {
+                  width: 50px;
+                  height: 50px;
+                  color: #fff;
+                  background-color: var(--main-color);
+                  border-radius: 50%;
+                  padding: 10px;
+                  cursor: pointer;
+                  transition: ease 0.3s all;
+
+                  &:hover {
+                        transform: scale(1.1);
+                  }
+            }
+      }
+}
+
+.hero .animation {
+      position: relative;
+      margin: auto;
+      text-align: center;
+}
+
+.about {
+      padding-block: var(--p-100);
+
+      .content .box {
+            margin-bottom: 40px;
+
+            >section p {
+                  padding-inline-start: 65px;
+            }
+
+            .sub-title {
+                  padding-inline-start: 65px;
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+
+                  h4 {
+                        font-size: 18px;
+                  }
+
+                  svg {
+                        color: var(--main-color);
+                        width: 25px;
+                        height: 25px;
+                  }
+
+                  p {
+                        padding-inline-start: 130px;
+                  }
+
+            }
+
+            .title {
+                  display: flex;
+                  align-items: end;
+                  gap: 15px;
+                  margin-bottom: 25px;
+
+                  h2 {
+                        margin: 0;
+                        font-weight: 700;
+                  }
+
+                  img {
+                        width: 50px;
+                  }
+            }
+
+            p {
+                  font-size: 16px;
+                  line-height: 1.6;
+                  color: var(--sub-text-color);
+                  padding-inline-start: 65px;
+
+                  span {
+                        color: var(--main-color);
+                        font-weight: 900;
+                  }
+            }
+
+            h4 {
+                  font-weight: 600;
+                  margin: 0;
+            }
+      }
+
+}

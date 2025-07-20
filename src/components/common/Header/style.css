@@ -1,0 +1,71 @@
+header {
+      min-height: 55px;
+}
+
+.navbar {
+      padding: 0;
+}
+
+.css-1byaawp-MuiAvatar-root {
+      font-family: "Tajawal", sans-serif !important;
+}
+
+.nav-link {
+      color: var(--main-text-color);
+      margin-top: 3px;
+}
+
+.nav-link.active {
+      color: var(--main-color) !important;
+}
+
+.auth-user {
+      align-items: center;
+      a {
+            border: 1px solid var(--main-color);
+            border-radius: 10px;
+            padding: 10px 10px;
+            font-size: 16px;
+            color: white;
+            background-color: var(--main-color);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-decoration: none;
+
+            &:first-child {
+                  background-color: #fff;
+                  color: var(--main-color);
+            }
+
+            &:hover {
+                  background-color: #fff;
+                  color: var(--main-color);
+            }
+      }
+}
+
+@media screen and (max-width: 991px) {
+      .navbar-brand {
+            font-size: 22px;
+      }
+
+      .auth-user {
+            margin-top: 30px;
+      }
+
+}
+
+.navbar-toggler {
+      border: none;
+      background-color: transparent;
+      color: var(--main-color);
+
+      span {
+            font-weight: 700;
+            width: 60px;
+      }
+
+      &:focus {
+            box-shadow: none;
+      }
+}

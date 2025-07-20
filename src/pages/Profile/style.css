@@ -1,0 +1,233 @@
+.profile {
+      display: flex;
+      justify-content: end;
+
+      .content {
+            padding: 30px 15px;
+            margin-top: 5px;
+            width: calc(100% - 250px);
+
+            .profile-header {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 35px;
+
+                  h4 {
+                        font-weight: 700;
+                        font-size: 20px;
+
+                        span {
+                              color: var(--main-color);
+                        }
+                  }
+            }
+
+            .emergency {
+                  .box {
+                        padding: 15px;
+                        border-radius: 15px;
+                        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+                        text-align: center;
+
+                        p {
+                              color: var(--main-color);
+                              margin: 0;
+                        }
+
+                        span {
+                              color: var(--sub-text-color);
+                              display: block;
+                        }
+
+                        img {
+                              width: 35px;
+                              margin-bottom: 15px;
+                        }
+                  }
+            }
+
+            .chronic,
+            .pharmaceutical {
+                  .content {
+                        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+                        border-radius: 15px;
+                        height: 100%;
+                        width: 100%;
+
+                        h2 {
+                              color: var(--main-color);
+                              font-weight: 700;
+                              margin-bottom: 10px;
+                              text-align: center;
+                        }
+
+                        ul {
+                              display: flex;
+                              flex-direction: column;
+                              gap: 10px;
+
+                              li {
+                                    color: var(--sub-text-color);
+                              }
+                        }
+                  }
+            }
+      }
+
+      .profile-sidebar {
+            padding-block: 30px;
+            width: 250px;
+            box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+            min-height: 100vh;
+            background: #f0f0f0;
+            position: fixed;
+            right: 0;
+            top: 0;
+
+
+            .navbar-brand {
+                  display: block;
+                  text-align: center;
+                  margin: 0;
+                  margin-top: 27px;
+            }
+
+            ul {
+                  margin-top: 80px;
+                  padding-inline-start: 15px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 15px;
+
+                  li {
+                        a {
+                              display: flex;
+                              align-items: center;
+                              gap: 10px;
+                              padding-block: 10px;
+                              color: var(--sub-text-color);
+                        }
+
+                        a.active {
+                              color: var(--main-color);
+                              border-inline-end: 4px solid var(--main-color);
+                        }
+
+                        img {
+                              width: 25px;
+                        }
+                  }
+            }
+      }
+
+      .reports {
+            padding-block: var(--p-100);
+
+            .accordion-item {
+                  margin-bottom: 15px;
+
+                  button {
+                        background-color: var(--main-color);
+                        color: white;
+                        display: flex;
+                        justify-content: space-between;
+
+                        &::after {
+                              margin-left: 0;
+                        }
+                  }
+            }
+
+            .content {
+                  width: 100%;
+                  padding: 0;
+                  margin-bottom: 15px;
+
+                  h3 {
+                        font-weight: 700;
+                        font-size: 20px;
+                        margin-bottom: 10px;
+                  }
+
+                  p {
+                        padding: 0;
+                        margin: 0;
+                  }
+
+                  ul.image {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 15px;
+      
+                        li {
+                              border: 1px solid var(--main-color);
+                              padding: 5px;
+                              border-radius: 5px;
+                              cursor: pointer;
+                              width: 70px;
+                              transition: all 0.3s ease;
+      
+                              &:hover {
+                                    transform: scale(1.1);
+                              }
+      
+                              img {
+                                    width: 100%;
+                              }
+                        }
+                  }
+
+                  ul {
+                        li.pharmaceutical {
+                              display: flex;
+                              align-items: center;
+                              flex-wrap: wrap;
+                              gap: 5px;
+                              margin-bottom: 10px;
+
+                              p {
+                                    color: var(--main-text-color);
+                                    font-weight: 700;
+                              }
+
+                              span {
+                                    display: block;
+                                    color: var(--sub-text-color);
+                              }
+                        }
+                  }
+            }
+
+            .accordion-item:first-of-type>.accordion-header .accordion-button {
+                  background-color: var(--main-color);
+                  color: #fff;
+                  font-weight: 700;
+            }
+
+            .accordion-body {
+                  background-color: #f6f6f6;
+            }
+      }
+}
+
+@media (max-width: 991px) {
+      .profile {
+            .content {
+                  width: calc(100% - 60px);
+            }
+      }
+
+      .profile-sidebar {
+            width: 60px !important;
+
+            .navbar-brand {
+                  font-size: 16px;
+            }
+
+            ul li a span {
+                  display: none;
+            }
+      }
+
+}

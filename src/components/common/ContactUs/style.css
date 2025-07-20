@@ -1,0 +1,18 @@
+.contactus {
+      padding-block: var(--p-100);
+      .content {
+            form {
+                  button {
+                        width: 100%;
+                        background-color: var(--main-color);
+                        font-weight: 700;
+                  }
+            }
+      }
+}
+
+@media (max-width: 767px) {
+      .content {
+            margin-top: -100px;
+      }
+}

@@ -1,0 +1,74 @@
+:root {
+      --main-color: #0d6efd;
+      --main-text-color: #404040;
+      --sub-text-color: #9A9A9A;
+      --p-100: 100px;
+}
+
+ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+}
+
+a {
+      text-decoration: none;
+}
+
+body {
+      font-family: "Tajawal", sans-serif;
+      direction: rtl;
+      font-weight: 600;
+}
+
+.section-header {
+      margin-bottom: 50px;
+      .section-title {
+            text-align: center;
+            font-weight: 700;
+            font-size: 30px;
+            margin-bottom: 15px;
+            span {
+                  color: var(--main-color);
+            }
+      }
+      
+      .section-subtitle {
+            text-align: center;
+            font-size: 16px;
+            color: var(--sub-text-color);
+            margin-bottom: 30px;
+            line-height: 1.6;
+      }
+}
+
+.form-control {
+      border-color: var(--main-color);
+      color: var(--main-text-color);
+
+      &:focus {
+            box-shadow: 0 0 0 .25rem rgba(13, 109, 253, 0.25);
+      }
+}
+
+.row {
+      --bs-gutter-x: 0rem;
+}
+
+.box-bg {
+      position: relative;
+      overflow: hidden;
+      &::before {
+            content: '';
+            position: absolute;
+            left: 0px;
+            bottom: 0;
+            height: 100%;
+            width: 15%;
+            background-color: #0d6dfd69;
+      }
+}
+
+.css-1hx09c7-MuiAvatar-root {
+      font-family: "Tajawal", sans-serif !important;
+}
