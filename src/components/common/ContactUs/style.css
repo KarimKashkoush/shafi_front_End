@@ -1,5 +1,6 @@
 .contactus {
-      padding-block: var(--p-100);
+      padding-bottom: var(--p-100);
+
       .content {
             form {
                   button {
@@ -12,7 +13,9 @@
 }
 
 @media (max-width: 767px) {
-      .content {
-            margin-top: -100px;
+      contactus {
+            .content {
+                  margin-top: -100px;
+            }
       }
 }
