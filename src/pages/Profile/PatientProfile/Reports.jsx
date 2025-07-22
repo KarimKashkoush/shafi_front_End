@@ -68,15 +68,35 @@ export default function Reports({ reports }) {
 
                                                 <section className="content">
                                                       <h3>الأدوية:</h3>
-                                                      <ul>
-                                                            {report.medications.map((med, index) => (
-                                                                  <li className='pharmaceutical' key={index}>
-                                                                        <p>{med.name}</p>
-                                                                        <span>{med.type}</span>
-                                                                        <span>{med.duration}</span>
-                                                                  </li>
-                                                            ))}
-                                                      </ul>
+
+                                                      {
+                                                            report.medications.length > 0 ? (
+                                                                  <table className='pharmaceutical'>
+                                                                        <thead>
+                                                                              <tr>
+                                                                                    <th>الاسم</th>
+                                                                                    <th>النوع</th>
+                                                                                    <th>الميعاد</th>
+                                                                                    <th>من</th>
+                                                                                    <th>إلى</th>
+                                                                              </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                              {report.medications.map((med, index) => (
+                                                                                    <tr key={index}>
+                                                                                          <td>{med.name}</td>
+                                                                                          <td>{med.type}</td>
+                                                                                          <td>{med.time}</td>
+                                                                                          <td>{med.from}</td>
+                                                                                          <td>{med.to}</td>
+                                                                                    </tr>
+                                                                              ))}
+                                                                        </tbody>
+                                                                  </table>
+                                                            ) : (
+                                                                  <p>لا توجد أدوية مذكورة في هذا التقرير.</p>
+                                                            )
+                                                      }
                                                 </section>
                                           </Accordion.Body>
                                     </Accordion.Item>

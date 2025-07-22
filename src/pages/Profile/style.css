@@ -143,6 +143,7 @@
                   width: 100%;
                   padding: 0;
                   margin-bottom: 15px;
+                  overflow: auto;
 
                   h3 {
                         font-weight: 700;
@@ -159,7 +160,7 @@
                         display: flex;
                         flex-wrap: wrap;
                         gap: 15px;
-      
+
                         li {
                               border: 1px solid var(--main-color);
                               padding: 5px;
@@ -167,33 +168,39 @@
                               cursor: pointer;
                               width: 70px;
                               transition: all 0.3s ease;
-      
+
                               &:hover {
                                     transform: scale(1.1);
                               }
-      
+
                               img {
                                     width: 100%;
                               }
                         }
                   }
 
-                  ul {
-                        li.pharmaceutical {
-                              display: flex;
-                              align-items: center;
-                              flex-wrap: wrap;
-                              gap: 5px;
-                              margin-bottom: 10px;
+                  .pharmaceutical {
+                        width: 100%;
+                        overflow-x: auto;
+                        text-align: center;
 
-                              p {
-                                    color: var(--main-text-color);
-                                    font-weight: 700;
+                        thead {
+                              background-color: var(--main-color);
+                              color: #fff;
+                              th  {
+                                    padding: 10px;
                               }
+                        }
 
-                              span {
-                                    display: block;
-                                    color: var(--sub-text-color);
+                        tbody {
+                              tr {
+                                    td {
+                                          padding: 10px;
+                                          border-bottom: 1px solid #ddd;
+                                    }
+                                    &:nth-child(even) {
+                                          background-color: #0d6dfd3a;
+                                    }
                               }
                         }
                   }

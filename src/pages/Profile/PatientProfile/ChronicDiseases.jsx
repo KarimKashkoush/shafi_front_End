@@ -1,6 +1,5 @@
 
-export default function ChronicDiseases({ reports }) {
-      console.log(reports)
+export default function ChronicDiseases() {
       return (
             <section className="chronic col-12 col-md-6 px-2">
                   <div className="content ">
