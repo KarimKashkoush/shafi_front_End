@@ -1,0 +1,7 @@
+.register-login {
+      h3 {
+            span {
+                  color: var(--main-color);
+            }
+      }
+}

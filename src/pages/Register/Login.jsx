@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Container, Col, Row, Form, Button } from 'react-bootstrap'
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
-
+import Lottie from 'lottie-react';
+import LoginAnimation from "../../assets/animation/login.json"
 export default function Login() {
       const navigate = useNavigate();
       const [validated, setValidated] = useState(false);
@@ -67,6 +68,9 @@ export default function Login() {
 
                               <Button type="submit" className="mt-3">تسجيل الدخول</Button>
                         </Form>
+                        <div className="col-md-6 d-none d-lg-flex justify-content-center">
+                              <Lottie animationData={LoginAnimation} />
+                        </div>
                   </Container>
             </section>
       )

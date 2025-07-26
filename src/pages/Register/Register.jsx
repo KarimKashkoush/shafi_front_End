@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Container, Col, Row, Form, Button } from 'react-bootstrap'
 import Lottie from 'lottie-react'
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { ref, set } from "firebase/database";
 import { database } from "../../firebase/firebase";
-
+import registerAnimation from "../../assets/animation/Register.json"
+import './style.css'
 export default function Register() {
       const [validated, setValidated] = useState(false)
       const [password, setPassword] = useState('')
@@ -17,7 +18,7 @@ export default function Register() {
             const form = event.currentTarget;
             const passwordsMatch = password === confirmPassword;
             const formValid = form.checkValidity();
-            const pinCode = pin.join(''); // اجمع الأرقام الأربعة
+            const pinCode = pin.join('');  
 
             setValidated(true);
             setPasswordMatchError(!passwordsMatch);
@@ -41,7 +42,6 @@ export default function Register() {
                   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                   const uid = userCredential.user.uid;
 
-                  // احفظ بيانات المستخدم
                   await set(ref(db, 'UsersData/' + uid), {
                         firstName,
                         fullName,
@@ -61,10 +61,10 @@ export default function Register() {
 
 
       return (
-            <section className="register-login vh-100 d-flex align-items-center justify-content-center">
+            <section className="py-5 register-login min-vh-100 d-flex flex-column align-items-center justify-content-center">
+                  <h3 className='fw-semibold'><span>إنشـــاء</span> حساب جديد</h3>
                   <Container className='row mx-auto align-items-center py-4'>
-
-                        <Form noValidate validated={validated} onSubmit={handleSubmit} className="form col-md-6 p-3">
+                        <Form noValidate validated={validated} onSubmit={handleSubmit} className="form col-lg-6 p-3">
                               <Row className="mb-2">
                                     <Form.Group as={Col} lg="3" controlId="firstName" className='p-2'>
                                           <Form.Label>الاسم الأول <span>*</span></Form.Label>
@@ -196,6 +196,9 @@ export default function Register() {
 
                               <Button type="submit" className="mt-3">تسجيل</Button>
                         </Form>
+                        <div className="col-lg-6 d-none d-lg-flex justify-content-center">
+                              <Lottie animationData={registerAnimation} />
+                        </div>
                   </Container>
             </section>
       )
