@@ -4,12 +4,21 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import Avatar from '@mui/material/Avatar';
 
+
 import './style.css';
 import Logo from '../Logo/Logo';
 
 export default function Header() {
       const navRef = useRef();
       const [expanded, setExpanded] = useState(false);
+
+      const [user, setUser] = useState(null);
+
+
+      useEffect(() => {
+            const storedUser = localStorage.getItem("user");
+            setUser(storedUser ? JSON.parse(storedUser) : null);
+      }, []);
 
       useEffect(() => {
             function handleClickOutside(event) {
@@ -43,9 +52,14 @@ export default function Header() {
                                     <NavLink to="/about" className="nav-link" onClick={() => setExpanded(false)}>عن شَافِي</NavLink>
 
                                     <section className="auth-user d-flex gap-1">
-                                          {/* <NavLink to='/profile' className="auth-img"><Avatar/></NavLink> */}
-                                          <NavLink to='/login'>تسجيل الدخول</NavLink>
-                                          <NavLink to='/register'>انشاء حساب</NavLink>
+                                          {user ? (
+                                                <NavLink to={`/profile/${user.uid}`} className="auth-img"><Avatar src={user.firstName} /></NavLink>
+                                          ) : (
+                                                <>
+                                                      <NavLink to='/login'>تسجيل الدخول</NavLink>
+                                                      <NavLink to={`/register/`}>انشاء حساب</NavLink>
+                                                </>
+                                          )}
                                     </section>
                               </Nav>
                         </Navbar.Collapse>

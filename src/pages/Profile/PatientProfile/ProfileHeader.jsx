@@ -1,18 +1,19 @@
 import { Avatar } from "@mui/material"
 export default function ProfileHeader({ userData }) {
-      const userName = userData ? userData.full_name : "المستخدم";
+      const firstName = userData ? userData.firstName : "المستخدم";
+      const userName = userData ? userData.fullName : '';
       const userImage = userData ? userData.image : null;
       return (
             <section className="profile-header">
-                  <h4>أهــلا، <span>{userName}</span></h4>
+                  <h4>أهــلا، <span>{firstName}</span> {userName}</h4>
                   <Avatar
                         src={userImage || undefined}
-                        alt={userName}
-                        sx={{ width: 56, height: 56 }} // تقدر تغير الحجم زي ما تحب
+                        alt={firstName}
+                        sx={{ width: 56, height: 56 }} 
                         loading="lazy"
                         
                   >
-                        {!userImage && userName.charAt(0)}
+                        {!userImage && typeof userName === 'string' && firstName.charAt(0)}
                   </Avatar>
             </section>
       )

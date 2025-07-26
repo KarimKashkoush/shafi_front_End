@@ -3,10 +3,11 @@ import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/Home/Home";
 import Services from "../pages/Services/Services";
 import About from "../pages/About/About";
-import Login from "../pages/Login/Login";
 import ProfileLayout from "../layouts/ProfileLayout";
 import Register from "../pages/Register/Register";
-
+import Login from "../pages/Register/Login";
+import { Navigate } from "react-router-dom";
+const isAuthenticated = Boolean(localStorage.getItem("user"));
 
 const router = createBrowserRouter([
 
@@ -15,12 +16,12 @@ const router = createBrowserRouter([
             element: <ProfileLayout />
       },
       {
-            path: '/login',
-            element: <Login />
+            path: "/login",
+            element: isAuthenticated ? <Navigate to="/" /> : <Login />
       },
       {
-            path: '/register',
-            element: <Register />
+            path: "/register",
+            element: isAuthenticated ? <Navigate to="/" /> : <Register />
       },
       {
             path: "/",
@@ -29,7 +30,7 @@ const router = createBrowserRouter([
             children: [
                   {
                         index: true,
-                        element: <Home/>
+                        element: <Home />
                   },
                   {
                         path: "services",
