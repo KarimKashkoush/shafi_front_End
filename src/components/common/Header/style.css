@@ -30,6 +30,7 @@ header {
             transition: all 0.3s ease;
             font-weight: 500;
             text-decoration: none;
+            padding: 5px 10px;
             
             
             &:first-child {
@@ -48,10 +49,6 @@ header {
       }
 }
 
-/* .collapse{
-      display: flex;
-      flex-direction: column;
-} */
 
 
 @media screen and (max-width: 991px) {

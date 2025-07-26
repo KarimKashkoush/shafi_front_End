@@ -10,7 +10,6 @@ import { Navigate } from "react-router-dom";
 const isAuthenticated = Boolean(localStorage.getItem("user"));
 
 const router = createBrowserRouter([
-
       {
             path: '/profile/:id',
             element: <ProfileLayout />
