@@ -46,6 +46,7 @@ header {
       
       .auth-img {
             border: none;
+            padding: 0;
       }
 }
 
