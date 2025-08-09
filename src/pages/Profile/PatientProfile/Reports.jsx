@@ -6,7 +6,7 @@ import { AuthContext } from '../../../context/Auth.Context';
 
 export default function Reports({ reports }) {
       const { user } = useContext(AuthContext)
-      const userType = user?.UserData?.userType
+      const userType = user?.UserData?.role
       const [isOpen, setIsOpen] = useState(false);
       const [photoIndex, setPhotoIndex] = useState(0);
       const [slides, setSlides] = useState([]);
@@ -70,7 +70,7 @@ export default function Reports({ reports }) {
                                                                                                 ) : ["patient", "doctor", "pharmacist", "clinical"].includes(userType) ? (
                                                                                                       <p>لم يتم اضافة نتيجة حتى الآن</p>
                                                                                                 ) : ["lab", "radiology"].includes(userType) ? (
-                                                                                                      <button>إضافة نتيجة</button>
+                                                                                                      <button className='btn m-auto'>إضافة نتيجة</button>
                                                                                                 ) : null}
                                                                                           </td>
 
@@ -111,7 +111,7 @@ export default function Reports({ reports }) {
                                                                                                 ) : ["patient", "doctor", "pharmacy", "clinical"].includes(userType) ? (
                                                                                                       <p>لم يتم اضافة نتيجة حتى الآن</p>
                                                                                                 ) : ["lab", "radiology"].includes(userType) ? (
-                                                                                                      <button>إضافة نتيجة</button>
+                                                                                                      <button className='btn m-auto'>إضافة نتيجة</button>
                                                                                                 ) : null}
                                                                                           </td>
                                                                                     </tr>
