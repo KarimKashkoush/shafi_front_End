@@ -1,0 +1,13 @@
+.add-report {
+      form h4 {
+            color: var(--main-color);
+      }
+
+      .form-header {
+            color: var(--text-color);
+            span {
+                  color: var(--main-color);
+            }
+      }
+
+}

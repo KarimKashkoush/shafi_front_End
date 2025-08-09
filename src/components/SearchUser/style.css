@@ -1,0 +1,62 @@
+.search-user {
+      .btn {
+            background-color: var(--main-color);
+      }
+
+      .search-box {
+            background-color: #f6f6f6;
+            box-shadow: 0px 0px 10px #0d6dfd3f;
+            padding: 25px;
+            position: fixed;
+            left: 50%;
+            top: 15px;
+            transform: translate(-50%);
+            width: calc(100% - 30px);
+            z-index: 1;
+            border-radius: 15px;
+            height: calc(100vh - 30px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            
+            form {
+                  gap: 15px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 10px;
+                  flex-direction: column;
+                  width: 100%;
+
+                  input {
+                        width: 100%;
+                        text-align: center;
+                        border: none;
+                        outline: none;
+                        padding: 10px;
+                        border: 1px solid #0d6efd;
+                        border-radius: 10px;
+                  }
+
+                  .btn {
+                        width: 150px;
+                  }
+            }
+
+            .close-box {
+                  position: absolute;
+                  top: 15px;
+                  right: 15px;
+                  width: 30px;
+                  height: 30px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+            }
+      }
+
+      .result-box {
+            width: 100%;
+      }
+}

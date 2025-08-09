@@ -1,18 +1,14 @@
 import "../style.css";
-import ProfileHeader from "./ProfileHeader";
-import ProfileSidebar from "./ProfileSidebar";
 import Emergency from "./Emergency";
 import ChronicDiseases from "./ChronicDiseases";
 import Pharmaceutical from "./Pharmaceutical";
 import Reports from "./Reports";
-
 import { database } from "../../../firebase/firebase";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ref, child, get } from "firebase/database";
 
 export default function PatientProfile() {
-
       const { id } = useParams();
       const [reports, setReports] = useState([]);
       const [userData, setUserData] = useState(null);
@@ -40,7 +36,7 @@ export default function PatientProfile() {
                         if (reportsSnapshot.exists()) {
                               const allReports = reportsSnapshot.val();
                               const userReports = Object.values(allReports).filter(
-                                    (report) => report.user_id === id
+                                    (report) => report.userId === id
                               );
                               setReports(userReports);
                         }
@@ -70,10 +66,8 @@ export default function PatientProfile() {
 
 
       return (
-            <section className="profile">
-                  <ProfileSidebar />
+            <section className="patient-profile">
                   <section className="content row g-3">
-                        <ProfileHeader userData={userData} />
                         <Emergency userData={userData} reportsCount={reports.length} />
 
                         {(!userData?.pinCode || pinVerified) ? (

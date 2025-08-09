@@ -1,9 +1,12 @@
 import Accordion from 'react-bootstrap/Accordion';
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
-import { useState } from 'react';
+import { useContext, useState } from 'react';
+import { AuthContext } from '../../../context/Auth.Context';
 
 export default function Reports({ reports }) {
+      const { user } = useContext(AuthContext)
+      const userType = user?.UserData?.userType
       const [isOpen, setIsOpen] = useState(false);
       const [photoIndex, setPhotoIndex] = useState(0);
       const [slides, setSlides] = useState([]);
@@ -17,6 +20,7 @@ export default function Reports({ reports }) {
 
       const reportEntries = Object.entries(reports || {});
 
+
       return (
             <>
                   <section className="reports">
@@ -25,82 +29,134 @@ export default function Reports({ reports }) {
                         </section>
 
                         <Accordion defaultActiveKey="0" flush>
-                              {reportEntries.map(([key, report], idx) => (
-                                    <Accordion.Item eventKey={idx.toString()} key={key}>
-                                          <Accordion.Header>تقرير رقم {idx + 1}</Accordion.Header>
-                                          <Accordion.Body>
-                                                <section className="content">
-                                                      <h3>التشخيص:</h3>
-                                                      <p>{report.diagnosis}</p>
-                                                </section>
+                              {reportEntries
+                                    .reverse().map(([key, report], idx) => (
+                                          <Accordion.Item eventKey={idx.toString()} key={key}>
+                                                <Accordion.Header>تقرير رقم {reportEntries.length - idx} - {new Date(report.createdAt).toLocaleString("ar-EG", {
+                                                      dateStyle: "full",
+                                                      timeStyle: "short"
+                                                })}</Accordion.Header>
+                                                <Accordion.Body>
+                                                      <section className="content">
+                                                            <h3>التشخيص:</h3>
+                                                            <p>{report.reportText}</p>
+                                                      </section>
 
-                                                <section className="content">
-                                                      <h3>صور الآشعة:</h3>
-                                                      <ul className='image'>
-                                                            {report.xray_images.map((image, index) => (
-                                                                  <li key={index}>
-                                                                        <img
-                                                                              src={image}
-                                                                              alt="xray"
-                                                                              loading="lazy"
-                                                                              onClick={() => openGallery(report.xray_images, index)}
-                                                                        />
-                                                                  </li>
-                                                            ))}
-                                                      </ul>
-                                                </section>
-
-                                                <section className="content">
-                                                      <h3>التحاليل الطبية:</h3>
-                                                      <ul className='image'>
-                                                            {report.lab_results.map((image, index) => (
-                                                                  <li key={index}>
-                                                                        <img
-                                                                              src={image}
-                                                                              alt="lab"
-                                                                              loading="lazy"
-                                                                              onClick={() => openGallery(report.lab_results, index)}
-                                                                        />
-                                                                  </li>
-                                                            ))}
-                                                      </ul>
-                                                </section>
-
-                                                <section className="content">
-                                                      <h3>الأدوية:</h3>
-
-                                                      {
-                                                            report.medications.length > 0 ? (
+                                                      <section className="content">
+                                                            <h3>الآشعة:</h3>
+                                                            {report.radiology.length > 0 ? (
                                                                   <table className='pharmaceutical'>
                                                                         <thead>
                                                                               <tr>
-                                                                                    <th>الاسم</th>
-                                                                                    <th>النوع</th>
-                                                                                    <th>الميعاد</th>
-                                                                                    <th>من</th>
-                                                                                    <th>إلى</th>
+                                                                                    <th>اسم الآشعة</th>
+                                                                                    <th>ملاحظات</th>
+                                                                                    <th>النتيجة</th>
                                                                               </tr>
                                                                         </thead>
                                                                         <tbody>
-                                                                              {report.medications.map((med, index) => (
+                                                                              {report.radiology.map((item, index) => (
                                                                                     <tr key={index}>
-                                                                                          <td>{med.name}</td>
-                                                                                          <td>{med.type}</td>
-                                                                                          <td>{med.time}</td>
-                                                                                          <td>{med.from}</td>
-                                                                                          <td>{med.to}</td>
+                                                                                          <td>{item.name}</td>
+                                                                                          <td>{item.notes !== "" ? item.notes : 'لا يوجد'}</td>
+                                                                                          <td>
+                                                                                                {item.result ? (
+                                                                                                      <img
+                                                                                                            src={item.result}
+                                                                                                            alt="xray result"
+                                                                                                            loading="lazy"
+                                                                                                            onClick={() => openGallery([item.result], 0)}
+                                                                                                            style={{ maxWidth: "150px", cursor: "pointer" }}
+                                                                                                      />
+                                                                                                ) : ["patient", "doctor", "pharmacist", "clinical"].includes(userType) ? (
+                                                                                                      <p>لم يتم اضافة نتيجة حتى الآن</p>
+                                                                                                ) : ["lab", "radiology"].includes(userType) ? (
+                                                                                                      <button>إضافة نتيجة</button>
+                                                                                                ) : null}
+                                                                                          </td>
+
                                                                                     </tr>
                                                                               ))}
                                                                         </tbody>
                                                                   </table>
                                                             ) : (
-                                                                  <p>لا توجد أدوية مذكورة في هذا التقرير.</p>
-                                                            )
-                                                      }
-                                                </section>
-                                          </Accordion.Body>
-                                    </Accordion.Item>
-                              ))}
+                                                                  <p>لا توجد آشعة مذكورة في هذا التقرير.</p>
+                                                            )}
+                                                      </section>
+
+                                                      <section className="content">
+                                                            <h3>التحاليل:</h3>
+                                                            {report.labTests.length > 0 ? (
+                                                                  <table className='pharmaceutical'>
+                                                                        <thead>
+                                                                              <tr>
+                                                                                    <th>اسم التحليل</th>
+                                                                                    <th>ملاحظات</th>
+                                                                                    <th>النتيجة</th>
+                                                                              </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                              {report.labTests.map((item, index) => (
+                                                                                    <tr key={index}>
+                                                                                          <td>{item.name}</td>
+                                                                                          <td>{item.notes !== "" ? item.notes : 'لا يوجد'}</td>
+                                                                                          <td>
+                                                                                                {item.result ? (
+                                                                                                      <img
+                                                                                                            src={item.result}
+                                                                                                            alt="lab result"
+                                                                                                            loading="lazy"
+                                                                                                            onClick={() => openGallery([item.result], 0)}
+                                                                                                            style={{ maxWidth: "150px", cursor: "pointer" }}
+                                                                                                      />
+                                                                                                ) : ["patient", "doctor", "pharmacy", "clinical"].includes(userType) ? (
+                                                                                                      <p>لم يتم اضافة نتيجة حتى الآن</p>
+                                                                                                ) : ["lab", "radiology"].includes(userType) ? (
+                                                                                                      <button>إضافة نتيجة</button>
+                                                                                                ) : null}
+                                                                                          </td>
+                                                                                    </tr>
+                                                                              ))}
+                                                                        </tbody>
+                                                                  </table>
+                                                            ) : (
+                                                                  <p>لا توجد تحاليل مذكورة في هذا التقرير.</p>
+                                                            )}
+                                                      </section>
+
+
+                                                      <section className="content">
+                                                            <h3>الأدوية:</h3>
+
+                                                            {
+                                                                  report.medications.length > 0 ? (
+                                                                        <table className='pharmaceutical'>
+                                                                              <thead>
+                                                                                    <tr>
+                                                                                          <th>الاسم</th>
+                                                                                          <th>الميعاد</th>
+                                                                                          <th>من</th>
+                                                                                          <th>إلى</th>
+                                                                                    </tr>
+                                                                              </thead>
+                                                                              <tbody>
+                                                                                    {report.medications.map((med, index) => (
+                                                                                          <tr key={index}>
+                                                                                                <td>{med.name}</td>
+                                                                                                <td>{med.times}</td>
+                                                                                                <td>{med.startDate}</td>
+                                                                                                <td>{med.endDate}</td>
+                                                                                          </tr>
+                                                                                    ))}
+                                                                              </tbody>
+                                                                        </table>
+                                                                  ) : (
+                                                                        <p>لا توجد أدوية مذكورة في هذا التقرير.</p>
+                                                                  )
+                                                            }
+                                                      </section>
+                                                </Accordion.Body>
+                                          </Accordion.Item>
+                                    ))}
                         </Accordion>
                   </section>
 

@@ -1,24 +1,17 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useContext } from 'react';
 import { NavLink } from 'react-router-dom';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import Avatar from '@mui/material/Avatar';
-
-
 import './style.css';
 import Logo from '../Logo/Logo';
+import { AuthContext } from '../../../context/Auth.Context';
 
 export default function Header() {
+      const { user } = useContext(AuthContext)
       const navRef = useRef();
       const [expanded, setExpanded] = useState(false);
 
-      const [user, setUser] = useState(null);
-
-
-      useEffect(() => {
-            const storedUser = localStorage.getItem("user");
-            setUser(storedUser ? JSON.parse(storedUser) : null);
-      }, []);
 
       useEffect(() => {
             function handleClickOutside(event) {
@@ -53,11 +46,17 @@ export default function Header() {
 
                                     <section className="auth-user d-flex gap-1">
                                           {user ? (
-                                                <NavLink to={`/profile/${user.uid}`} className="auth-img"><Avatar src={user.firstName} /></NavLink>
+                                                <NavLink to={`/profile/${user.uid}`} className="auth-img">                  <Avatar
+                                                      loading="lazy"
+                                                >
+                                                      {user.UserData.firstName?.charAt(0)}
+                                                </Avatar>
+                                                </NavLink>
+
                                           ) : (
                                                 <>
                                                       <NavLink to='/login'>تسجيل الدخول</NavLink>
-                                                      <NavLink to={`/register/`}>انشاء حساب</NavLink>
+                                                      <NavLink to={`/register`}>انشاء حساب</NavLink>
                                                 </>
                                           )}
                                     </section>

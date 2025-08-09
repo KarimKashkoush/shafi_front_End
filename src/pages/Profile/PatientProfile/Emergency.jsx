@@ -18,7 +18,7 @@ function calculateAge(birthDateString) {
 }
 
 export default function Emergency({ userData, reportsCount }) {
-      const age = userData ? calculateAge(userData.birthDay) : null;
+      const age = userData ? calculateAge(userData.dateOfBirth) : null;
       age !== null && (age < 0 || isNaN(age)) ? "غير معروف" : age;
       const bloodType = userData ? userData.bloodType : "غير معروف";
       const emergencyNumber = userData ? userData.emergencyNumber : ["غير معروف"];
@@ -29,7 +29,7 @@ export default function Emergency({ userData, reportsCount }) {
                               <section className="box box-bg">
                                     <img src={growth} alt="growth" />
                                     <p>العمر</p>
-                                    <span dir='ltr'>{age}</span>
+                                    <span dir='ltr'>{isNaN(age) ? "غير معروف" : age}</span>
                               </section>
                         </section>
 
@@ -37,7 +37,7 @@ export default function Emergency({ userData, reportsCount }) {
                               <section className="box box-bg">
                                     <img src={blodImage} alt="blodImage" />
                                     <p>فصيلة الدم</p>
-                                    <span dir='ltr'>{bloodType}</span>
+                                    <span dir='ltr'>{!bloodType ? "غير معروف" : bloodType}</span>
                               </section>
                         </section>
 
@@ -45,7 +45,7 @@ export default function Emergency({ userData, reportsCount }) {
                               <section className="box box-bg">
                                     <img src={call} alt="call" />
                                     <p>أرقام الطوارئ</p>
-                                    <span dir='ltr'>{emergencyNumber}</span>
+                                    <span dir='ltr'>{!emergencyNumber ? "غير معروف" : emergencyNumber}</span>
                               </section>
                         </section>
 

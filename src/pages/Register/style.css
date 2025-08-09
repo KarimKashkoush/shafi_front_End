@@ -4,4 +4,13 @@
                   color: var(--main-color);
             }
       }
+      
+      form span {
+            font-size: 14px;
+            color: var(--sub-text-color);
+      }
+
+      label span {
+            color: red;
+      }
 }

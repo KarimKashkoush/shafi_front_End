@@ -6,9 +6,6 @@ header {
       padding: 0;
 }
 
-.css-1byaawp-MuiAvatar-root {
-      font-family: "Tajawal", sans-serif !important;
-}
 
 .nav-link {
       color: var(--main-text-color);
@@ -31,19 +28,19 @@ header {
             font-weight: 500;
             text-decoration: none;
             padding: 5px 10px;
-            
-            
+
+
             &:first-child {
                   background-color: #fff;
                   color: var(--main-color);
             }
-            
+
             &:hover {
                   background-color: #fff;
                   color: var(--main-color);
             }
       }
-      
+
       .auth-img {
             border: none;
             padding: 0;
