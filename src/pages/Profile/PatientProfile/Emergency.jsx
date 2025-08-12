@@ -29,7 +29,7 @@ export default function Emergency({ userData, reportsCount }) {
                               <section className="box box-bg">
                                     <img src={growth} alt="growth" />
                                     <p>العمر</p>
-                                    <span dir='ltr'>{isNaN(age) ? "غير معروف" : age}</span>
+                                    <span dir='ltr'>{isNaN(age) || !age ? "غير معروف" : age}</span>
                               </section>
                         </section>
 

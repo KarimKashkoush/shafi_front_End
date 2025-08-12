@@ -22,17 +22,18 @@ export default function Pharmaceutical({ reports }) {
             <section className="pharmaceutical col-12 col-md-6 px-2">
                   <section className="content">
                         <h2>الأدويـــة الحالية</h2>
-                        {currentMeds.length > 0 ? (
-                              <ul>
-                                    {currentMeds.map((med, idx) => (
+                        <ul>
+                              {currentMeds.length > 0 ? (
+                                    currentMeds.map((med, idx) => (
                                           <li key={idx}>
                                                 <strong>{med.name}</strong> - {med.times}
                                           </li>
-                                    ))}
-                              </ul>
-                        ) : (
-                              <p>لا توجد أدوية حالياً</p>
-                        )}
+                                    ))
+                              ) : (
+                                    <li className="text-center">لا توجد أدوية حالياً</li>
+                              )}
+                        </ul>
+
                   </section>
             </section>
       );

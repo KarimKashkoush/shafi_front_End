@@ -5,8 +5,10 @@ import registerAnimation from "../../assets/animation/Register.json"
 import './style.css'
 import { useForm } from 'react-hook-form'
 import axios from 'axios';
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 export default function Register() {
+      const navigate = useNavigate();
       const [validated, setValidated] = useState(false)
       const [password, setPassword] = useState('')
       const [confirmPassword, setConfirmPassword] = useState('')
@@ -43,34 +45,15 @@ export default function Register() {
             };
 
             try {
-                  // 1. جلب المستخدمين الحاليين
-                  const usersResponse = await axios.get('https://shafi-be8b0-default-rtdb.firebaseio.com/UsersData.json');
-                  const users = usersResponse.data || {};
+                  const apiUrl = import.meta.env.VITE_API_URL;
 
-                  // 2. التحقق من وجود نفس الايميل أو رقم الهاتف
-                  const isDuplicate = Object.values(users).some(user =>
-                        user.email === finalData.email || user.phoneNumber === finalData.phoneNumber
-                  );
-
-                  if (isDuplicate) {
-                        alert("يوجد حساب مسجل بهذا البريد الإلكتروني أو رقم الهاتف بالفعل");
-                        return;
-                  }
-
-                  // 3. في حالة عدم التكرار - سجل المستخدم
-                  const response = await axios.post(
-                        'https://shafi-be8b0-default-rtdb.firebaseio.com/UsersData.json',
-                        finalData
-                  );
-
-                  console.log("تم التسجيل بنجاح:", response.data);
-                  alert("تم إنشاء الحساب بنجاح");
-                  // 4. إعادة التوجيه أو أي إجراء آخر بعد التسجيل
-                  Navigate('/login');
+                  await axios.post(`${apiUrl}/register`, finalData);
+                  toast.success("تم إنشاء الحساب بنجاح 🎉");
+                  navigate("/login");
 
             } catch (error) {
                   console.error("حدث خطأ أثناء التسجيل:", error.response?.data || error.message);
-                  alert("فشل في التسجيل، حاول مرة أخرى");
+                  alert(error.response?.data?.message || "فشل في التسجيل، حاول مرة أخرى");
             }
       }
 

@@ -12,7 +12,7 @@ export default function ChronicDiseases({ reports }) {
                               {chronicDiseases.length > 0 ? (
                                     chronicDiseases.map((disease, idx) => <li key={idx}>{disease}</li>)
                               ) : (
-                                    <li>لا توجد أمراض مزمنة مسجلة</li>
+                                    <li className="text-center">لا توجد أمراض مزمنة مسجلة</li>
                               )}
                         </ul>
                   </div>

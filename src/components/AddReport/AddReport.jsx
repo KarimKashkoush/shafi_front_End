@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Button, Form, Row, Col } from 'react-bootstrap';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import "./style.css"
 import { useParams } from 'react-router';
 import axios from "axios";
-
+import { AuthContext } from '../../context/Auth.Context';
+import { toast } from "react-toastify";
 const schema = z.object({
       reportText: z.string().optional(),
       chronicDisease: z.string().optional(),
@@ -28,6 +29,7 @@ const schema = z.object({
 });
 
 export default function AddReport() {
+      const { user } = useContext(AuthContext)
       const { id } = useParams();
       const [openNewReport, setOpenNewReport] = useState(false);
       const { register, handleSubmit, control, watch, formState: { errors } } = useForm({
@@ -56,19 +58,28 @@ export default function AddReport() {
             };
 
             try {
+                  const apiUrl = import.meta.env.VITE_API_URL;
                   const response = await axios.post(
-                        "https://shafi-be8b0-default-rtdb.firebaseio.com/Reports.json",
+                        `${apiUrl}/addReport`,
                         finalData
                   );
-                  console.log("✅ تم إرسال التقرير بنجاح:", response.data);
+
+                  if (response.data.message == "success") {
+                        toast.success("تم إنشاء التقرير بنجاح 🎉");
+                  }
+
             } catch (error) {
                   console.error("❌ حصل خطأ أثناء إرسال التقرير:", error);
             }
       }
 
       return (
-            <section className="add-report py-5">
-                  <Button className='btn fw-bold' onClick={() => { setOpenNewReport(!openNewReport) }}>إضافة تقرير طبي جديد</Button>
+            <section className="add-report py-2">
+                  {(user?.role === 'clinic' || user?.role === 'doctor') &&
+                        <Button className='btn fw-bold' onClick={() => { setOpenNewReport(!openNewReport) }}>
+                              إضافة تقرير طبي جديد
+                        </Button>
+                  }
 
                   {openNewReport &&
                         <Form className='border p-2 rounded shadow mt-2' onSubmit={handleSubmit(onSubmit)}>

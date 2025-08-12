@@ -3,10 +3,9 @@ import Emergency from "./Emergency";
 import ChronicDiseases from "./ChronicDiseases";
 import Pharmaceutical from "./Pharmaceutical";
 import Reports from "./Reports";
-import { database } from "../../../firebase/firebase";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ref, child, get } from "firebase/database";
+import axios from 'axios';
 
 export default function PatientProfile() {
       const { id } = useParams();
@@ -30,31 +29,21 @@ export default function PatientProfile() {
       const enteredPin = pinDigits.join("");
 
       useEffect(() => {
-            const fetchData = async () => {
+            async function fetchPatientData() {
                   try {
-                        const reportsSnapshot = await get(child(ref(database), "Reports"));
-                        if (reportsSnapshot.exists()) {
-                              const allReports = reportsSnapshot.val();
-                              const userReports = Object.values(allReports).filter(
-                                    (report) => report.userId === id
-                              );
-                              setReports(userReports);
-                        }
-
-                        const userSnapshot = await get(child(ref(database), `UsersData/${id}`));
-                        if (userSnapshot.exists()) {
-                              setUserData(userSnapshot.val());
-                        }
-
-                        setLoading(false);
+                        const apiUrl = import.meta.env.VITE_API_URL;
+                        const res = await axios.get(`${apiUrl}/user/${id}`);
+                        setUserData(res?.data?.user);
+                        setReports(res?.data?.reports);
                   } catch (error) {
-                        console.error("حدث خطأ أثناء تحميل البيانات:", error);
+                        console.error('Error fetching patient data:', error);
+                  } finally {
                         setLoading(false);
                   }
-            };
+            }
 
-            fetchData();
-      }, [id]);
+            fetchPatientData();
+      }, []);
 
       if (loading) {
             return (
@@ -68,13 +57,13 @@ export default function PatientProfile() {
       return (
             <section className="patient-profile">
                   <section className="content row g-3">
-                        <Emergency userData={userData} reportsCount={reports.length} />
+                        <Emergency reportsCount={reports.length} />
 
-                        {(!userData?.pinCode || pinVerified) ? (
+                        {(!userData?.pin || pinVerified) ? (
                               <>
                                     <ChronicDiseases reports={reports} />
                                     <Pharmaceutical reports={reports} />
-                                    <Reports userData={userData} reports={reports} />
+                                    <Reports reports={reports} />
                               </>
                         ) : (
                               <div className="verify-pin mt-4">

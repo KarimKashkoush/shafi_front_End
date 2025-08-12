@@ -1,73 +1,57 @@
-import {  useState } from 'react';
+import { useContext, useState } from 'react';
 import { Container, Col, Row, Form, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import LoginAnimation from "../../assets/animation/login.json";
-import { getDatabase, ref, get } from "firebase/database";
-
+import { toast } from "react-toastify";
+import axios from "axios";
+import { AuthContext } from '../../context/Auth.Context';
 
 export default function Login() {
+      const { setUser, setToken } = useContext(AuthContext)
       const navigate = useNavigate();
       const [validated, setValidated] = useState(false);
+      const [emailOrPhone, setEmailOrPhone] = useState('');
       const [password, setPassword] = useState('');
       const [loading, setLoading] = useState(false);
 
       const handleSubmit = async (event) => {
             event.preventDefault();
-            const form = event.currentTarget;
             setValidated(true);
 
-            const identifier = form.email.value.trim();
-            const enteredPassword = password.trim();
+            if (!emailOrPhone || !password) {
+                  toast.error("الرجاء إدخال البريد أو الهاتف وكلمة المرور");
+                  return;
+            }
 
             try {
+                  const apiUrl = import.meta.env.VITE_API_URL;
                   setLoading(true);
-                  const db = getDatabase();
-                  const usersSnap = await get(ref(db, 'UsersData'));
-                  const users = usersSnap.val();
+                  const payload = emailOrPhone.includes("@")
+                        ? { email: emailOrPhone, password }
+                        : { phoneNumber: emailOrPhone, password };
 
-                  if (!users) throw new Error("لا يوجد مستخدمون مسجلون");
-                  console.log(Object.entries(users))
+                  const res = await axios.post(`${apiUrl}/login`, payload, { withCredentials: true });
 
-                  const matchedUserEntry = Object.entries(users).find(([uid, user]) =>
-                        (user.email === identifier || user.phoneNumber === identifier) &&
-                        user.password === enteredPassword
-                  );
+                  toast.success(res.data.message);
 
-
-                  if (!matchedUserEntry) {
-                        alert("البريد الإلكتروني أو رقم الهاتف أو كلمة المرور غير صحيحة");
-                        return;
+                  if (res.data.message === "success") {
+                        localStorage.setItem("token", res.data.token);
+                        localStorage.setItem("user", JSON.stringify(res.data.user));
+                        setUser(res.data.user)
+                        setToken(res.data.token)
+                        setLoading(false);
+                        navigate("/", { replace: true });
+                  } else {
+                        setLoading(false);
+                        toast.error(res.data.message);
                   }
-
-                  const [uid, userData] = matchedUserEntry;
-
-                  // جلب تقارير المستخدم
-                  const reportsSnap = await get(ref(db, 'Reports'));
-                  const allReports = reportsSnap?.val() || {};
-                  const userReports = Object.values(allReports).filter(report => report.user_id === uid);
-
-                  // حفظ البيانات
-                  const payload = {
-                        email: userData.email,
-                        uid,
-                        UserData: userData,
-                        Reports: userReports,
-                  };
-
-                  localStorage.setItem('user', JSON.stringify(payload));
-
-                  alert("تم تسجيل الدخول بنجاح");
-                  navigate("/", { replace: true });
-
             } catch (error) {
-                  console.error("Login error:", error);
-                  alert("فشل في تسجيل الدخول: " + error.message);
+                  toast.error(error.response?.data?.message || "فشل تسجيل الدخول");
             } finally {
                   setLoading(false);
             }
       };
-
 
       return (
             <section className="py-5 register-login min-vh-100 d-flex flex-column align-items-center justify-content-center">
@@ -75,18 +59,23 @@ export default function Login() {
                   <Container className='row mx-auto align-items-center py-4'>
                         <Form noValidate validated={validated} onSubmit={handleSubmit} className="form col-md-6 p-3">
                               <Row className="mb-2">
-                                    <Form.Group as={Col} md="12" controlId="email" className='p-2'>
+                                    <Form.Group as={Col} md="12" className='p-2'>
                                           <Form.Label>البريد الإلكتروني أو رقم الهاتف</Form.Label>
-                                          <Form.Control required type="text" placeholder="أدخل البريد أو رقم الهاتف" />
+                                          <Form.Control
+                                                required
+                                                type="text"
+                                                placeholder="أدخل البريد أو رقم الهاتف"
+                                                value={emailOrPhone}
+                                                onChange={(e) => setEmailOrPhone(e.target.value)}
+                                          />
                                           <Form.Control.Feedback type="invalid">
                                                 برجاء إدخال البريد الإلكتروني أو رقم الهاتف
                                           </Form.Control.Feedback>
                                     </Form.Group>
-
                               </Row>
 
                               <Row className="mb-2">
-                                    <Form.Group as={Col} md="12" controlId="password" className='p-2'>
+                                    <Form.Group as={Col} md="12" className='p-2'>
                                           <Form.Label>كلمة المرور</Form.Label>
                                           <Form.Control
                                                 required
@@ -114,4 +103,3 @@ export default function Login() {
             </section>
       );
 }
-

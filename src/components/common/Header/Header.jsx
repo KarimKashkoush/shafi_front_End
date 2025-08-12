@@ -46,10 +46,10 @@ export default function Header() {
 
                                     <section className="auth-user d-flex gap-1">
                                           {user ? (
-                                                <NavLink to={`/profile/${user.uid}`} className="auth-img">                  <Avatar
+                                                <NavLink to={`/profile/${user.id}`} className="auth-img">                  <Avatar
                                                       loading="lazy"
                                                 >
-                                                      {user.UserData.firstName?.charAt(0)}
+                                                      {user.firstName?.charAt(0)}
                                                 </Avatar>
                                                 </NavLink>
 

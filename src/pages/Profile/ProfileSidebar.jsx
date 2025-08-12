@@ -3,21 +3,17 @@ import Logo from "../../components/common/Logo/Logo";
 import MedicalDataImg from "../../assets/images/medical-data.png";
 import ProfileImg from "../../assets/images/profile.png";
 import LogOutImg from "../../assets/images/logout.png";
-import { getAuth, signOut } from "firebase/auth";
-const user = JSON.parse(localStorage.getItem("user"));
+import { useContext } from "react";
+import { AuthContext } from "../../context/Auth.Context";
+
 
 export default function ProfileSidebar() {
-      const uid = user ? user.uid : null;
+      const { user } = useContext(AuthContext)
+      const id = user ? user.id : null;
       const handleLogout = () => {
-            const auth = getAuth();
-            signOut(auth)
-                  .then(() => {
-                        localStorage.removeItem("user");
-                        window.location.reload();
-                  })
-                  .catch((error) => {
-                        console.error("خطأ أثناء تسجيل الخروج:", error.message);
-                  });
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+            localStorage.removeItem("theme");
       };
 
       return (
@@ -25,7 +21,7 @@ export default function ProfileSidebar() {
                   <Logo />
                   <ul>
                         <li>
-                              <NavLink to={`/profile/${uid}`} end>
+                              <NavLink to={`/profile/${id}`} end>
                                     <img src={MedicalDataImg} alt={MedicalDataImg} loading="lazy" />
                                     <span>
                                           البيانات الطبية

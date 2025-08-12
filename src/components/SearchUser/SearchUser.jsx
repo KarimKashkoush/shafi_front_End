@@ -6,8 +6,6 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 export default function SearchUser() {
-
-
       const { register, handleSubmit } = useForm({
             defaultValues: {
                   searchValue: "",
@@ -20,32 +18,33 @@ export default function SearchUser() {
 
       useEffect(() => {
             async function fetchUsers() {
+
                   try {
-                        const res = await axios.get("https://shafi-be8b0-default-rtdb.firebaseio.com/UsersData.json")
-                        setUsersData(res.data || {})
+                        const apiUrl = import.meta.env.VITE_API_URL;
+                        const res = await axios.get(`${apiUrl}/allUsers`);
+                        setUsersData(res.data.users);
                   } catch (err) {
-                        console.error("فشل تحميل البيانات:", err)
+                        console.error("فشل تحميل البيانات:", err);
                   }
             }
-
-            fetchUsers()
-      }, [])
+            fetchUsers();
+      }, []);
 
       function onSubmit(data) {
             const searchTerm = data.searchValue.trim();
             if (!searchTerm) return;
 
-            const found = Object.entries(usersData).find(([id, user]) =>
-                  user?.nationalId === searchTerm || user?.phoneNumber === searchTerm
+            const found = usersData.find(user =>
+                  user.nationalId === searchTerm || user.phone_number === searchTerm
             );
 
             if (found) {
-                  const [id, user] = found;
-                  setFoundUser({ ...user, id });
+                  setFoundUser(found);
             } else {
                   setFoundUser(null);
             }
       }
+
 
       return (
             <section className='search-user'>
@@ -66,13 +65,15 @@ export default function SearchUser() {
                                     <Button type='submit' className="btn btn-primary search-btn fw-bold">بحث</Button>
                               </form>
 
-                              {foundUser && (
+                              {foundUser ? (
                                     <div className="result-box mt-3 p-2 border rounded bg-light w-full">
                                           <Link to={`/UserData/${foundUser.id}`}>
-                                                <strong>الاسم:</strong> {foundUser.firstName} {foundUser.fullName}
+                                                <strong>الاسم:</strong> {foundUser.first_name} {foundUser.full_name}
                                           </Link>
                                     </div>
-                              )}
+                              ) :
+                                    (<p>لا يوجد مستخدم </p>)
+                              }
                         </section>
                   )}
             </section>
