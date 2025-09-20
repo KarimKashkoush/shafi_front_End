@@ -36,24 +36,35 @@ export default function Reports({ reports }) {
 
                               {reportEntries.length > 0 ? (
                                     reportEntries
-                                          .slice()
-                                          .reverse()
                                           .map(([key, report], idx) => (
                                                 <Accordion.Item eventKey={idx.toString()} key={key}>
                                                       <Accordion.Item eventKey={idx.toString()} key={key}>
-                                                            <Accordion.Header>تقرير رقم {reportEntries.length - idx} - {new Date(report.createdAt).toLocaleString("ar-EG", {
-                                                                  dateStyle: "full",
-                                                                  timeStyle: "short"
-                                                            })}</Accordion.Header>
+                                                            <Accordion.Header>
+                                                                  تقرير رقم {idx + 1} - {new Date(report.created_at).toLocaleString("ar-EG", {
+                                                                        timeZone: "Africa/Cairo",
+                                                                        year: "numeric",
+                                                                        month: "long",
+                                                                        day: "numeric",
+                                                                        hour: "2-digit",
+                                                                        minute: "2-digit",
+                                                                        hour12: true,
+                                                                  })}
+                                                            </Accordion.Header>
+
                                                             <Accordion.Body>
                                                                   <section className="content">
                                                                         <h3>التشخيص:</h3>
-                                                                        <p>{report.reportText}</p>
+                                                                        <p>{report.report_text}</p>
+                                                                  </section>
+
+                                                                  <section className="content">
+                                                                        <h3>أمراض مزمنة:</h3>
+                                                                        <p>{report.chronic_disease_name || 'لا يوجد'}</p>
                                                                   </section>
 
                                                                   <section className="content">
                                                                         <h3>الآشعة:</h3>
-                                                                        {report.radiology.length > 0 ? (
+                                                                        {Array.isArray(report.radiology) && report.radiology.length > 0 ? (
                                                                               <table className='pharmaceutical'>
                                                                                     <thead>
                                                                                           <tr>
@@ -65,7 +76,7 @@ export default function Reports({ reports }) {
                                                                                     <tbody>
                                                                                           {report.radiology.map((item, index) => (
                                                                                                 <tr key={index}>
-                                                                                                      <td>{item.name}</td>
+                                                                                                      <td>{item.name || 'لا يوجد'}</td>
                                                                                                       <td>{item.notes !== "" ? item.notes : 'لا يوجد'}</td>
                                                                                                       <td className='d-flex flex-wrap g-1'>
                                                                                                             {item.result ? (
@@ -133,7 +144,7 @@ export default function Reports({ reports }) {
 
                                                                   <section className="content">
                                                                         <h3>التحاليل:</h3>
-                                                                        {report.labTests.length > 0 ? (
+                                                                        {Array.isArray(report.lab_tests) && report.lab_tests.length > 0 ? (
                                                                               <table className='pharmaceutical'>
                                                                                     <thead>
                                                                                           <tr>
@@ -143,11 +154,11 @@ export default function Reports({ reports }) {
                                                                                           </tr>
                                                                                     </thead>
                                                                                     <tbody>
-                                                                                          {report.labTests.map((item, index) => (
+                                                                                          {report.lab_tests.map((item, index) => (
                                                                                                 <tr key={index}>
-                                                                                                      <td>{item.name}</td>
+                                                                                                      <td>{item.name || 'لا يوجد'}</td>
                                                                                                       <td>{item.notes !== "" ? item.notes : 'لا يوجد'}</td>
-                                                                                                      <td>
+                                                                                                      <td className='d-flex flex-wrap g-1'>
                                                                                                             {item.result ? (
                                                                                                                   (() => {
                                                                                                                         const resultArray = Array.isArray(item.result) ? item.result : [item.result];
@@ -215,7 +226,7 @@ export default function Reports({ reports }) {
                                                                         <h3>الأدوية:</h3>
 
                                                                         {
-                                                                              report.medications.length > 0 ? (
+                                                                              report.medications && report.medications.length > 0 ? (
                                                                                     <table className='pharmaceutical'>
                                                                                           <thead>
                                                                                                 <tr>
@@ -228,10 +239,10 @@ export default function Reports({ reports }) {
                                                                                           <tbody>
                                                                                                 {report.medications.map((med, index) => (
                                                                                                       <tr key={index}>
-                                                                                                            <td>{med.name}</td>
-                                                                                                            <td>{med.times}</td>
-                                                                                                            <td>{med.startDate}</td>
-                                                                                                            <td>{med.endDate}</td>
+                                                                                                            <td>{med.name || 'لا يوجد'} </td>
+                                                                                                            <td>{med.times || 'لا يوجد'}</td>
+                                                                                                            <td>{med.startDate || 'لا يوجد'}</td>
+                                                                                                            <td>{med.endDate || 'لا يوجد'}</td>
                                                                                                       </tr>
                                                                                                 ))}
                                                                                           </tbody>
@@ -242,7 +253,8 @@ export default function Reports({ reports }) {
                                                                         }
                                                                   </section>
                                                             </Accordion.Body>
-                                                      </Accordion.Item>                                                </Accordion.Item>
+                                                      </Accordion.Item>
+                                                </Accordion.Item>
                                           ))
                               ) : (
                                     <h2 className="text-center my-4">لا يوجد تقارير طبية</h2>

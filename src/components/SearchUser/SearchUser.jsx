@@ -23,6 +23,7 @@ export default function SearchUser() {
                         const apiUrl = import.meta.env.VITE_API_URL;
                         const res = await axios.get(`${apiUrl}/allUsers`);
                         setUsersData(res.data.users);
+                        console.log(usersData)
                   } catch (err) {
                         console.error("فشل تحميل البيانات:", err);
                   }

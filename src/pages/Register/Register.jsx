@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 export default function Register() {
       const navigate = useNavigate();
+      const [loading, setLoading] = useState(false)
       const [validated, setValidated] = useState(false)
       const [password, setPassword] = useState('')
       const [confirmPassword, setConfirmPassword] = useState('')
@@ -29,33 +30,36 @@ export default function Register() {
       })
 
       async function onSubmit(data) {
+            setLoading(true);
             const passwordsMatch = password === confirmPassword;
             const fullPin = pin.join("");
 
             setValidated(true);
             setPasswordMatchError(!passwordsMatch);
 
-            if (!passwordsMatch || pin.some(p => p === '')) {
+            if (!passwordsMatch) {
+                  setLoading(false);
                   return;
             }
 
             const finalData = {
                   ...data,
-                  pin: fullPin,
+                  pin: pin.some(p => p !== '') ? fullPin : "", // لو دخل أرقام ابعتها، لو فاضي ابعت فاضي
             };
 
             try {
                   const apiUrl = import.meta.env.VITE_API_URL;
-
                   await axios.post(`${apiUrl}/register`, finalData);
                   toast.success("تم إنشاء الحساب بنجاح 🎉");
                   navigate("/login");
-
             } catch (error) {
                   console.error("حدث خطأ أثناء التسجيل:", error.response?.data || error.message);
                   alert(error.response?.data?.message || "فشل في التسجيل، حاول مرة أخرى");
+            } finally {
+                  setLoading(false);
             }
       }
+
 
 
       return (
@@ -145,7 +149,7 @@ export default function Register() {
                                                       value={digit}
                                                       className="text-center"
                                                       onChange={(e) => {
-                                                            const val = e.target.value.replace(/\D/g, '') // بس أرقام
+                                                            const val = e.target.value.replace(/\D/g, '')
                                                             const newPin = [...pin]
                                                             newPin[index] = val
                                                             setPin(newPin)
@@ -159,8 +163,8 @@ export default function Register() {
                                                                   pinRefs[index - 1].current.focus()
                                                             }
                                                       }}
-                                                      isInvalid={validated && pin[index] === ''}
                                                 />
+
                                           ))}
                                     </div>
                                     <span>يستخدم هذا الرقم (Pin Code) لإظهار الملف الطبي الشخصي عند الجهات الطبية (دكتور، مركز آشعة، معمل تحاليل، صيدلية) وفي حالة عدم كتابته يكون الملف متاح الإطلاع عليه من قبل أي شخص يملك بياناتك الشخصية</span>
@@ -197,7 +201,9 @@ export default function Register() {
                               </Row>
 
                               <Row className="mb-3 px-2 mt-2">
-                                    <Button type="submit" className="mt-3">تسجيل</Button>
+                                    <Button type="submit" className="mt-3" disabled={loading}>
+                                          {loading ? "جاري التسجيل..." : "تسجيل"}
+                                    </Button>
                               </Row>
                         </Form>
                         <div className="col-lg-6 d-none d-lg-flex justify-content-center">

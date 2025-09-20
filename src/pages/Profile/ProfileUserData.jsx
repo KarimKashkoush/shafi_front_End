@@ -15,14 +15,14 @@ export default function ProfileUserData() {
       } = useForm({
             defaultValues: {
                   address: user.address,
-                  birth_date: user.birth_date,
+                  birthDate: user.birthDate,
                   blood: user.blood,
                   email: user.email,
-                  emergency_number: user.emergency_number,
-                  first_name: user.first_name,
-                  full_name: user.full_name,
+                  emergencyNumber: user.emergencyNumber,
+                  firstName: user.firstName,
+                  fullName: user.fullName,
                   gender: user.gender,
-                  phone_number: user.phone_number,
+                  phoneNumber: user.phoneNumber,
             }
       });
 
@@ -65,10 +65,10 @@ export default function ProfileUserData() {
                                                 <label>الاسم الأول</label>
                                                 <input
                                                       className="form-control"
-                                                      {...register("first_name", { required: "الاسم مطلوب" })}
+                                                      {...register("firstName", { required: "الاسم مطلوب" })}
                                                 />
-                                                {errors.first_name && (
-                                                      <span className="text-danger">{errors.first_name.message}</span>
+                                                {errors.firstName && (
+                                                      <span className="text-danger">{errors.firstName.message}</span>
                                                 )}
                                           </div>
 
@@ -76,16 +76,16 @@ export default function ProfileUserData() {
                                                 <label>الاسم بالكامل</label>
                                                 <input
                                                       className="form-control"
-                                                      {...register("full_name", { required: "الاسم بالكامل مطلوب" })}
+                                                      {...register("fullName", { required: "الاسم بالكامل مطلوب" })}
                                                 />
-                                                {errors.full_name && (
-                                                      <span className="text-danger">{errors.full_name.message}</span>
+                                                {errors.fullName && (
+                                                      <span className="text-danger">{errors.fullName.message}</span>
                                                 )}
                                           </div>
 
                                           <div className="col-12">
                                                 <label>رقم الهاتف</label>
-                                                <input className="form-control" {...register("phone_number")} />
+                                                <input className="form-control" {...register("phoneNumber")} />
                                           </div>
 
                                           <div className="col-12">
@@ -97,8 +97,8 @@ export default function ProfileUserData() {
                                                 <label>الجنس</label>
                                                 <select className="form-control" {...register("gender")}>
                                                       <option value="">اختر</option>
-                                                      <option value="male">ذكر</option>
-                                                      <option value="female">أنثى</option>
+                                                      <option value="ذكر">ذكر</option>
+                                                      <option value="أنثي">أنثى</option>
                                                 </select>
                                           </div>
 
@@ -119,7 +119,7 @@ export default function ProfileUserData() {
 
                                           <div className="col-12">
                                                 <label>رقم الطوارئ</label>
-                                                <input className="form-control" {...register("emergency_number")} />
+                                                <input className="form-control" {...register("emergencyNumber")} />
                                           </div>
 
                                           <div className="col-12">
@@ -129,7 +129,7 @@ export default function ProfileUserData() {
 
                                           <div className="col-12">
                                                 <label>تاريخ الميلاد</label>
-                                                <input type="date" className="form-control" {...register("birth_date")} />
+                                                <input type="date" className="form-control" {...register("birthDate")} />
                                           </div>
 
                                           <div className="col-12 mt-3">
@@ -154,11 +154,11 @@ export default function ProfileUserData() {
                                                 <tbody>
                                                       <tr>
                                                             <th>الاسم</th>
-                                                            <td>{data?.first_name} {data?.full_name}</td>
+                                                            <td>{data?.firstName} {data?.fullName}</td>
                                                       </tr>
                                                       <tr>
                                                             <th>رقم الهاتف</th>
-                                                            <td>{data?.phone_number || "غير مسجل"}</td>
+                                                            <td>{data?.phoneNumber || "غير مسجل"}</td>
                                                       </tr>
                                                       <tr>
                                                             <th>البريد الإلكتروني</th>
@@ -174,7 +174,7 @@ export default function ProfileUserData() {
                                                       </tr>
                                                       <tr>
                                                             <th>رقم الطوارئ</th>
-                                                            <td>{data?.emergency_number || "غير مسجل"}</td>
+                                                            <td>{data?.emergencyNumber || "غير مسجل"}</td>
                                                       </tr>
                                                       <tr>
                                                             <th>العنوان</th>
@@ -182,7 +182,7 @@ export default function ProfileUserData() {
                                                       </tr>
                                                       <tr>
                                                             <th>تاريخ الميلاد</th>
-                                                            <td>{data?.birth_date || "غير مسجل"}</td>
+                                                            <td>{data?.birthDate || "غير مسجل"}</td>
                                                       </tr>
                                                 </tbody>
                                           </table>

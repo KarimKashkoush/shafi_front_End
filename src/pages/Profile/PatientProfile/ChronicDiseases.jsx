@@ -2,8 +2,8 @@ import { ClockFading } from "lucide-react"
 
 export default function ChronicDiseases({ reports }) {
       const chronicDiseases = Object.values(reports)
-            .filter((report) => report.chronicDisease === "yes" && report.chronicDiseaseName)
-            .map((report) => report.chronicDiseaseName);
+            .filter((report) => report.chronic_disease === "yes" && report.chronic_disease_name)
+            .map((report) => report.chronic_disease_name);
       return (
             <section className="chronic col-12 col-md-6 px-2">
                   <div className="content ">
