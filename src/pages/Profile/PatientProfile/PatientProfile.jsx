@@ -34,6 +34,7 @@ export default function PatientProfile() {
                         const apiUrl = import.meta.env.VITE_API_URL;
                         const res = await axios.get(`${apiUrl}/user/${id}`);
                         setUserData(res?.data?.user);
+                        console.log(userData)
                         setReports(res?.data?.reports);
                   } catch (error) {
                         console.error('Error fetching patient data:', error);
