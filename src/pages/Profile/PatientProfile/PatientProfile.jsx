@@ -27,7 +27,7 @@ export default function PatientProfile() {
       };
 
       const enteredPin = pinDigits.join("");
-
+      
       useEffect(() => {
             async function fetchPatientData() {
                   try {
