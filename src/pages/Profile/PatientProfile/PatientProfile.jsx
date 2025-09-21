@@ -89,6 +89,8 @@ export default function PatientProfile() {
 
                                     </div>
 
+                                    <p>pass: {userData?.pin}</p>
+
                                     <button
                                           className="btn btn-primary mt-2 m-auto d-block"
                                           onClick={() => {
