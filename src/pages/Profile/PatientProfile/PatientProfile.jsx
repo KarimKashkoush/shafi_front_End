@@ -92,7 +92,9 @@ export default function PatientProfile() {
                                     <button
                                           className="btn btn-primary mt-2 m-auto d-block"
                                           onClick={() => {
-                                                if (!userData?.pin || enteredPin === userData?.pin) {
+                                                const userPin = userData?.pin?.trim();
+
+                                                if (!userPin || enteredPin === userPin) {
                                                       setPinVerified(true);
                                                 } else {
                                                       alert("الرقم السري غير صحيح، حاول مرة أخرى");
