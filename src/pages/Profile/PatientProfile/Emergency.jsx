@@ -18,10 +18,11 @@ function calculateAge(birthDateString) {
 }
 
 export default function Emergency({ userData, reportsCount }) {
-      const age = userData ? calculateAge(userData.dateOfBirth) : null;
+      const age = userData ? calculateAge(userData.birthDate) : null;
       age !== null && (age < 0 || isNaN(age)) ? "غير معروف" : age;
-      const bloodType = userData ? userData.bloodType : "غير معروف";
-      const emergencyNumber = userData ? userData.emergencyNumber : ["غير معروف"];
+      const blood = userData ? userData.blood : "غير معروف";
+      const emergencyNumber = userData ? userData.emergencyNumber : "غير معروف";
+
       return (
             <section className="emergency col-12">
                   <section className="boxs row g-3">
@@ -37,7 +38,7 @@ export default function Emergency({ userData, reportsCount }) {
                               <section className="box box-bg">
                                     <img src={blodImage} alt="blodImage" />
                                     <p>فصيلة الدم</p>
-                                    <span dir='ltr'>{!bloodType ? "غير معروف" : bloodType}</span>
+                                    <span dir='ltr'>{!blood ? "غير معروف" : blood}</span>
                               </section>
                         </section>
 
@@ -45,8 +46,7 @@ export default function Emergency({ userData, reportsCount }) {
                               <section className="box box-bg">
                                     <img src={call} alt="call" />
                                     <p>أرقام الطوارئ</p>
-                                    <span dir='ltr'>{!emergencyNumber ? "غير معروف" : emergencyNumber}</span>
-                              </section>
+                                    <span dir='ltr'>{!emergencyNumber ? "غير معروف" : emergencyNumber}</span>                              </section>
                         </section>
 
                         <section className="col-6 col-md-3 px-2">

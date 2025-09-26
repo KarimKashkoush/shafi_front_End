@@ -3,49 +3,68 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { AuthContext } from "../../context/Auth.Context";
 
+// تحويل الداتا من snake_case إلى camelCase
+function mapUser(user) {
+      return {
+            id: user.id,
+            firstName: user.firstName,
+            fullName: user.fullName,
+            phoneNumber: user.phoneNumber,
+            email: user.email,
+            gender: user.gender,
+            blood: user.blood,
+            emergencyNumber: user.emergencyNumber,
+            address: user.address,
+            birthDate: user.birthDate,
+            createdAt: user.createdAt,
+      };
+}
+
 export default function ProfileUserData() {
       const { user, setUser } = useContext(AuthContext);
-      const [data, setData] = useState(user);
+      const [data, setData] = useState(user ? mapUser(user) : null);
       const [editMode, setEditMode] = useState(false);
+
       const {
             register,
             handleSubmit,
             formState: { errors },
             reset,
       } = useForm({
-            defaultValues: {
-                  address: user.address,
-                  birthDate: user.birthDate,
-                  blood: user.blood,
-                  email: user.email,
-                  emergencyNumber: user.emergencyNumber,
-                  firstName: user.firstName,
-                  fullName: user.fullName,
-                  gender: user.gender,
-                  phoneNumber: user.phoneNumber,
-            }
+            defaultValues: data,
       });
-
-
 
       useEffect(() => {
             if (user) {
-                  setData(user);
-                  reset(user);
+                  const mapped = mapUser(user);
+                  setData(mapped);
+                  reset(mapped);
             }
       }, [user, reset]);
-
-
 
       const onSubmit = async (formData) => {
             try {
                   const apiUrl = import.meta.env.VITE_API_URL;
-                  const res = await axios.put(`${apiUrl}/user/${user.id}`, formData);
+
+                  const payload = {
+                        firstName: formData.firstName,
+                        fullName: formData.fullName,
+                        phoneNumber: formData.phoneNumber,
+                        email: formData.email,
+                        gender: formData.gender,
+                        blood: formData.blood,
+                        emergencyNumber: formData.emergencyNumber,
+                        address: formData.address,
+                        birthDate: formData.birthDate,
+                  };
+
+                  const res = await axios.put(`${apiUrl}/user/${user.id}`, payload);
 
                   if (res.data.message === "success") {
-                        setData(res.data.user);
-                        setUser(res.data.user);
-                        localStorage.setItem("user", JSON.stringify(res.data.user));
+                        const mappedUser = mapUser(res.data.user);
+                        setData(mappedUser);
+                        setUser(mappedUser);
+                        localStorage.setItem("user", JSON.stringify(mappedUser));
                         setEditMode(false);
                         alert("تم تحديث البيانات بنجاح");
                   }
@@ -54,6 +73,17 @@ export default function ProfileUserData() {
             }
       };
 
+      function calculateAge(birthDateString) {
+            if (!birthDateString) return null;
+            const today = new Date();
+            const birthDate = new Date(birthDateString);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                  age--;
+            }
+            return age;
+      }
       return (
             <section className="profile-user-data">
                   <section className="content">
@@ -182,8 +212,13 @@ export default function ProfileUserData() {
                                                       </tr>
                                                       <tr>
                                                             <th>تاريخ الميلاد</th>
-                                                            <td>{data?.birthDate || "غير مسجل"}</td>
+                                                            <td>
+                                                                  {data?.birthDate
+                                                                        ? `${new Date(data.birthDate).toLocaleDateString("ar-EG")} (${calculateAge(data.birthDate)} سنة)`
+                                                                        : "غير مسجل"}
+                                                            </td>
                                                       </tr>
+
                                                 </tbody>
                                           </table>
                                           <button className="btn bg-black text-white" onClick={() => setEditMode(true)}>

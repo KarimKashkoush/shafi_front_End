@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Button } from 'react-bootstrap'
 import './style.css'
 import { useForm } from "react-hook-form"
@@ -6,46 +6,53 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 export default function SearchUser() {
-      const { register, handleSubmit } = useForm({
+      const { register, handleSubmit, reset } = useForm({
             defaultValues: {
                   searchValue: "",
             }
       });
 
       const [showBox, setShowBox] = useState(false)
-      const [usersData, setUsersData] = useState({})
       const [foundUser, setFoundUser] = useState(null)
+      const [loading, setLoading] = useState(false)
+      const [notFound, setNotFound] = useState(false)
 
-      useEffect(() => {
-            async function fetchUsers() {
-
-                  try {
-                        const apiUrl = import.meta.env.VITE_API_URL;
-                        const res = await axios.get(`${apiUrl}/allUsers`);
-                        setUsersData(res.data.users);
-                        console.log(usersData)
-                  } catch (err) {
-                        console.error("فشل تحميل البيانات:", err);
-                  }
-            }
-            fetchUsers();
-      }, []);
-
-      function onSubmit(data) {
+      async function onSubmit(data) {
             const searchTerm = data.searchValue.trim();
             if (!searchTerm) return;
 
-            const found = usersData.find(user =>
-                  user.nationalId === searchTerm || user.phone_number === searchTerm
-            );
+            setLoading(true);
+            setNotFound(false);
+            setFoundUser(null);
 
-            if (found) {
-                  setFoundUser(found);
-            } else {
-                  setFoundUser(null);
+            try {
+                  const apiUrl = import.meta.env.VITE_API_URL;
+                  const res = await axios.get(`${apiUrl}/allUsers`);
+
+                  const users = res.data.users || [];
+                  const found = users.find(user =>
+                        user.nationalId === searchTerm || user.phoneNumber === searchTerm
+                  );
+
+                  if (found) {
+                        setFoundUser(found);
+                  } else {
+                        setNotFound(true);
+                  }
+            } catch (err) {
+                  console.error("فشل البحث:", err);
+                  setNotFound(true);
+            } finally {
+                  setLoading(false);
             }
       }
 
+      function handleCloseBox() {
+            setShowBox(false);
+            setFoundUser(null);
+            setNotFound(false);
+            reset({ searchValue: "" }); // إفراغ الـ input
+      }
 
       return (
             <section className='search-user'>
@@ -55,7 +62,8 @@ export default function SearchUser() {
 
                   {showBox && (
                         <section className="search-box">
-                              <Button className='btn close-box' onClick={() => setShowBox(false)}>X</Button>
+                              <Button className='btn close-box' onClick={handleCloseBox}>X</Button>
+
                               <form onSubmit={handleSubmit(onSubmit)}>
                                     <input
                                           type="text"
@@ -63,18 +71,22 @@ export default function SearchUser() {
                                           className="search-input"
                                           placeholder="أدخل الرقم القومي أو رقم الهاتف"
                                     />
-                                    <Button type='submit' className="btn btn-primary search-btn fw-bold">بحث</Button>
+                                    <Button type='submit' className="btn btn-primary search-btn fw-bold">
+                                          {loading ? "جارٍ البحث..." : "بحث"}
+                                    </Button>
                               </form>
 
-                              {foundUser ? (
+                              {foundUser && (
                                     <div className="result-box mt-3 p-2 border rounded bg-light w-full">
                                           <Link to={`/UserData/${foundUser.id}`}>
-                                                <strong>الاسم:</strong> {foundUser.first_name} {foundUser.full_name}
+                                                <strong>الاسم:</strong> {foundUser.firstName} {foundUser.fullName}
                                           </Link>
                                     </div>
-                              ) :
-                                    (<p>لا يوجد مستخدم </p>)
-                              }
+                              )}
+
+                              {notFound && !loading && (
+                                    <p className="text-danger mt-2">لا يوجد مستخدم بهذه البيانات</p>
+                              )}
                         </section>
                   )}
             </section>

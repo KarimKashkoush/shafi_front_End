@@ -5,7 +5,7 @@ import Pharmaceutical from "./Pharmaceutical";
 import Reports from "./Reports";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from 'axios';
+import axios from "axios";
 
 export default function PatientProfile() {
       const { id } = useParams();
@@ -20,6 +20,7 @@ export default function PatientProfile() {
                   const newPin = [...pinDigits];
                   newPin[index] = value;
                   setPinDigits(newPin);
+
                   if (value && index < 3) {
                         document.getElementById(`pin-${index + 1}`).focus();
                   }
@@ -27,24 +28,30 @@ export default function PatientProfile() {
       };
 
       const enteredPin = pinDigits.join("");
-      
+
       useEffect(() => {
             async function fetchPatientData() {
                   try {
                         const apiUrl = import.meta.env.VITE_API_URL;
                         const res = await axios.get(`${apiUrl}/user/${id}`);
-                        setUserData(res?.data?.user);
-                        console.log(userData)
-                        setReports(res?.data?.reports);
+                        const user = res?.data?.user || {};
+                        const fetchedReports = res?.data?.reports || [];
+
+                        setUserData(user);
+                        setReports(fetchedReports);
+
+                        if (!user?.pinCode || user?.pinCode.trim() === "") {
+                              setPinVerified(true);
+                        }
                   } catch (error) {
-                        console.error('Error fetching patient data:', error);
+                        console.error("Error fetching patient data:", error);
                   } finally {
                         setLoading(false);
                   }
             }
 
             fetchPatientData();
-      }, []);
+      }, [id]);
 
       if (loading) {
             return (
@@ -54,13 +61,12 @@ export default function PatientProfile() {
             );
       }
 
-
       return (
             <section className="patient-profile">
                   <section className="content row g-3">
-                        <Emergency reportsCount={reports.length} />
+                        <Emergency reportsCount={reports.length} userData={userData} />
 
-                        {(!userData?.pin || pinVerified) ? (
+                        {pinVerified ? (
                               <>
                                     <ChronicDiseases reports={reports} />
                                     <Pharmaceutical reports={reports} />
@@ -68,8 +74,14 @@ export default function PatientProfile() {
                               </>
                         ) : (
                               <div className="verify-pin mt-4">
-                                    <p className="text-center">يرجى إدخال الرقم السري لعرض باقي البيانات</p>
-                                    <div className="d-flex gap-2 justify-content-center" style={{ direction: "ltr" }}>
+                                    <p className="text-center">
+                                          يرجى إدخال الرقم السري لعرض باقي البيانات
+                                    </p>
+
+                                    <div
+                                          className="d-flex gap-2 justify-content-center"
+                                          style={{ direction: "ltr" }}
+                                    >
                                           {pinDigits.map((digit, index) => (
                                                 <input
                                                       key={index}
@@ -77,28 +89,37 @@ export default function PatientProfile() {
                                                       type="text"
                                                       maxLength={1}
                                                       value={digit}
-                                                      onChange={(e) => handleChange(index, e.target.value.slice(0, 1))}
+                                                      onChange={(e) =>
+                                                            handleChange(index, e.target.value.slice(0, 1))
+                                                      }
                                                       onKeyDown={(e) => {
-                                                            if (e.key === "Backspace" && !pinDigits[index] && index > 0) {
+                                                            if (
+                                                                  e.key === "Backspace" &&
+                                                                  !pinDigits[index] &&
+                                                                  index > 0
+                                                            ) {
                                                                   document.getElementById(`pin-${index - 1}`).focus();
                                                             }
                                                       }}
                                                       className="form-control text-center"
-                                                      style={{ width: "40px", direction: "ltr", textAlign: "center" }}
+                                                      style={{
+                                                            width: "40px",
+                                                            direction: "ltr",
+                                                            textAlign: "center",
+                                                      }}
                                                 />
                                           ))}
-
                                     </div>
 
-                                    <p>pass: {userData?.pin}</p>
-
                                     <button
-                                          className="btn btn-primary mt-2 m-auto d-block"
+                                          className="btn btn-primary mt-3 m-auto d-block"
                                           onClick={() => {
-                                                if (userData?.pin === "    " || enteredPin === userData?.pin) {
+                                                if (enteredPin === userData?.pinCode) {
                                                       setPinVerified(true);
                                                 } else {
                                                       alert("الرقم السري غير صحيح، حاول مرة أخرى");
+                                                      setPinDigits(["", "", "", ""]);
+                                                      document.getElementById("pin-0").focus();
                                                 }
                                           }}
                                     >
@@ -107,6 +128,6 @@ export default function PatientProfile() {
                               </div>
                         )}
                   </section>
-            </section >
+            </section>
       );
 }

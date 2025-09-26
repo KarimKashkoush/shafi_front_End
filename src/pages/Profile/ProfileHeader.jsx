@@ -3,7 +3,6 @@ import { useContext } from "react";
 import { AuthContext } from "../../context/Auth.Context";
 export default function ProfileHeader() {
       const { user } = useContext(AuthContext);
-      console.log(user)
       const firstName = user ? user.firstName : "المستخدم";
       const fullName = user ? user.fullName : '';
       const userImage = user ? user.image : null;
@@ -18,7 +17,7 @@ export default function ProfileHeader() {
                         loading="lazy"
 
                   >
-                        {!userImage && typeof full_name === 'string' && firstName?.charAt(0)}
+                        {!userImage && typeof fullName === 'string' && firstName?.charAt(0)}
                   </Avatar>
             </section>
       )
