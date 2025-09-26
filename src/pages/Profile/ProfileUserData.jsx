@@ -1,9 +1,8 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { AuthContext } from "../../context/Auth.Context";
 
-// تحويل الداتا من snake_case إلى camelCase
 function mapUser(user) {
       return {
             id: user.id,
@@ -84,6 +83,7 @@ export default function ProfileUserData() {
             }
             return age;
       }
+
       return (
             <section className="profile-user-data">
                   <section className="content">
@@ -159,7 +159,12 @@ export default function ProfileUserData() {
 
                                           <div className="col-12">
                                                 <label>تاريخ الميلاد</label>
-                                                <input type="date" className="form-control" {...register("birthDate")} />
+                                                <input
+                                                      type="date"
+                                                      className="form-control"
+                                                      {...register("birthDate")}
+                                                      defaultValue={data?.birthDate ? new Date(data.birthDate).toISOString().split("T")[0] : ""}
+                                                />
                                           </div>
 
                                           <div className="col-12 mt-3">
