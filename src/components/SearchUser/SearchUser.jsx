@@ -51,7 +51,7 @@ export default function SearchUser() {
             setShowBox(false);
             setFoundUser(null);
             setNotFound(false);
-            reset({ searchValue: "" }); // إفراغ الـ input
+            reset({ searchValue: "" }); 
       }
 
       return (

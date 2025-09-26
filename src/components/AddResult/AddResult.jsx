@@ -34,8 +34,6 @@ export default function AddResult({ addResult, setAddResult }) {
                   console.log(err)
                   setLoading(false)
             }
-
-
             setAddResult(false);
       };
 

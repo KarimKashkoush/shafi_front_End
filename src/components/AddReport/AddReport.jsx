@@ -44,6 +44,7 @@ export default function AddReport() {
             }
       });
 
+
       const chronicDiseaseValue = watch("chronicDisease");
 
       const { fields: medFields, append: addMedication } = useFieldArray({ control, name: "medications" });

@@ -40,7 +40,7 @@ export default function Reports({ reports }) {
                                                 <Accordion.Item eventKey={idx.toString()} key={key}>
                                                       <Accordion.Item eventKey={idx.toString()} key={key}>
                                                             <Accordion.Header>
-                                                                  تقرير رقم {idx + 1} - {new Date(report.created_at).toLocaleString("ar-EG", {
+                                                                  تقرير رقم {idx + 1} - {new Date(report.createdAt).toLocaleString("ar-EG", {
                                                                         timeZone: "Africa/Cairo",
                                                                         year: "numeric",
                                                                         month: "long",

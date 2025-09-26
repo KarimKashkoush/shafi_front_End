@@ -12,6 +12,7 @@ function mapUser(user) {
             email: user.email,
             gender: user.gender,
             blood: user.blood,
+            role: user.role,
             emergencyNumber: user.emergencyNumber,
             address: user.address,
             birthDate: user.birthDate,

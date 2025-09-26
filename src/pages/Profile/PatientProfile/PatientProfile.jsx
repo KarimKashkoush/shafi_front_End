@@ -49,7 +49,6 @@ export default function PatientProfile() {
                         setLoading(false);
                   }
             }
-
             fetchPatientData();
       }, [id]);
 
