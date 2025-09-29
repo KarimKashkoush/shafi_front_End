@@ -6,10 +6,10 @@ import LogOutImg from "../../assets/images/logout.png";
 import { useContext } from "react";
 import { AuthContext } from "../../context/Auth.Context";
 
-
-export default function ProfileSidebar() {
-      const { user } = useContext(AuthContext)
+export default function ProfileSidebar({ links }) {
+      const { user } = useContext(AuthContext);
       const id = user ? user.id : null;
+
       const handleLogout = () => {
             localStorage.removeItem("user");
             localStorage.removeItem("token");
@@ -20,29 +20,19 @@ export default function ProfileSidebar() {
             <section className="profile-sidebar">
                   <Logo />
                   <ul>
-                        <li>
-                              <NavLink to={`/profile/${id}`} end>
-                                    <img src={MedicalDataImg} alt={MedicalDataImg} loading="lazy" />
-                                    <span>
-                                          البيانات الطبية
-                                    </span>
-                              </NavLink>
-                        </li>
-                        <li>
-                              <NavLink to={`userData`} end>
-                                    <img src={ProfileImg} alt={ProfileImg} loading="lazy" />
-                                    <span>
-                                          بيانات الحساب
-                                    </span>
-                              </NavLink>
-                        </li>
-                        <li>
-                              <NavLink to="/" onClick={handleLogout} end>
-                                    <img src={LogOutImg} alt="Log out" loading="lazy" />
-                                    <span>تسجيل الخروج</span>
-                              </NavLink>
-                        </li>
+                        {links.map((link, idx) => (
+                              <li key={idx}>
+                                    <NavLink
+                                          to={link.to.replace(":id", id)} // لو في :id في الرابط
+                                          end={link.end || false}
+                                          onClick={link.onClick || undefined}
+                                    >
+                                          <img src={link.icon} alt={link.alt || ""} loading="lazy" />
+                                          <span>{link.label}</span>
+                                    </NavLink>
+                              </li>
+                        ))}
                   </ul>
             </section>
-      )
+      );
 }

@@ -1,40 +1,51 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import { toast } from "react-toastify";
-
-export default function AddResult({ addResult, setAddResult }) {
+import { AuthContext } from '../../context/Auth.Context';
+export default function AddResult({ addResult, setAddResult }) { 
       const [files, setFiles] = useState([]);
       const [loading, setLoading] = useState(false);
+      
+      const { user } = useContext(AuthContext)
       const handleFileChange = (e) => {
             setFiles(Array.from(e.target.files));
       };
 
-      
-
       const handleSubmit = async (e) => {
-            setLoading(true)
             e.preventDefault();
             if (!files.length) return;
+
+            setLoading(true);
 
             const formData = new FormData();
             files.forEach(file => formData.append("resultFiles", file));
 
             formData.append("type", addResult.type);
             formData.append("index", addResult.index);
+            formData.append("userId", user.id); 
+
             const apiUrl = import.meta.env.VITE_API_URL;
             try {
-                  await fetch(`${apiUrl}/reports/${addResult.reportId}/add-result`, {
+                  const response = await fetch(`${apiUrl}/reports/${addResult.reportId}/add-result`, {
                         method: "POST",
                         body: formData
                   });
-                  setLoading(false)
-                  toast.success("تم تسجيل النتيجة بنجاح 🎉");
-                  
+
+                  const result = await response.json();
+
+                  if (result.message === "success") {
+                        toast.success("تم تسجيل النتيجة بنجاح 🎉");
+                  } else {
+                        toast.error("حدث خطأ أثناء رفع النتيجة 😞");
+                  }
+
             } catch (err) {
-                  console.log(err)
-                  setLoading(false)
+                  console.log(err);
+                  toast.error("حدث خطأ أثناء رفع النتيجة 😞");
+            } finally {
+                  setLoading(false);
+                  setAddResult(false);
             }
-            setAddResult(false);
       };
 
       return (
@@ -123,4 +134,5 @@ export default function AddResult({ addResult, setAddResult }) {
             </>
       );
 }
+
 

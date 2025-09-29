@@ -4,7 +4,7 @@ import ProfileHeader from "../pages/Profile/ProfileHeader";
 
 export default function PatientLayout() {
       return (
-            <section className="patient-layout">
+            <section className="profile-layout">
                   <ProfileSidebar />
                   <section className="content">
                         <ProfileHeader />

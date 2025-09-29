@@ -54,12 +54,12 @@ export default function Reports({ reports }) {
                                                             <Accordion.Body>
                                                                   <section className="content">
                                                                         <h3>التشخيص:</h3>
-                                                                        <p>{report.report_text}</p>
+                                                                        <p>{report.reportText}</p>
                                                                   </section>
 
                                                                   <section className="content">
                                                                         <h3>أمراض مزمنة:</h3>
-                                                                        <p>{report.chronic_disease_name || 'لا يوجد'}</p>
+                                                                        <p>{report.chronicDiseaseName || 'لا يوجد'}</p>
                                                                   </section>
 
                                                                   <section className="content">
@@ -78,19 +78,19 @@ export default function Reports({ reports }) {
                                                                                                 <tr key={index}>
                                                                                                       <td>{item.name || 'لا يوجد'}</td>
                                                                                                       <td>{item.notes !== "" ? item.notes : 'لا يوجد'}</td>
-                                                                                                      <td className='d-flex flex-wrap g-1'>
+                                                                                                      <td className="d-flex flex-wrap gap-1 align-items-center justify-content-center">
                                                                                                             {item.result ? (
                                                                                                                   (() => {
                                                                                                                         const resultArray = Array.isArray(item.result) ? item.result : [item.result];
                                                                                                                         return (
-                                                                                                                              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                                                                                              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
                                                                                                                                     {resultArray.map((fileSrc, index) => {
-                                                                                                                                          const fullPath = `${apiUrl}${fileSrc}`;
-                                                                                                                                          if (fileSrc.toLowerCase().endsWith(".pdf")) {
+                                                                                                                                          const resultUrl = item.result?.url;
+                                                                                                                                          if (resultUrl?.toLowerCase().endsWith(".pdf")) {
                                                                                                                                                 return (
                                                                                                                                                       <a
                                                                                                                                                             key={index}
-                                                                                                                                                            href={fullPath}
+                                                                                                                                                            href={resultUrl}
                                                                                                                                                             target="_blank"
                                                                                                                                                             rel="noopener noreferrer"
                                                                                                                                                             style={{
@@ -110,14 +110,15 @@ export default function Reports({ reports }) {
                                                                                                                                                 return (
                                                                                                                                                       <img
                                                                                                                                                             key={index}
-                                                                                                                                                            src={fullPath}
-                                                                                                                                                            alt={`result-${index}`}
+                                                                                                                                                            src={resultUrl}
+                                                                                                                                                            alt={`result`}
                                                                                                                                                             loading="lazy"
-                                                                                                                                                            onClick={() => openGallery(resultArray, index)}
+                                                                                                                                                            onClick={() => openGallery([resultUrl], index)}
                                                                                                                                                             style={{ width: "50px", height: "50px", cursor: "pointer" }}
                                                                                                                                                       />
                                                                                                                                                 );
                                                                                                                                           }
+
                                                                                                                                     })}
                                                                                                                               </div>
                                                                                                                         );
@@ -144,7 +145,7 @@ export default function Reports({ reports }) {
 
                                                                   <section className="content">
                                                                         <h3>التحاليل:</h3>
-                                                                        {Array.isArray(report.lab_tests) && report.lab_tests.length > 0 ? (
+                                                                        {Array.isArray(report.labTests) && report.labTests.length > 0 ? (
                                                                               <table className='pharmaceutical'>
                                                                                     <thead>
                                                                                           <tr>
@@ -154,23 +155,23 @@ export default function Reports({ reports }) {
                                                                                           </tr>
                                                                                     </thead>
                                                                                     <tbody>
-                                                                                          {report.lab_tests.map((item, index) => (
+                                                                                          {report.labTests.map((item, index) => (
                                                                                                 <tr key={index}>
                                                                                                       <td>{item.name || 'لا يوجد'}</td>
                                                                                                       <td>{item.notes !== "" ? item.notes : 'لا يوجد'}</td>
-                                                                                                      <td className='d-flex flex-wrap g-1'>
+                                                                                                      <td className="d-flex flex-wrap gap-1 align-items-center justify-content-center">
                                                                                                             {item.result ? (
                                                                                                                   (() => {
                                                                                                                         const resultArray = Array.isArray(item.result) ? item.result : [item.result];
                                                                                                                         return (
-                                                                                                                              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                                                                                              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
                                                                                                                                     {resultArray.map((fileSrc, index) => {
-                                                                                                                                          const fullPath = `${apiUrl}${fileSrc}`;
-                                                                                                                                          if (fileSrc.toLowerCase().endsWith(".pdf")) {
+                                                                                                                                          const resultUrl = item.result?.url;
+                                                                                                                                          if (resultUrl?.toLowerCase().endsWith(".pdf")) {
                                                                                                                                                 return (
                                                                                                                                                       <a
                                                                                                                                                             key={index}
-                                                                                                                                                            href={fullPath}
+                                                                                                                                                            href={resultUrl}
                                                                                                                                                             target="_blank"
                                                                                                                                                             rel="noopener noreferrer"
                                                                                                                                                             style={{
@@ -190,14 +191,15 @@ export default function Reports({ reports }) {
                                                                                                                                                 return (
                                                                                                                                                       <img
                                                                                                                                                             key={index}
-                                                                                                                                                            src={fullPath}
-                                                                                                                                                            alt={`result-${index}`}
+                                                                                                                                                            src={resultUrl}
+                                                                                                                                                            alt={`result`}
                                                                                                                                                             loading="lazy"
-                                                                                                                                                            onClick={() => openGallery(resultArray, index)}
+                                                                                                                                                            onClick={() => openGallery([resultUrl], index)}
                                                                                                                                                             style={{ width: "50px", height: "50px", cursor: "pointer" }}
                                                                                                                                                       />
                                                                                                                                                 );
                                                                                                                                           }
+
                                                                                                                                     })}
                                                                                                                               </div>
                                                                                                                         );
