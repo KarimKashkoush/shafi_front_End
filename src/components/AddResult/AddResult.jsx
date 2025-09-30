@@ -26,7 +26,7 @@ export default function AddResult({ addResult, setAddResult }) {
 
             const apiUrl = import.meta.env.VITE_API_URL;
             try {
-                  const response = await fetch(`${apiUrl}/reports/${addResult.reportId}/add-result`, {
+                  const response = await fetch(`${apiUrl}/reports/${addResult.reportId}/addResult`, {
                         method: "POST",
                         body: formData
                   });
