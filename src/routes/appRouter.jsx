@@ -11,14 +11,13 @@ import PatientProfile from "../pages/Profile/PatientProfile/PatientProfile";
 import ProfileUserData from "../pages/Profile/ProfileUserData";
 import ShowUserData from "../layouts/ShowUserData";
 import StafProfile from "../pages/Profile/StafProfile/StafProfile";
-import { AuthContext } from "../context/Auth.Context";
 import StafLayout from "../layouts/StafLayout";
 import StafAddResult from "../components/StafAddResult/StafAddResult";
+import StafAddAppointment from "../components/StafAddAppointment/StafAddAppointment";
 
 function AppRouter() {
       const user = JSON.parse(localStorage.getItem("user")); // يبقى object
 
-      // تعريف routes الخاصة بالبروفايل حسب الدور
       const profileRoutes = user ? [
             {
                   path: "/profile/:id",
@@ -29,6 +28,7 @@ function AppRouter() {
                   ] : [
                         { index: true, element: <StafProfile /> },
                         { path: "userData", element: <ProfileUserData /> },
+                        { path: "add-appointment", element: <StafAddAppointment /> },
                         { path: "add-result", element: <StafAddResult /> }
                   ]
             }

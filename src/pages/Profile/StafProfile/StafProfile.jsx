@@ -6,6 +6,8 @@ export default function StafProfile() {
       return (
             <section className="staff-profile">
                   <Rate />
+
+                  
             </section>
       )
 }

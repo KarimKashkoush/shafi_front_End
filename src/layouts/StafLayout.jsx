@@ -7,8 +7,8 @@ import ProfileImg from "../assets/images/profile.png";
 import LogOutImg from "../assets/images/logout.png";
 
 const linksForPatient = [
-      { to: "/add-result", label: "تسجيل حالة", icon: MedicalDataImg },
-      { to: "/add-result", label: "إضافة نتيجة جديدة", icon: MedicalDataImg },
+      { to: "add-appointment", label: "تسجيل حالة", icon: MedicalDataImg },
+      { to: "add-result", label: "إضافة نتيجة جديدة", icon: MedicalDataImg },
       { to: "/profile/:id", label: "البيانات الطبية", icon: MedicalDataImg },
       { to: "userData", label: "بيانات الحساب", icon: ProfileImg },
       {
