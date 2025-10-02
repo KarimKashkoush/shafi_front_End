@@ -29,7 +29,14 @@ export default function ProfileSidebar({ links }) {
                                     </NavLink>
                               </li>
                         ))}
+                        <li>
+                              <NavLink to="/" onClick={handleLogout}>
+                                    <img src={LogOutImg} alt="Logout" loading="lazy" />
+                                    <span>تسجيل الخروج</span>
+                              </NavLink>
+                        </li>
                   </ul>
             </section>
       );
 }
+
