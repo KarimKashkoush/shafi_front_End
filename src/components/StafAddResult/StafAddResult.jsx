@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Form, Row } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -15,29 +15,6 @@ const schema = z.object({
 export default function StafAddResult() {
       const [files, setFiles] = useState([]);
       const [loading, setLoading] = useState(false);
-
-      const [appointments, setAppointments] = useState([]);
-      const [search, setSearch] = useState("");
-      const apiUrl = import.meta.env.VITE_API_URL;
-
-      // جلب البيانات
-      const fetchAppointments = async () => {
-            try {
-                  const res = await axios.get(`${apiUrl}/appointments`);
-                  setAppointments(res.data.data);
-            } catch (err) {
-                  console.error("Error fetching appointments", err);
-            }
-      };
-
-      useEffect(() => {
-            fetchAppointments();
-      }, []);
-
-      const filteredAppointments = appointments.filter((appt) =>
-            [appt.caseName, appt.phone, appt.nationalId]
-                  .some((field) => field && field.toString().includes(search))
-      );
 
       const {
             register,
@@ -225,64 +202,6 @@ export default function StafAddResult() {
                               {loading ? "جاري الإضافة..." : "إضافة النتيجة"}
                         </button>
                   </form>
-
-                  <h4 className="fw-bold">إضافة نتيجة جديدة</h4>
-                  <div className="container my-4">
-                        {/* البحث */}
-                        <div className="mb-3">
-                              <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="ابحث بالاسم أو الهاتف أو الرقم القومي"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                              />
-                        </div>
-
-                        {/* الجدول */}
-                        <table className="table table-bordered table-striped text-center">
-                              <thead className="table-dark">
-                                    <tr>
-                                          <th>#</th>
-                                          <th>اسم الحالة</th>
-                                          <th>رقم الهاتف</th>
-                                          <th>الرقم القومي</th>
-                                          <th>وقت التسجيل</th>
-                                          <th>النتيجة</th>
-                                    </tr>
-                              </thead>
-                              <tbody>
-                                    {filteredAppointments.length > 0 ? (
-                                          filteredAppointments.map((appt, idx) => (
-                                                <tr key={appt.id}>
-                                                      <td>{idx + 1}</td>
-                                                      <td>{appt.caseName}</td>
-                                                      <td>{appt.phone}</td>
-                                                      <td>{appt.nationalId}</td>
-                                                      <td>{new Date(appt.created_at).toLocaleString()}</td>
-                                                      <td>
-                                                            {appt.result ? (
-                                                                  <span className="text-success fw-bold">
-                                                                        ✅ تم إرفاق النتيجة
-                                                                  </span>
-                                                            ) : (
-                                                                  <span className="text-danger fw-bold">
-                                                                        ❌ لم يتم إرفاق نتيجة
-                                                                  </span>
-                                                            )}
-                                                      </td>
-                                                </tr>
-                                          ))
-                                    ) : (
-                                          <tr>
-                                                <td colSpan="6" className="text-center">
-                                                      لا توجد بيانات
-                                                </td>
-                                          </tr>
-                                    )}
-                              </tbody>
-                        </table>
-                  </div>
             </section>
       );
 }

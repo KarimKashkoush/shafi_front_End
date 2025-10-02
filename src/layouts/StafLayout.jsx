@@ -11,6 +11,7 @@ const linksForPatient = [
       { to: "add-result", label: "إضافة نتيجة جديدة", icon: MedicalDataImg },
       { to: "/profile/:id", label: "البيانات الطبية", icon: MedicalDataImg },
       { to: "userData", label: "بيانات الحساب", icon: ProfileImg },
+      { to: "cases", label: "الحالات", icon: ProfileImg },
       {
             to: "/", label: "تسجيل الخروج", icon: LogOutImg, onClick: () => {
                   localStorage.removeItem("user");

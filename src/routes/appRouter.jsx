@@ -14,6 +14,7 @@ import StafProfile from "../pages/Profile/StafProfile/StafProfile";
 import StafLayout from "../layouts/StafLayout";
 import StafAddResult from "../components/StafAddResult/StafAddResult";
 import StafAddAppointment from "../components/StafAddAppointment/StafAddAppointment";
+import Cases from "../pages/Profile/StafProfile/Cases";
 
 function AppRouter() {
       const user = JSON.parse(localStorage.getItem("user")); // يبقى object
@@ -29,7 +30,8 @@ function AppRouter() {
                         { index: true, element: <StafProfile /> },
                         { path: "userData", element: <ProfileUserData /> },
                         { path: "add-appointment", element: <StafAddAppointment /> },
-                        { path: "add-result", element: <StafAddResult /> }
+                        { path: "add-result", element: <StafAddResult /> },
+                        { path: "cases", element: <Cases /> }
                   ]
             }
       ] : [];
