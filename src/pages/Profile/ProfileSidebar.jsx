@@ -22,11 +22,8 @@ export default function ProfileSidebar({ links }) {
                   <ul>
                         {links.map((link, idx) => (
                               <li key={idx}>
-                                    <NavLink
-                                          to={link.to.replace(":id", id)} // لو في :id في الرابط
-                                          end={link.end || false}
-                                          onClick={link.onClick || undefined}
-                                    >
+                                    <NavLink to={link.to.replace(":id", id)} end>
+
                                           <img src={link.icon} alt={link.alt || ""} loading="lazy" />
                                           <span>{link.label}</span>
                                     </NavLink>
