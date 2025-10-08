@@ -3,17 +3,27 @@ import axios from "axios";
 import "./style.css";
 
 export default function Rate() {
+      const today = new Date().toISOString().split("T")[0]; // ✅ تاريخ اليوم بصيغة yyyy-mm-dd
+
       const [appointments, setAppointments] = useState([]);
       const [loading, setLoading] = useState(true);
-      const [filter, setFilter] = useState("all"); // today | week | month | all
+      const [startDate, setStartDate] = useState(today); // ✅ البداية = تاريخ اليوم تلقائيًا
+      const [endDate, setEndDate] = useState(""); // النهاية فاضية
       const apiUrl = import.meta.env.VITE_API_URL;
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = user?.id;
 
-      // دالة تجيب الداتا
+      // 🔹 جلب البيانات
       const fetchAppointments = async () => {
             try {
                   setLoading(true);
                   const res = await axios.get(`${apiUrl}/appointments`);
-                  setAppointments(res.data.data);
+
+                  const userAppointments = res.data.data.filter(
+                        (appt) => appt.userId === userId
+                  );
+
+                  setAppointments(userAppointments);
             } catch (err) {
                   console.error("❌ Error fetching appointments:", err);
             } finally {
@@ -25,28 +35,17 @@ export default function Rate() {
             fetchAppointments();
       }, []);
 
-      // فلترة المدة
+      // ✅ فلترة حسب الفترة المحددة
       const filterAppointments = (data) => {
-            const now = new Date();
+            const start = startDate ? new Date(startDate) : new Date("2000-01-01");
+            const end = endDate ? new Date(endDate) : new Date();
+
+            // نخلي نهاية اليوم شاملة كل الساعات
+            end.setHours(23, 59, 59, 999);
 
             return data.filter((appt) => {
                   const created = new Date(appt.createdAt);
-                  switch (filter) {
-                        case "today":
-                              return (
-                                    created.toDateString() === now.toDateString()
-                              );
-                        case "week":
-                              const weekAgo = new Date();
-                              weekAgo.setDate(now.getDate() - 7);
-                              return created >= weekAgo;
-                        case "month":
-                              const monthAgo = new Date();
-                              monthAgo.setMonth(now.getMonth() - 1);
-                              return created >= monthAgo;
-                        default:
-                              return true;
-                  }
+                  return created >= start && created <= end;
             });
       };
 
@@ -63,18 +62,27 @@ export default function Rate() {
             <section className="rate container my-4">
                   <h4 className="fw-bold mb-3">📊 ملخص الحالات</h4>
 
-                  {/* الفلتر */}
-                  <div className="mb-4">
-                        <select
-                              className="form-select w-auto"
-                              value={filter}
-                              onChange={(e) => setFilter(e.target.value)}
-                        >
-                              <option value="all">الكل</option>
-                              <option value="today">اليوم</option>
-                              <option value="week">هذا الأسبوع</option>
-                              <option value="month">هذا الشهر</option>
-                        </select>
+                  {/* ✅ اختيار المدة */}
+                  <div className="d-flex align-items-center gap-3 mb-4 flex-wrap">
+                        <div>
+                              <label className="form-label fw-bold me-2">من:</label>
+                              <input
+                                    type="date"
+                                    className="form-control"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                              />
+                        </div>
+
+                        <div>
+                              <label className="form-label fw-bold me-2">إلى:</label>
+                              <input
+                                    type="date"
+                                    className="form-control"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                              />
+                        </div>
                   </div>
 
                   {loading ? (
@@ -90,7 +98,7 @@ export default function Rate() {
 
                               <section className="box col-6 col-md-3 px-2">
                                     <section className="content">
-                                          <p>📄 حالات ليها نتائج</p>
+                                          <p>📄 حالات لديها نتائج</p>
                                           <span>{withResults}</span>
                                     </section>
                               </section>
@@ -106,7 +114,9 @@ export default function Rate() {
                                     <section className="content">
                                           <p>📊 نسبة النتائج</p>
                                           <span>
-                                                {total > 0 ? ((withResults / total) * 100).toFixed(1) + "%" : "0%"}
+                                                {total > 0
+                                                      ? ((withResults / total) * 100).toFixed(1) + "%"
+                                                      : "0%"}
                                           </span>
                                     </section>
                               </section>

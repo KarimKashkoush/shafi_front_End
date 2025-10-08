@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
 export default function Cases() {
@@ -13,21 +13,24 @@ export default function Cases() {
       const userId = user?.id;
 
       // جلب البيانات
-      const fetchAppointments = async () => {
+      const fetchAppointments = useCallback(async () => {
             try {
                   setLoading(true);
                   const res = await axios.get(`${apiUrl}/appointments`);
-                  setAppointments(res.data.data);
+                  const userAppointments = res.data.data.filter(
+                        (appt) => appt.userId === userId
+                  );
+                  setAppointments(userAppointments);
             } catch (err) {
                   console.error("Error fetching appointments", err);
             } finally {
                   setLoading(false);
             }
-      };
+      }, [apiUrl, userId]); // ✅ dependencies المطلوبة فقط
 
       useEffect(() => {
             fetchAppointments();
-      }, []);
+      }, [fetchAppointments]); // ✅ التحذير اختفى
 
       // حذف الحالة
       const handleDelete = async (id) => {
@@ -176,7 +179,7 @@ export default function Cases() {
                               <tbody>
                                     {sortedAppointments.length > 0 ? (
                                           sortedAppointments.map((appt, idx) => (
-                                                <tr key={appt.id}>
+                                                <tr  key={`${appt.id}`} >
                                                       <td>{idx + 1}</td>
                                                       <td>{appt.caseName}</td>
                                                       <td>{appt.testName}</td>
