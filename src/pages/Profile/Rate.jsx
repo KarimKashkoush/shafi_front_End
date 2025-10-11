@@ -15,9 +15,13 @@ export default function Rate() {
 
       // 🔹 جلب البيانات
       const fetchAppointments = async () => {
+            const token = localStorage.getItem("token"); // 🟢 جلب التوكن
+
             try {
                   setLoading(true);
-                  const res = await axios.get(`${apiUrl}/appointments`);
+                  const res = await axios.get(`${apiUrl}/appointments`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                  });
 
                   const userAppointments = res.data.data.filter(
                         (appt) => appt.userId === userId

@@ -3,7 +3,7 @@ import { Form, Row } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import api from "../../lib/api";
 import { toast } from "react-toastify";
 
 const schema = z.object({
@@ -12,6 +12,7 @@ const schema = z.object({
       phone: z.string().min(1, "رقم الهاتف مطلوب"),
       nationalId: z.string().optional()
 });
+
 export default function StafAddResult() {
       const [files, setFiles] = useState([]);
       const [loading, setLoading] = useState(false);
@@ -36,10 +37,10 @@ export default function StafAddResult() {
 
       const onSubmit = async (data) => {
             try {
-                  const apiUrl = import.meta.env.VITE_API_URL;
                   const user = JSON.parse(localStorage.getItem("user"));
+                  const token = localStorage.getItem("token"); 
                   const formData = new FormData();
-                  setLoading(true)
+                  setLoading(true);
 
                   formData.append("caseName", data.caseName);
                   formData.append("phone", data.phone);
@@ -52,21 +53,24 @@ export default function StafAddResult() {
                         formData.append("files", file);
                   });
 
-
-                  const response = await axios.post(`${apiUrl}/staffAddResult`, formData, {
-                        headers: { "Content-Type": "multipart/form-data" },
+                  const response = await api.post(`/staffAddResult`, formData, {
+                        headers: {
+                              "Content-Type": "multipart/form-data",
+                              Authorization: `Bearer ${token}`, // 🟢 إضافة التوكن هنا
+                        },
                   });
 
                   if (response.data.message === "success") {
-                        setLoading(false)
+                        setLoading(false);
                         toast.success("تم رفع النتيجة بنجاح 🎉");
                   }
             } catch (err) {
-                  setLoading(false)
+                  setLoading(false);
                   console.error("❌ خطأ أثناء رفع النتيجة:", err);
                   toast.error("حصل خطأ أثناء رفع النتيجة");
             }
       };
+
 
       return (
             <section className="staf-add-result">
@@ -198,9 +202,21 @@ export default function StafAddResult() {
                               </div>
                         </Row>
 
-                        <button className="btn btn-primary px-4 py-2 w-100" type="submit" disabled={loading}>
-                              {loading ? "جاري الإضافة..." : "إضافة النتيجة"}
+                        <button
+                              className="btn btn-primary px-4 py-2 w-100 d-flex justify-content-center align-items-center gap-2"
+                              type="submit"
+                              disabled={loading}
+                        >
+                              {loading && (
+                                    <span
+                                          className="spinner-border spinner-border-sm"
+                                          role="status"
+                                          aria-hidden="true"
+                                    ></span>
+                              )}
+                              {loading ? "جاري رفع النتيجة..." : "إضافة النتيجة"}
                         </button>
+
                   </form>
             </section>
       );

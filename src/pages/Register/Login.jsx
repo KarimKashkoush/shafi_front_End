@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import LoginAnimation from "../../assets/animation/login.json";
 import { toast } from "react-toastify";
-import axios from "axios";
+import api from "../../lib/api";
 import { AuthContext } from '../../context/Auth.Context';
 
 export default function Login() {
@@ -25,22 +25,21 @@ export default function Login() {
             }
 
             try {
-                  const apiUrl = import.meta.env.VITE_API_URL;
                   setLoading(true);
                   const payload = emailOrPhone.includes("@")
                         ? { email: emailOrPhone, password }
                         : { phoneNumber: emailOrPhone, password };
 
-                  const res = await axios.post(`${apiUrl}/login`, payload, { withCredentials: true });
+                  const res = await api.post(`/login`, payload);
 
-                  toast.success(res.data.message);
-
+                  
                   if (res.data.message === "success") {
                         localStorage.setItem("token", res.data.token);
                         localStorage.setItem("user", JSON.stringify(res.data.user));
                         setUser(res.data.user)
                         setToken(res.data.token)
                         setLoading(false);
+                        toast.success("تم تسجيل الدخول بنجاح");
                         navigate("/", { replace: true });
                   } else {
                         setLoading(false);

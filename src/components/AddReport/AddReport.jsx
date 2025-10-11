@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import "./style.css"
 import { useParams } from 'react-router';
-import axios from "axios";
+import api from "../../lib/api";
 import { AuthContext } from '../../context/Auth.Context';
 import { toast } from "react-toastify";
 const schema = z.object({
@@ -59,9 +59,8 @@ export default function AddReport() {
             };
 
             try {
-                  const apiUrl = import.meta.env.VITE_API_URL;
-                  const response = await axios.post(
-                        `${apiUrl}/addReport`,
+                  const response = await api.post(
+                        `/addReport`,
                         finalData
                   );
 

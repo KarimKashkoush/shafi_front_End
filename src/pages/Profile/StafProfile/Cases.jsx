@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
-
 export default function Cases() {
       const [appointments, setAppointments] = useState([]);
       const [search, setSearch] = useState("");
@@ -14,10 +13,14 @@ export default function Cases() {
 
       // جلب البيانات
       const fetchAppointments = useCallback(async () => {
+            const token = localStorage.getItem("token");
             try {
                   setLoading(true);
-                  const res = await axios.get(`${apiUrl}/appointments`);
-                  const userAppointments = res.data.data.filter(
+                  const res = await axios.get(`${apiUrl}/appointments`, {
+                        headers: {
+                              Authorization: `Bearer ${token}`,
+                        },
+                  }); const userAppointments = res.data.data.filter(
                         (appt) => appt.userId === userId
                   );
                   setAppointments(userAppointments);
@@ -46,7 +49,14 @@ export default function Cases() {
             }).then(async (result) => {
                   if (result.isConfirmed) {
                         try {
-                              await axios.delete(`${apiUrl}/appointments/${id}`);
+                              const token = localStorage.getItem("token"); // 🟢 جلب التوكن
+                              await axios.delete(`${apiUrl}/appointments/${id}`, {
+                                    headers: {
+                                          "Content-Type": "multipart/form-data",
+                                          Authorization: `Bearer ${token}`, // 🟢 إضافة التوكن هنا
+                                    },
+                              });
+
                               setAppointments((prev) => prev.filter((appt) => appt.id !== id));
 
                               Swal.fire({
@@ -73,9 +83,18 @@ export default function Cases() {
             const newId = window.prompt("ادخل الرقم القومي:", currentValue || "");
             if (newId && newId !== currentValue) {
                   try {
-                        const res = await axios.put(`${apiUrl}/appointments/${id}/nationalId`, {
-                              nationalId: newId,
-                        });
+                        const token = localStorage.getItem("token"); // 🟢 جلب التوكن
+
+                        const res = await axios.put(
+                              `${apiUrl}/appointments/${id}/nationalId`,
+                              { nationalId: newId },
+                              {
+                                    headers: {
+                                          Authorization: `Bearer ${token}`, // 🟢 إضافة التوكن هنا
+                                    },
+                              }
+                        );
+
 
                         if (res.data.message === "success") {
                               setAppointments((prev) =>
@@ -103,11 +122,19 @@ export default function Cases() {
             formData.append("userId", userId);
 
             try {
+                  const token = localStorage.getItem("token"); // 🟢 جلب التوكن
+
                   const res = await axios.post(
                         `${apiUrl}/appointments/${id}/addResultAppointment`,
                         formData,
-                        { headers: { "Content-Type": "multipart/form-data" } }
+                        {
+                              headers: {
+                                    "Content-Type": "multipart/form-data",
+                                    Authorization: `Bearer ${token}`, // 🟢 إضافة التوكن هنا
+                              },
+                        }
                   );
+
 
                   Swal.fire("تم", "تم رفع النتيجة بنجاح ✅", "success");
 
@@ -179,7 +206,7 @@ export default function Cases() {
                               <tbody>
                                     {sortedAppointments.length > 0 ? (
                                           sortedAppointments.map((appt, idx) => (
-                                                <tr  key={`${appt.id}`} >
+                                                <tr key={`${appt.id}`} >
                                                       <td>{idx + 1}</td>
                                                       <td>{appt.caseName}</td>
                                                       <td>{appt.testName}</td>
@@ -252,9 +279,11 @@ export default function Cases() {
                                                             <button
                                                                   className="btn btn-sm btn-success"
                                                                   onClick={() => setUploadingId(appt.id)}
+                                                                  disabled={appt.resultFiles && appt.resultFiles.length > 0} // ✅ قفل الزرار لو فيه نتيجة
                                                             >
-                                                                  📤 رفع نتيجة
+                                                                  📤 {appt.resultFiles && appt.resultFiles.length > 0 ? "تم رفع النتيجة" : "رفع نتيجة"}
                                                             </button>
+
 
                                                             {uploadingId === appt.id && (
                                                                   <div
@@ -281,11 +310,20 @@ export default function Cases() {
                                                                                                 إلغاء
                                                                                           </button>
                                                                                           <button
-                                                                                                className="btn btn-success"
+                                                                                                className="btn btn-success d-flex align-items-center justify-content-center gap-2"
                                                                                                 onClick={() => handleUploadResult(appt.id)}
+                                                                                                disabled={loading} // يقفل الزرار أثناء التحميل
                                                                                           >
-                                                                                                ✅ تأكيد الرفع
+                                                                                                {loading && (
+                                                                                                      <span
+                                                                                                            className="spinner-border spinner-border-sm"
+                                                                                                            role="status"
+                                                                                                            aria-hidden="true"
+                                                                                                      ></span>
+                                                                                                )}
+                                                                                                {loading ? "جاري رفع النتيجة..." : "✅ تأكيد الرفع"}
                                                                                           </button>
+
                                                                                     </div>
                                                                               </div>
                                                                         </div>

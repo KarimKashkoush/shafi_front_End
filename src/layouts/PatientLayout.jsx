@@ -1,11 +1,20 @@
-import { Outlet } from "react-router";
+import { Outlet, useParams } from "react-router";
 import ProfileSidebar from "../pages/Profile/ProfileSidebar";
 import ProfileHeader from "../pages/Profile/ProfileHeader";
+import ProfileImg from "../assets/images/profile.png";
+import medicalFiles from "../assets/images/medical_files.png";
+
 
 export default function PatientLayout() {
+      const { id } = useParams();
+      const linksForPatient = [
+            { to: `/profile/${id}`, label: "التقارير الطبيه", icon: medicalFiles },
+            { to: "userData", label: "بيانات الحساب", icon: ProfileImg },
+      ];
+
       return (
             <section className="profile-layout">
-                  <ProfileSidebar />
+                  <ProfileSidebar links={linksForPatient} />
                   <section className="content">
                         <ProfileHeader />
                         <Outlet />

@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Row } from "react-bootstrap";
-import axios from "axios";
+import api from "../../lib/api";
 import { toast } from "react-toastify";
 import { useState } from "react";
 
@@ -31,23 +31,27 @@ export default function StafAddAppointment() {
 
       const onSubmit = async (data) => {
             try {
-                  setLoading(true)
-                  const apiUrl = import.meta.env.VITE_API_URL;
+                  setLoading(true);
                   const user = JSON.parse(localStorage.getItem("user"));
+                  const token = localStorage.getItem("token"); // 🟢 جلب التوكن
 
                   const payload = {
                         ...data,
                         userId: user?.id,
                   };
 
-                  const response = await axios.post(`${apiUrl}/appointments`, payload);
+                  const response = await api.post(`/appointments`, payload, {
+                        headers: {
+                              Authorization: `Bearer ${token}`, // 🟢 إضافة التوكن هنا
+                        },
+                  });
 
                   if (response.data.message === "success") {
-                        setLoading(false)
+                        setLoading(false);
                         toast.success("✅ تم تسجيل الحجز بنجاح");
                   }
             } catch (err) {
-                  setLoading(false)
+                  setLoading(false);
                   console.error("❌ خطأ أثناء تسجيل الحجز:", err);
                   toast.error("حصل خطأ أثناء تسجيل الحجز");
             }
@@ -109,7 +113,7 @@ export default function StafAddAppointment() {
                               />
                         </Row>
 
-                        <button className="btn btn-primary px-4 py-2 w-100" type="submit"  disabled={loading}>
+                        <button className="btn btn-primary px-4 py-2 w-100" type="submit" disabled={loading}>
                               {loading ? "جاري الإرسال..." : "إضافة الحجز"}
                         </button>
                   </form>

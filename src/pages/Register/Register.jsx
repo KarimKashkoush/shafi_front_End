@@ -89,6 +89,23 @@ export default function Register() {
                               </Row>
 
                               <Row className="mb-2">
+                                    <Form.Group as={Col} md="12" controlId="nationalId" className="p-2">
+                                          <Form.Label>الرقم القومي <span>*</span></Form.Label>
+                                          <Form.Control
+                                                {...register('nationalId')}
+                                                required
+                                                type="text"
+                                                placeholder="أدخل الرقم القومي"
+                                                pattern="\d{14}"
+                                          />
+                                          <Form.Control.Feedback type="invalid">
+                                                برجاء إدخال رقم قومي صحيح مكون من 14 رقمًا
+                                          </Form.Control.Feedback>
+                                    </Form.Group>
+                              </Row>
+
+
+                              <Row className="mb-2">
                                     <Form.Group as={Col} md="6" controlId="password" className='p-2'>
                                           <Form.Label>كلمة المرور <span>*</span></Form.Label>
                                           <div className="position-relative">

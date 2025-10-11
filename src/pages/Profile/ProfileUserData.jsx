@@ -1,7 +1,7 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
-import { AuthContext } from "../../context/Auth.Context";
+import { useParams } from "react-router-dom";
+import api from "../../lib/api";
 
 function mapUser(user) {
       return {
@@ -10,6 +10,7 @@ function mapUser(user) {
             fullName: user.fullName,
             phoneNumber: user.phoneNumber,
             email: user.email,
+            nationalId: user.nationalId,
             gender: user.gender,
             blood: user.blood,
             role: user.role,
@@ -21,31 +22,39 @@ function mapUser(user) {
 }
 
 export default function ProfileUserData() {
-      const { user, setUser } = useContext(AuthContext);
-      const [data, setData] = useState(user ? mapUser(user) : null);
+      const { id } = useParams(); // ✅ هنا بناخد الـ id من الـ URL
+      const [data, setData] = useState(null);
       const [editMode, setEditMode] = useState(false);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState("");
 
       const {
             register,
             handleSubmit,
             formState: { errors },
             reset,
-      } = useForm({
-            defaultValues: data,
-      });
+      } = useForm();
 
       useEffect(() => {
-            if (user) {
-                  const mapped = mapUser(user);
-                  setData(mapped);
-                  reset(mapped);
-            }
-      }, [user, reset]);
+            const fetchUser = async () => {
+                  try {
+                        const res = await api.get(`/user/${id}`);
+                        const mapped = mapUser(res.data.user);
+                        setData(mapped);
+                        reset(mapped);
+                  } catch (err) {
+                        console.error("خطأ في جلب بيانات المستخدم:", err);
+                        setError("حدث خطأ أثناء تحميل البيانات");
+                  } finally {
+                        setLoading(false);
+                  }
+            };
+
+            if (id) fetchUser();
+      }, [id, reset]);
 
       const onSubmit = async (formData) => {
             try {
-                  const apiUrl = import.meta.env.VITE_API_URL;
-
                   const payload = {
                         firstName: formData.firstName,
                         fullName: formData.fullName,
@@ -54,17 +63,17 @@ export default function ProfileUserData() {
                         gender: formData.gender,
                         blood: formData.blood,
                         emergencyNumber: formData.emergencyNumber,
+                        nationalId: formData.nationalId,
                         address: formData.address,
                         birthDate: formData.birthDate,
                   };
 
-                  const res = await axios.put(`${apiUrl}/user/${user.id}`, payload);
+                  const res = await api.put(`/user/${id}`, payload);
 
                   if (res.data.message === "success") {
                         const mappedUser = mapUser(res.data.user);
                         setData(mappedUser);
-                        setUser(mappedUser);
-                        localStorage.setItem("user", JSON.stringify(mappedUser));
+                        reset(mappedUser);
                         setEditMode(false);
                         alert("تم تحديث البيانات بنجاح");
                   }
@@ -84,6 +93,9 @@ export default function ProfileUserData() {
             }
             return age;
       }
+
+      if (loading) return <p>جاري تحميل البيانات...</p>;
+      if (error) return <p className="text-danger">{error}</p>;
 
       return (
             <section className="profile-user-data">
@@ -122,6 +134,11 @@ export default function ProfileUserData() {
                                           <div className="col-12">
                                                 <label>البريد الإلكتروني</label>
                                                 <input type="email" className="form-control" {...register("email")} />
+                                          </div>
+
+                                          <div className="col-12">
+                                                <label>الرقم القومي</label>
+                                                <input className="form-control" {...register("nationalId")} />
                                           </div>
 
                                           <div className="col-12">
@@ -164,7 +181,11 @@ export default function ProfileUserData() {
                                                       type="date"
                                                       className="form-control"
                                                       {...register("birthDate")}
-                                                      defaultValue={data?.birthDate ? new Date(data.birthDate).toISOString().split("T")[0] : ""}
+                                                      defaultValue={
+                                                            data?.birthDate
+                                                                  ? new Date(data.birthDate).toISOString().split("T")[0]
+                                                                  : ""
+                                                      }
                                                 />
                                           </div>
 
@@ -201,6 +222,10 @@ export default function ProfileUserData() {
                                                             <td>{data?.email || "غير مسجل"}</td>
                                                       </tr>
                                                       <tr>
+                                                            <th>الرقم القومي</th>
+                                                            <td>{data?.nationalId || "غير مسجل"}</td>
+                                                      </tr>
+                                                      <tr>
                                                             <th>الجنس</th>
                                                             <td>{data?.gender || "غير مسجل"}</td>
                                                       </tr>
@@ -220,13 +245,15 @@ export default function ProfileUserData() {
                                                             <th>تاريخ الميلاد</th>
                                                             <td>
                                                                   {data?.birthDate
-                                                                        ? `${new Date(data.birthDate).toLocaleDateString("ar-EG")} (${calculateAge(data.birthDate)} سنة)`
+                                                                        ? `${new Date(data.birthDate).toLocaleDateString("ar-EG")} (${calculateAge(
+                                                                              data.birthDate
+                                                                        )} سنة)`
                                                                         : "غير مسجل"}
                                                             </td>
                                                       </tr>
-
                                                 </tbody>
                                           </table>
+
                                           <button className="btn bg-black text-white" onClick={() => setEditMode(true)}>
                                                 تعديل البيانات
                                           </button>

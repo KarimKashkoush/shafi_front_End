@@ -5,6 +5,7 @@ import Pharmaceutical from "./Pharmaceutical";
 import Reports from "./Reports";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import api from "../../../lib/api";
 import axios from "axios";
 
 export default function PatientProfile() {
@@ -14,6 +15,7 @@ export default function PatientProfile() {
       const [loading, setLoading] = useState(true);
       const [pinVerified, setPinVerified] = useState(false);
       const [pinDigits, setPinDigits] = useState(["", "", "", ""]);
+      const [results, setResults] = useState([]);
 
       const handleChange = (index, value) => {
             if (/^\d?$/.test(value)) {
@@ -30,25 +32,54 @@ export default function PatientProfile() {
       const enteredPin = pinDigits.join("");
 
       useEffect(() => {
+            const token = localStorage.getItem("token");
             async function fetchPatientData() {
                   try {
-                        const apiUrl = import.meta.env.VITE_API_URL;
-                        const res = await axios.get(`${apiUrl}/user/${id}`);
+
+                        const res = await api.get(`/user/${id}`, {
+                              headers: {
+                                    Authorization: `Bearer ${token}`,
+                              },
+                        });
+
                         const user = res?.data?.user || {};
                         const fetchedReports = res?.data?.reports || [];
 
                         setUserData(user);
                         setReports(fetchedReports);
 
-                        if (!user?.pinCode || user?.pinCode.trim() === "") {
+                        if (!user?.pin || user?.pin.trim() === "") {
                               setPinVerified(true);
                         }
+
+                        // ✅ بعد ما نجيب بيانات المستخدم نجيب النتائج بناءً على الرقم القومي
+                        if (user?.nationalId) {
+                              getResultByNationalId(user.nationalId, token);
+                        }
+
                   } catch (error) {
                         console.error("Error fetching patient data:", error);
                   } finally {
                         setLoading(false);
                   }
             }
+
+            async function getResultByNationalId(nationalId, token) {
+                  try {
+                        const res = await axios.get(
+                              `${import.meta.env.VITE_API_URL}/results/nationalId/${nationalId}`,
+                              {
+                                    headers: {
+                                          Authorization: `Bearer ${token}`,
+                                    },
+                              }
+                        );
+                        setResults(res.data.data || []);
+                  } catch (err) {
+                        console.error("Error fetching results:", err);
+                  }
+            }
+
             fetchPatientData();
       }, [id]);
 
@@ -69,7 +100,7 @@ export default function PatientProfile() {
                               <>
                                     <ChronicDiseases reports={reports} />
                                     <Pharmaceutical reports={reports} />
-                                    <Reports reports={reports} />
+                                    <Reports reports={reports} results={results}/>
                               </>
                         ) : (
                               <div className="verify-pin mt-4">
@@ -113,7 +144,7 @@ export default function PatientProfile() {
                                     <button
                                           className="btn btn-primary mt-3 m-auto d-block"
                                           onClick={() => {
-                                                if (enteredPin === userData?.pinCode) {
+                                                if (enteredPin === userData?.pin) {
                                                       setPinVerified(true);
                                                 } else {
                                                       alert("الرقم السري غير صحيح، حاول مرة أخرى");
@@ -124,6 +155,7 @@ export default function PatientProfile() {
                                     >
                                           عرض بيانات المستخدم
                                     </button>
+
                               </div>
                         )}
                   </section>

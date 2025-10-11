@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Button } from 'react-bootstrap'
 import './style.css'
 import { useForm } from "react-hook-form"
-import axios from 'axios';
+import api from '../../lib/api';
 import { Link } from 'react-router-dom';
 
 export default function SearchUser() {
@@ -26,12 +26,18 @@ export default function SearchUser() {
             setFoundUser(null);
 
             try {
-                  const apiUrl = import.meta.env.VITE_API_URL;
-                  const res = await axios.get(`${apiUrl}/allUsers`);
+                  const token = localStorage.getItem("token"); // 🟢 جلب التوكن
+
+                  const res = await api.get(`/allUsers`, {
+                        headers: {
+                              Authorization: `Bearer ${token}`, // 🟢 إضافة التوكن للطلب
+                        },
+                  });
 
                   const users = res.data.users || [];
-                  const found = users.find(user =>
-                        user.nationalId === searchTerm || user.phoneNumber === searchTerm
+                  const found = users.find(
+                        (user) =>
+                              user.nationalId === searchTerm || user.phoneNumber === searchTerm
                   );
 
                   if (found) {
@@ -51,7 +57,7 @@ export default function SearchUser() {
             setShowBox(false);
             setFoundUser(null);
             setNotFound(false);
-            reset({ searchValue: "" }); 
+            reset({ searchValue: "" });
       }
 
       return (

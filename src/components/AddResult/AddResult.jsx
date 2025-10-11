@@ -2,6 +2,7 @@ import { useContext, useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import { toast } from "react-toastify";
 import { AuthContext } from '../../context/Auth.Context';
+import api from "../../lib/api";
 export default function AddResult({ addResult, setAddResult }) { 
       const [files, setFiles] = useState([]);
       const [loading, setLoading] = useState(false);
@@ -24,16 +25,12 @@ export default function AddResult({ addResult, setAddResult }) {
             formData.append("index", addResult.index);
             formData.append("userId", user.id); 
 
-            const apiUrl = import.meta.env.VITE_API_URL;
             try {
-                  const response = await fetch(`${apiUrl}/reports/${addResult.reportId}/addResult`, {
-                        method: "POST",
-                        body: formData
+                  const response = await api.post(`/reports/${addResult.reportId}/addResult`, formData, {
+                        headers: { "Content-Type": "multipart/form-data" }
                   });
 
-                  const result = await response.json();
-
-                  if (result.message === "success") {
+                  if (response.data.message === "success") {
                         toast.success("تم تسجيل النتيجة بنجاح 🎉");
                   } else {
                         toast.error("حدث خطأ أثناء رفع النتيجة 😞");
