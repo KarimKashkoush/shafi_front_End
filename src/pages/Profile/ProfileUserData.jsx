@@ -6,7 +6,6 @@ import api from "../../lib/api";
 function mapUser(user) {
       return {
             id: user.id,
-            firstName: user.firstName,
             fullName: user.fullName,
             phoneNumber: user.phoneNumber,
             email: user.email,
@@ -56,7 +55,6 @@ export default function ProfileUserData() {
       const onSubmit = async (formData) => {
             try {
                   const payload = {
-                        firstName: formData.firstName,
                         fullName: formData.fullName,
                         phoneNumber: formData.phoneNumber,
                         email: formData.email,
@@ -104,17 +102,6 @@ export default function ProfileUserData() {
                         <div className="user-data">
                               {editMode ? (
                                     <form onSubmit={handleSubmit(onSubmit)} className="row g-3">
-                                          <div className="col-12">
-                                                <label>الاسم الأول</label>
-                                                <input
-                                                      className="form-control"
-                                                      {...register("firstName", { required: "الاسم مطلوب" })}
-                                                />
-                                                {errors.firstName && (
-                                                      <span className="text-danger">{errors.firstName.message}</span>
-                                                )}
-                                          </div>
-
                                           <div className="col-12">
                                                 <label>الاسم بالكامل</label>
                                                 <input
@@ -209,10 +196,6 @@ export default function ProfileUserData() {
                                     <>
                                           <table className="table w-100">
                                                 <tbody>
-                                                      <tr>
-                                                            <th>الاسم</th>
-                                                            <td>{data?.firstName} {data?.fullName}</td>
-                                                      </tr>
                                                       <tr>
                                                             <th>رقم الهاتف</th>
                                                             <td>{data?.phoneNumber || "غير مسجل"}</td>
