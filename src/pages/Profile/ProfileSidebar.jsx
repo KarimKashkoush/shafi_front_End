@@ -1,19 +1,25 @@
 import { NavLink } from "react-router";
 import Logo from "../../components/common/Logo/Logo";
-import MedicalDataImg from "../../assets/images/medical-data.png";
-import ProfileImg from "../../assets/images/profile.png";
 import LogOutImg from "../../assets/images/logout.png";
 import { useContext } from "react";
 import { AuthContext } from "../../context/Auth.Context";
-
+import { useNavigate } from "react-router-dom";
 export default function ProfileSidebar({ links }) {
-      const { user } = useContext(AuthContext);
+      const { user, setUser, setToken } = useContext(AuthContext);
       const id = user ? user.id : null;
-
+      const navigate = useNavigate();
       const handleLogout = () => {
+            // مسح البيانات من localStorage
             localStorage.removeItem("user");
             localStorage.removeItem("token");
             localStorage.removeItem("theme");
+
+            // تحديث الـ context فورًا
+            setUser(null);
+            setToken(null);
+
+            // التحويل لصفحة تسجيل الدخول
+            navigate("/");
       };
 
       return (

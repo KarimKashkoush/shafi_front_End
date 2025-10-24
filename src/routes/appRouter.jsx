@@ -1,5 +1,4 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-
 import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/Home/Home";
 import Services from "../pages/Services/Services";
@@ -15,26 +14,64 @@ import StafLayout from "../layouts/StafLayout";
 import StafAddResult from "../components/StafAddResult/StafAddResult";
 import StafAddAppointment from "../components/StafAddAppointment/StafAddAppointment";
 import Cases from "../pages/Profile/StafProfile/Cases";
+import ManageReceptionists from "../pages/Profile/ManageReceptionists";
+import AdminLayout from "../layouts/AdminLayout";
+import AdminProfile from "../pages/Profile/AdminProfile/AdminProfile";
+import AddUserByAdmin from "../pages/Profile/AdminProfile/AddUserByAdmin";
+import Users from "../pages/Profile/AdminProfile/Users";
+import UserInfo from "../pages/Profile/AdminProfile/UserInfo";
+import FinancialAccounts from "../pages/Profile/AdminProfile/FinancialAccounts";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../context/Auth.Context";
 
 function AppRouter() {
-      const user = JSON.parse(localStorage.getItem("user")); // يبقى object
+      const { user } = useContext(AuthContext);
+      const [loading, setLoading] = useState(true);
 
-      const profileRoutes = user ? [
-            {
-                  path: "/profile/:id",
-                  element: user.role === "patient" ? <PatientLayout /> : <StafLayout />,
-                  children: user.role === "patient" ? [
-                        { index: true, element: <PatientProfile /> },
-                        { path: "userData", element: <ProfileUserData /> }
-                  ] : [
-                        { index: true, element: <StafProfile /> },
-                        { path: "userData", element: <ProfileUserData /> },
-                        { path: "add-appointment", element: <StafAddAppointment /> },
-                        { path: "add-result", element: <StafAddResult /> },
-                        { path: "cases", element: <Cases /> }
-                  ]
-            }
-      ] : [];
+      useEffect(() => {
+            const timer = setTimeout(() => setLoading(false), 300);
+            return () => clearTimeout(timer);
+      }, [user]);
+
+      if (loading) return <div>Loading...</div>;
+
+      const profileRoutes = user
+            ? [
+                  {
+                        path: "/profile/:id",
+                        element:
+                              user.role === "patient" ? (
+                                    <PatientLayout />
+                              ) : user.role === "admin" ? (
+                                    <AdminLayout />
+                              ) : (
+                                    <StafLayout />
+                              ),
+                        children:
+                              user.role === "patient"
+                                    ? [
+                                          { index: true, element: <PatientProfile /> },
+                                          { path: "userData", element: <ProfileUserData /> },
+                                    ]
+                                    : user.role === "admin"
+                                          ? [
+                                                { index: true, element: <AdminProfile /> },
+                                                { path: "add-user", element: <AddUserByAdmin /> },
+                                                { path: "users", element: <Users /> },
+                                                { path: "financial-accounts", element: <FinancialAccounts /> },
+                                                { path: "users/user-info/:id", element: <UserInfo /> },
+                                          ]
+                                          : [
+                                                { index: true, element: <StafProfile /> },
+                                                { path: "userData", element: <ProfileUserData /> },
+                                                { path: "add-appointment", element: <StafAddAppointment /> },
+                                                { path: "add-result", element: <StafAddResult /> },
+                                                { path: "cases", element: <Cases /> },
+                                                { path: "manage-receptionists", element: <ManageReceptionists /> },
+                                          ],
+                  },
+            ]
+            : [];
 
       const router = createBrowserRouter([
             { path: "/login", element: <Login /> },
@@ -46,16 +83,14 @@ function AppRouter() {
                         { index: true, element: <Home /> },
                         { path: "services", element: <Services /> },
                         { path: "about", element: <About /> },
-                  ]
+                  ],
             },
-            ...profileRoutes, // دمج routes الخاصة بالبروفايل
+            ...profileRoutes,
             {
                   path: "/UserData/:id",
                   element: <ShowUserData />,
-                  children: [
-                        { index: true, element: <PatientProfile /> }
-                  ]
-            }
+                  children: [{ index: true, element: <PatientProfile /> }],
+            },
       ]);
 
       return <RouterProvider router={router} />;

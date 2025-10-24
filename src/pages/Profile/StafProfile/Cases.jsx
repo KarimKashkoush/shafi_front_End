@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import "./style.css";
 export default function Cases() {
       const [appointments, setAppointments] = useState([]);
       const [search, setSearch] = useState("");
@@ -190,157 +191,159 @@ export default function Cases() {
                   {loading ? (
                         <div className="text-center my-4 fw-bold">⏳ جاري التحميل...</div>
                   ) : (
-                        <table className="table table-bordered table-striped text-center">
-                              <thead className="table-dark">
-                                    <tr>
-                                          <th>#</th>
-                                          <th>اسم الحالة</th>
-                                          <th>المطلوب</th>
-                                          <th>رقم الهاتف</th>
-                                          <th>الرقم القومي</th>
-                                          <th>وقت التسجيل</th>
-                                          <th>النتيجة</th>
-                                          <th>الإجراءات</th>
-                                    </tr>
-                              </thead>
-                              <tbody>
-                                    {sortedAppointments.length > 0 ? (
-                                          sortedAppointments.map((appt, idx) => (
-                                                <tr key={`${appt.id}`} >
-                                                      <td>{idx + 1}</td>
-                                                      <td>{appt.caseName}</td>
-                                                      <td>{appt.testName}</td>
-                                                      <td>{appt.phone}</td>
-                                                      <td>{appt.nationalId || "❌ غير مسجل"}</td>
+                        <section className="table overflow-x-auto">
+                              <table className="table table-bordered table-striped text-center" style={{ width: "100%", minWidth: "1050px" }}>
+                                    <thead className="table-dark">
+                                          <tr>
+                                                <th>#</th>
+                                                <th>اسم الحالة</th>
+                                                <th>المطلوب</th>
+                                                <th>رقم الهاتف</th>
+                                                <th>الرقم القومي</th>
+                                                <th>وقت التسجيل</th>
+                                                <th>النتيجة</th>
+                                                <th>الإجراءات</th>
+                                          </tr>
+                                    </thead>
+                                    <tbody>
+                                          {sortedAppointments.length > 0 ? (
+                                                sortedAppointments.map((appt, idx) => (
+                                                      <tr key={`${appt.id}`} >
+                                                            <td>{idx + 1}</td>
+                                                            <td>{appt.caseName}</td>
+                                                            <td>{appt.testName}</td>
+                                                            <td>{appt.phone}</td>
+                                                            <td>{appt.nationalId || "❌ غير مسجل"}</td>
 
-                                                      <td>
-                                                            {appt.createdAt
-                                                                  ? (() => {
-                                                                        const dateObj = new Date(new Date(appt.createdAt).getTime() + 3 * 60 * 60 * 1000);
+                                                            <td>
+                                                                  {appt.createdAt
+                                                                        ? (() => {
+                                                                              const dateObj = new Date(new Date(appt.createdAt).getTime() + 3 * 60 * 60 * 1000);
 
-                                                                        // الوقت (مثلاً 11:30)
-                                                                        const time = dateObj.toLocaleTimeString("ar-EN", {
-                                                                              hour: "2-digit",
-                                                                              minute: "2-digit",
-                                                                              hour12: true,
-                                                                        });
+                                                                              // الوقت (مثلاً 11:30)
+                                                                              const time = dateObj.toLocaleTimeString("ar-EN", {
+                                                                                    hour: "2-digit",
+                                                                                    minute: "2-digit",
+                                                                                    hour12: true,
+                                                                              });
 
-                                                                        // التاريخ (مثلاً 2/10/2025)
-                                                                        const date = dateObj.toLocaleDateString("en-GB", {
-                                                                              day: "2-digit",
-                                                                              month: "2-digit",
-                                                                              year: "numeric",
-                                                                        });
+                                                                              // التاريخ (مثلاً 2/10/2025)
+                                                                              const date = dateObj.toLocaleDateString("en-GB", {
+                                                                                    day: "2-digit",
+                                                                                    month: "2-digit",
+                                                                                    year: "numeric",
+                                                                              });
 
-                                                                        return `${time} - ${date}`;
-                                                                  })()
-                                                                  : "—"}
-                                                      </td>
-
-
-
-                                                      <td>
-                                                            {appt.resultFiles && appt.resultFiles.length > 0 ? (
-                                                                  <div className="d-flex flex-column gap-1">
-                                                                        {appt.resultFiles.map((file, i) => (
-                                                                              <a
-                                                                                    key={i}
-                                                                                    href={file}
-                                                                                    target="_blank"
-                                                                                    rel="noopener noreferrer"
-                                                                                    className="text-success fw-bold"
-                                                                              >
-                                                                                    📄 نتيجة {i + 1}
-                                                                              </a>
-                                                                        ))}
-                                                                  </div>
-                                                            ) : (
-                                                                  <span className="text-danger fw-bold">
-                                                                        ❌ لم يتم إرفاق نتيجة
-                                                                  </span>
-                                                            )}
-                                                      </td>
-
-                                                      <td className="d-flex justify-content-center align-items-center flex-wrap gap-2">
-                                                            <button
-                                                                  className="btn btn-sm btn-warning"
-                                                                  onClick={() =>
-                                                                        handleEditNationalId(appt.id, appt.nationalId)
-                                                                  }
-                                                            >
-                                                                  ✏ تعديل
-                                                            </button>
-                                                            <button
-                                                                  className="btn btn-sm btn-danger"
-                                                                  onClick={() => handleDelete(appt.id)}
-                                                            >
-                                                                  🗑 حذف
-                                                            </button>
-                                                            <button
-                                                                  className="btn btn-sm btn-success"
-                                                                  onClick={() => setUploadingId(appt.id)}
-                                                                  disabled={appt.resultFiles && appt.resultFiles.length > 0} // ✅ قفل الزرار لو فيه نتيجة
-                                                            >
-                                                                  📤 {appt.resultFiles && appt.resultFiles.length > 0 ? "تم رفع النتيجة" : "رفع نتيجة"}
-                                                            </button>
+                                                                              return `${time} - ${date}`;
+                                                                        })()
+                                                                        : "—"}
+                                                            </td>
 
 
-                                                            {uploadingId === appt.id && (
-                                                                  <div
-                                                                        className="modal fade show d-block"
-                                                                        tabIndex="-1"
-                                                                        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+
+                                                            <td>
+                                                                  {appt.resultFiles && appt.resultFiles.length > 0 ? (
+                                                                        <div className="d-flex flex-column gap-1">
+                                                                              {appt.resultFiles.map((file, i) => (
+                                                                                    <a
+                                                                                          key={i}
+                                                                                          href={file}
+                                                                                          target="_blank"
+                                                                                          rel="noopener noreferrer"
+                                                                                          className="text-success fw-bold"
+                                                                                    >
+                                                                                          📄 نتيجة {i + 1}
+                                                                                    </a>
+                                                                              ))}
+                                                                        </div>
+                                                                  ) : (
+                                                                        <span className="text-danger fw-bold">
+                                                                              ❌ لم يتم إرفاق نتيجة
+                                                                        </span>
+                                                                  )}
+                                                            </td>
+
+                                                            <td className="d-flex justify-content-center align-items-center flex-wrap gap-2">
+                                                                  <button
+                                                                        className="btn btn-sm btn-warning"
+                                                                        onClick={() =>
+                                                                              handleEditNationalId(appt.id, appt.nationalId)
+                                                                        }
                                                                   >
-                                                                        <div className="modal-dialog modal-dialog-centered">
-                                                                              <div className="modal-content p-3">
-                                                                                    <h5 className="mb-3">رفع نتيجة الحالة</h5>
-                                                                                    <input
-                                                                                          type="file"
-                                                                                          multiple
-                                                                                          className="form-control"
-                                                                                          onChange={(e) =>
-                                                                                                setFiles(Array.from(e.target.files))
-                                                                                          }
-                                                                                    />
-                                                                                    <div className="mt-3 d-flex justify-content-end gap-2">
-                                                                                          <button
-                                                                                                className="btn btn-secondary"
-                                                                                                onClick={() => setUploadingId(null)}
-                                                                                          >
-                                                                                                إلغاء
-                                                                                          </button>
-                                                                                          <button
-                                                                                                className="btn btn-success d-flex align-items-center justify-content-center gap-2"
-                                                                                                onClick={() => handleUploadResult(appt.id)}
-                                                                                                disabled={loading} // يقفل الزرار أثناء التحميل
-                                                                                          >
-                                                                                                {loading && (
-                                                                                                      <span
-                                                                                                            className="spinner-border spinner-border-sm"
-                                                                                                            role="status"
-                                                                                                            aria-hidden="true"
-                                                                                                      ></span>
-                                                                                                )}
-                                                                                                {loading ? "جاري رفع النتيجة..." : "✅ تأكيد الرفع"}
-                                                                                          </button>
+                                                                        ✏ تعديل
+                                                                  </button>
+                                                                  <button
+                                                                        className="btn btn-sm btn-danger"
+                                                                        onClick={() => handleDelete(appt.id)}
+                                                                  >
+                                                                        🗑 حذف
+                                                                  </button>
+                                                                  <button
+                                                                        className="btn btn-sm btn-success"
+                                                                        onClick={() => setUploadingId(appt.id)}
+                                                                        disabled={appt.resultFiles && appt.resultFiles.length > 0} // ✅ قفل الزرار لو فيه نتيجة
+                                                                  >
+                                                                        📤 {appt.resultFiles && appt.resultFiles.length > 0 ? "تم رفع النتيجة" : "رفع نتيجة"}
+                                                                  </button>
 
+
+                                                                  {uploadingId === appt.id && (
+                                                                        <div
+                                                                              className="modal fade show d-block"
+                                                                              tabIndex="-1"
+                                                                              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+                                                                        >
+                                                                              <div className="modal-dialog modal-dialog-centered">
+                                                                                    <div className="modal-content p-3">
+                                                                                          <h5 className="mb-3">رفع نتيجة الحالة</h5>
+                                                                                          <input
+                                                                                                type="file"
+                                                                                                multiple
+                                                                                                className="form-control"
+                                                                                                onChange={(e) =>
+                                                                                                      setFiles(Array.from(e.target.files))
+                                                                                                }
+                                                                                          />
+                                                                                          <div className="mt-3 d-flex justify-content-end gap-2">
+                                                                                                <button
+                                                                                                      className="btn btn-secondary"
+                                                                                                      onClick={() => setUploadingId(null)}
+                                                                                                >
+                                                                                                      إلغاء
+                                                                                                </button>
+                                                                                                <button
+                                                                                                      className="btn btn-success d-flex align-items-center justify-content-center gap-2"
+                                                                                                      onClick={() => handleUploadResult(appt.id)}
+                                                                                                      disabled={loading} // يقفل الزرار أثناء التحميل
+                                                                                                >
+                                                                                                      {loading && (
+                                                                                                            <span
+                                                                                                                  className="spinner-border spinner-border-sm"
+                                                                                                                  role="status"
+                                                                                                                  aria-hidden="true"
+                                                                                                            ></span>
+                                                                                                      )}
+                                                                                                      {loading ? "جاري رفع النتيجة..." : "✅ تأكيد الرفع"}
+                                                                                                </button>
+
+                                                                                          </div>
                                                                                     </div>
                                                                               </div>
                                                                         </div>
-                                                                  </div>
-                                                            )}
+                                                                  )}
+                                                            </td>
+                                                      </tr>
+                                                ))
+                                          ) : (
+                                                <tr>
+                                                      <td colSpan="7" className="text-center">
+                                                            لا توجد بيانات
                                                       </td>
                                                 </tr>
-                                          ))
-                                    ) : (
-                                          <tr>
-                                                <td colSpan="7" className="text-center">
-                                                      لا توجد بيانات
-                                                </td>
-                                          </tr>
-                                    )}
-                              </tbody>
-                        </table>
+                                          )}
+                                    </tbody>
+                              </table>
+                        </section>
                   )}
             </section>
       );

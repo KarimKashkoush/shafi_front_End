@@ -18,11 +18,11 @@ function calculateAge(birthDateString) {
 }
 
 export default function Emergency({ userData, reportsCount }) {
-      const age = userData ? calculateAge(userData.birthDate) : null;
+      const age = userData?.birthDate ? calculateAge(userData.birthDate) : null;
       age !== null && (age < 0 || isNaN(age)) ? "غير معروف" : age;
       const blood = userData ? userData.blood : "غير معروف";
       const emergencyNumber = userData ? userData.emergencyNumber : "غير معروف";
-
+      const displayAge = age === null || age < 0 || isNaN(age) ? "غير معروف" : age;
       return (
             <section className="emergency col-12">
                   <section className="boxs row g-3">
@@ -30,7 +30,7 @@ export default function Emergency({ userData, reportsCount }) {
                               <section className="box box-bg">
                                     <img src={growth} alt="growth" />
                                     <p>العمر</p>
-                                    <span dir='ltr'>{isNaN(age) || !age ? "غير معروف" : age}</span>
+                                    <span dir='ltr'>{displayAge}</span>
                               </section>
                         </section>
 

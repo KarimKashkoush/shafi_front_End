@@ -1,4 +1,3 @@
-import { ClockFading } from "lucide-react"
 
 export default function ChronicDiseases({ reports }) {
       const chronicDiseases = Object.values(reports)

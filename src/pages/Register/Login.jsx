@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { Container, Col, Row, Form, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import LoginAnimation from "../../assets/animation/login.json";
 import { toast } from "react-toastify";
@@ -32,7 +32,7 @@ export default function Login() {
 
                   const res = await api.post(`/login`, payload);
 
-                  
+
                   if (res.data.message === "success") {
                         localStorage.setItem("token", res.data.token);
                         localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -93,6 +93,10 @@ export default function Login() {
                               <Button type="submit" className="mt-3" disabled={loading}>
                                     {loading ? "جارٍ تسجيل الدخول..." : "تسجيل الدخول"}
                               </Button>
+
+                              <Row className="mt-2">
+                                    <Link to='/register'>انشاء حساب</Link>
+                              </Row>
                         </Form>
 
                         <div className="col-md-6 d-none d-lg-flex justify-content-center">

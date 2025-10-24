@@ -51,6 +51,12 @@ body {
       }
 }
 
+.form-label {
+      span {
+            color: red;
+      }
+}
+
 .row {
       --bs-gutter-x: 0rem;
 }
