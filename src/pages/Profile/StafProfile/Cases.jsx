@@ -204,7 +204,7 @@ ${appt.resultFiles && appt.resultFiles.length > 0
 
             // ✅ تجهيز رقم الدكتور (بدون + أو 0)
             const phone = `${appt.doctorPhone}`;
-            const whatsappURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            const whatsappURL = `https://wa.me/2${phone}?text=${encodeURIComponent(message)}`;
 
             // ✅ فتح واتساب في تبويب جديد
             window.open(whatsappURL, "_blank");
