@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../../lib/api";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { Col, Row, Form, Button } from "react-bootstrap";
 
 export default function ManageReceptionists() {
       const [receptionists, setReceptionists] = useState([]);
@@ -108,85 +109,101 @@ export default function ManageReceptionists() {
                   <h2 className="mb-3">إدارة موظفي الاستقبال</h2>
 
                   <form onSubmit={handleSubmit} className="mb-4 flex flex-col gap-2">
-                        <input
-                              type="text"
-                              placeholder="الاسم"
-                              value={formData.fullName}
-                              onChange={(e) =>
-                                    setFormData({ ...formData, fullName: e.target.value })
-                              }
-                              required
-                        />
-                        <input
-                              type="email"
-                              placeholder="الإيميل"
-                              value={formData.email}
-                              onChange={(e) =>
-                                    setFormData({ ...formData, email: e.target.value })
-                              }
-                              required
-                        />
-                        <input
-                              type="tel"
-                              placeholder="رقم الهاتف"
-                              value={formData.phoneNumber}
-                              onChange={(e) =>
-                                    setFormData({ ...formData, phoneNumber: e.target.value })
-                              }
-                              required
-                        />
-                        <input
-                              type="password"
-                              placeholder="كلمة المرور"
-                              value={formData.password}
-                              onChange={(e) =>
-                                    setFormData({ ...formData, password: e.target.value })
-                              }
-                              required
-                        />
-                        <button type="submit">➕ إضافة موظف استقبال</button>
+
+                        <Row className="m-3 py-2">
+                              <Form.Group as={Col} md='12' controlId="fullName">
+                                    <Form.Label>الاسم<span>*</span></Form.Label>
+                                    <Form.Control required type="text" placeholder="أدخل الاسم" value={formData.fullName}
+                                          onChange={(e) =>
+                                                setFormData({ ...formData, fullName: e.target.value })
+                                          } />
+                                    <Form.Control.Feedback type="invalid">الاسم مطلوب</Form.Control.Feedback>
+                              </Form.Group>
+                        </Row>
+
+                        <Row className="m-3 py-2">
+                              <Form.Group as={Col} md='12' controlId="email">
+                                    <Form.Label>الإيميل<span>*</span></Form.Label>
+                                    <Form.Control required type="email" placeholder="أدخل الإيميل" value={formData.email}
+                                          onChange={(e) =>
+                                                setFormData({ ...formData, email: e.target.value })
+                                          } />
+                                    <Form.Control.Feedback type="invalid">الإيميل مطلوب</Form.Control.Feedback>
+                              </Form.Group>
+                        </Row>
+
+                        <Row className="m-3 py-2">
+                              <Form.Group as={Col} md='12' controlId="phoneNumber">
+                                    <Form.Label>رقم الهاتف<span>*</span></Form.Label>
+                                    <Form.Control required type="text" placeholder="رقم الهاتف" value={formData.phoneNumber}
+                                          onChange={(e) =>
+                                                setFormData({ ...formData, phoneNumber: e.target.value })
+                                          } />
+                                    <Form.Control.Feedback type="invalid">الإيميل مطلوب</Form.Control.Feedback>
+                              </Form.Group>
+                        </Row>
+
+                        <Row className="m-3 py-2">
+                              <Form.Group as={Col} md='12' controlId="password">
+                                    <Form.Label>كلمة المرور<span>*</span></Form.Label>
+                                    <Form.Control required type="password" placeholder="كلمة المرور" value={formData.password}
+                                          onChange={(e) =>
+                                                setFormData({ ...formData, password: e.target.value })
+                                          } />
+                                    <Form.Control.Feedback type="invalid">الإيميل مطلوب</Form.Control.Feedback>
+                              </Form.Group>
+                        </Row>
+
+                        <Row className="m-3 py-2">
+                              <Button type="submit" className="mt-3">
+                                    إضافة موظف استقبال
+                              </Button>
+                        </Row>
                   </form>
 
-                  <table border="1" width="100%" cellPadding="5">
-                        <thead>
-                              <tr>
-                                    <th>الاسم</th>
-                                    <th>الإيميل</th>
-                                    <th>رقم الهاتف</th>
-                                    <th>الحالة</th>
-                                    <th>تحكم</th>
-                              </tr>
-                        </thead>
-                        <tbody>
-                              {receptionists.length > 0 ? (
-                                    receptionists.map((r) => (
-                                          <tr key={r.id}>
-                                                <td>{r.fullName}</td>
-                                                <td>{r.email}</td>
-                                                <td>{r.phoneNumber}</td>
-                                                <td>{r.status === "active" ? "نشط" : "مجمد"}</td>
-                                                <td>
-                                                      <button onClick={() => handleToggleStatus(r.id, r.status)}>
-                                                            {r.status === "active" ? "🚫 تجميد" : "✅ تفعيل"}
-                                                      </button>
-                                                      <button
-                                                            onClick={() => handleDelete(r.id)}
-                                                            style={{ marginLeft: "10px" }}
-                                                      >
-                                                            🗑️ حذف
-                                                      </button>
+                  <section className="table overflow-x-auto">
+                        <table className="table table-bordered table-striped text-center" style={{ width: "100%", minWidth: "1199px" }}>
+                              <thead className="table-dark">
+                                    <tr>
+                                          <th>الاسم</th>
+                                          <th>الإيميل</th>
+                                          <th>رقم الهاتف</th>
+                                          <th>الحالة</th>
+                                          <th>تحكم</th>
+                                    </tr>
+                              </thead>
+                              <tbody>
+                                    {receptionists.length > 0 ? (
+                                          receptionists.map((r) => (
+                                                <tr key={r.id}>
+                                                      <td>{r.fullName}</td>
+                                                      <td>{r.email}</td>
+                                                      <td>{r.phoneNumber}</td>
+                                                      <td>{r.status === "active" ? "نشط" : "مجمد"}</td>
+                                                      <td className="">
+                                                            <Button onClick={() => handleToggleStatus(r.id, r.status)}>
+                                                                  {r.status === "active" ? "🚫 تجميد" : "✅ تفعيل"}
+                                                            </Button>
+                                                            <Button
+                                                                  onClick={() => handleDelete(r.id)}
+                                                                  style={{ marginLeft: "10px" }}
+                                                                  className="bg-danger text-white mx-1"
+                                                            >
+                                                                  🗑️ حذف
+                                                            </Button>
+                                                      </td>
+                                                </tr>
+                                          ))
+                                    ) : (
+                                          <tr>
+                                                <td colSpan="5" className="text-center">
+                                                      لا يوجد موظفون حاليًا
                                                 </td>
                                           </tr>
-                                    ))
-                              ) : (
-                                    <tr>
-                                          <td colSpan="5" className="text-center">
-                                                لا يوجد موظفون حاليًا
-                                          </td>
-                                    </tr>
-                              )}
-                        </tbody>
-                  </table>
+                                    )}
+                              </tbody>
+                        </table>
+                  </section>
             </div>
       );
 }

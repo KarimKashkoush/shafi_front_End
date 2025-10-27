@@ -37,8 +37,8 @@ export default function AddUserByAdmin() {
       }
 
       const specialties = [
-            { value: "internal_medicine", label: "الباطنة (Internal Medicine)" },
-            { value: "general_surgery", label: "الجراحة العامة (General Surgery)" },
+            { value: "internal medicine", label: "الباطنة (Internal Medicine)" },
+            { value: "general surgery", label: "الجراحة العامة (General Surgery)" },
             { value: "pediatrics", label: "الأطفال (Pediatrics)" },
             { value: "obgyn", label: "النساء والتوليد (Obstetrics & Gynecology)" },
             { value: "ent", label: "الأنف والأذن والحنجرة (ENT)" },
@@ -52,7 +52,7 @@ export default function AddUserByAdmin() {
             { value: "neurology", label: "المخ والأعصاب (Neurology)" },
             { value: "psychiatry", label: "النفسية والعصبية (Psychiatry)" },
             { value: "nutrition", label: "التغذية والسمنة (Nutrition & Obesity)" },
-            { value: "general_practice", label: "الطب العام (General Practice)" },
+            { value: "general practice", label: "الطب العام (General Practice)" },
       ];
 
 

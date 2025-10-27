@@ -11,6 +11,8 @@ export default function Cases() {
       const apiUrl = import.meta.env.VITE_API_URL;
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
+      const [uploading, setUploading] = useState(false);
+
 
       // جلب البيانات
       const fetchAppointments = useCallback(async () => {
@@ -116,14 +118,16 @@ export default function Cases() {
 
       // رفع نتيجة
       const handleUploadResult = async (id) => {
-            if (files.length === 0) return Swal.fire("تنبيه", "اختر ملفات أولاً", "warning");
+            if (files.length === 0)
+                  return Swal.fire("تنبيه", "اختر ملفات أولاً", "warning");
 
             const formData = new FormData();
             for (let f of files) formData.append("files", f);
             formData.append("userId", userId);
 
             try {
-                  const token = localStorage.getItem("token"); // 🟢 جلب التوكن
+                  const token = localStorage.getItem("token");
+                  setUploading(true); // ✅ بدأ التحميل
 
                   const res = await axios.post(
                         `${apiUrl}/appointments/${id}/addResultAppointment`,
@@ -131,17 +135,18 @@ export default function Cases() {
                         {
                               headers: {
                                     "Content-Type": "multipart/form-data",
-                                    Authorization: `Bearer ${token}`, // 🟢 إضافة التوكن هنا
+                                    Authorization: `Bearer ${token}`,
                               },
                         }
                   );
-
 
                   Swal.fire("تم", "تم رفع النتيجة بنجاح ✅", "success");
 
                   setAppointments((prev) =>
                         prev.map((appt) =>
-                              appt.id === id ? { ...appt, resultFiles: res.data.data.files } : appt
+                              appt.id === id
+                                    ? { ...appt, resultFiles: res.data.data.files }
+                                    : appt
                         )
                   );
 
@@ -150,8 +155,11 @@ export default function Cases() {
             } catch (err) {
                   console.error("❌ خطأ أثناء رفع النتيجة:", err);
                   Swal.fire("خطأ", "حدث خطأ أثناء رفع النتيجة", "error");
+            } finally {
+                  setUploading(false); // ✅ انتهى التحميل
             }
       };
+
 
       // البحث
       const filteredAppointments = appointments.filter((appt) =>
@@ -170,6 +178,38 @@ export default function Cases() {
 
             return new Date(a.createdAt) - new Date(b.createdAt);
       });
+
+      // ✅ إرسال النتيجة على واتساب
+      const handleSendWhatsApp = (appt) => {
+            if (!appt.doctorPhone) {
+                  return Swal.fire("تنبيه", "لا يوجد رقم هاتف للدكتور!", "warning");
+            }
+
+            // ✅ تجهيز نص الرسالة
+            const message = `
+📋 *تفاصيل الحالة:*
+👤 الاسم: ${appt.caseName}
+📞 الهاتف: 2${appt.phone.replace(/^0+/, "")}
+🧾 المطلوب: ${appt.testName}
+🆔 الرقم القومي: ${appt.nationalId || "غير مسجل"}
+🕒 وقت التسجيل: ${new Date(appt.createdAt).toLocaleString("ar-EG")}
+
+📄 *النتيجة:*
+${appt.resultFiles && appt.resultFiles.length > 0
+                        ? appt.resultFiles.map((f, i) => `نتيجة ${i + 1}: ${f}`).join("\n")
+                        : "❌ لم يتم إرفاق نتيجة بعد"}
+`.trim();
+
+
+
+            // ✅ تجهيز رقم الدكتور (بدون + أو 0)
+            const phone = `2${appt.doctorPhone.replace(/^0+/, "")}`;
+            const whatsappURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+            // ✅ فتح واتساب في تبويب جديد
+            window.open(whatsappURL, "_blank");
+      };
+
 
       return (
             <section className="cases">
@@ -202,6 +242,8 @@ export default function Cases() {
                                                 <th>الرقم القومي</th>
                                                 <th>وقت التسجيل</th>
                                                 <th>النتيجة</th>
+                                                <th>اسم الدكتور</th>
+                                                <th>ارسال النتيجه</th>
                                                 <th>الإجراءات</th>
                                           </tr>
                                     </thead>
@@ -263,6 +305,18 @@ export default function Cases() {
                                                                   )}
                                                             </td>
 
+                                                            <td>{appt.doctorName || "—"}</td>
+
+
+                                                            <td>
+                                                                  <button
+                                                                        className="btn btn-sm btn-success"
+                                                                        onClick={() => handleSendWhatsApp(appt)}
+                                                                  >
+                                                                        📩 ارسال واتساب
+                                                                  </button>
+                                                            </td>
+
                                                             <td className="d-flex justify-content-center align-items-center flex-wrap gap-2">
                                                                   <button
                                                                         className="btn btn-sm btn-warning"
@@ -314,17 +368,18 @@ export default function Cases() {
                                                                                                 <button
                                                                                                       className="btn btn-success d-flex align-items-center justify-content-center gap-2"
                                                                                                       onClick={() => handleUploadResult(appt.id)}
-                                                                                                      disabled={loading} // يقفل الزرار أثناء التحميل
+                                                                                                      disabled={uploading} // ✅ يقفل الزرار أثناء الرفع فقط
                                                                                                 >
-                                                                                                      {loading && (
+                                                                                                      {uploading && (
                                                                                                             <span
                                                                                                                   className="spinner-border spinner-border-sm"
                                                                                                                   role="status"
                                                                                                                   aria-hidden="true"
                                                                                                             ></span>
                                                                                                       )}
-                                                                                                      {loading ? "جاري رفع النتيجة..." : "✅ تأكيد الرفع"}
+                                                                                                      {uploading ? "جاري رفع النتيجة..." : "✅ تأكيد الرفع"}
                                                                                                 </button>
+
 
                                                                                           </div>
                                                                                     </div>
