@@ -189,7 +189,7 @@ export default function Cases() {
             const message = `
 📋 *تفاصيل الحالة:*
 👤 الاسم: ${appt.caseName}
-📞 الهاتف: 2${appt.phone.replace(/^0+/, "")}
+📞 الهاتف:${appt.phone}
 🧾 المطلوب: ${appt.testName}
 🆔 الرقم القومي: ${appt.nationalId || "غير مسجل"}
 🕒 وقت التسجيل: ${new Date(appt.createdAt).toLocaleString("ar-EG")}
@@ -203,7 +203,7 @@ ${appt.resultFiles && appt.resultFiles.length > 0
 
 
             // ✅ تجهيز رقم الدكتور (بدون + أو 0)
-            const phone = `2${appt.doctorPhone.replace(/^0+/, "")}`;
+            const phone = `${appt.doctorPhone}`;
             const whatsappURL = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
             // ✅ فتح واتساب في تبويب جديد
