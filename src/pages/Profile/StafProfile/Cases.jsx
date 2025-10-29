@@ -10,12 +10,10 @@ import { Zoom } from "yet-another-react-lightbox/plugins";
 import "./style.css";
 import whatssapIcon from "../../../assets/images/whatsapp.png";
 import pdfImage from '../../../assets/images/file.png';
-import { useNavigate } from "react-router";
 
 export default function Cases() {
       const [fromDate, setFromDate] = useState("");
       const [toDate, setToDate] = useState("");
-      const navigate = useNavigate();
       const [appointments, setAppointments] = useState([]);
       const [search, setSearch] = useState("");
       const [loading, setLoading] = useState(true);
@@ -37,12 +35,6 @@ export default function Cases() {
             setPhotoIndex(index);
             setIsOpen(true);
       };
-
-
-      const handleViewAppointment = (id) => {
-            navigate(`/appointment/${id}`);
-      };
-
 
       // جلب البيانات
       const fetchAppointments = useCallback(async () => {
@@ -434,7 +426,7 @@ ${appointmentLink}
                                                                   {appt.doctorName}
                                                             </td>
 
-                                                            <td className="d-flex justify-content-center align-items-center flex-wrap gap-2">
+                                                            <td className="d-flex flex-wrap gap-2 justify-content-center justify-content-center h-100 align-items-center">
                                                                   <button
                                                                         className="btn btn-sm btn-warning"
                                                                         onClick={() =>
@@ -455,13 +447,6 @@ ${appointmentLink}
                                                                         disabled={appt.resultFiles && appt.resultFiles.length > 0} // ✅ قفل الزرار لو فيه نتيجة
                                                                   >
                                                                         📤 {appt.resultFiles && appt.resultFiles.length > 0 ? "تم رفع النتيجة" : "رفع نتيجة"}
-                                                                  </button>
-
-                                                                  <button
-                                                                        className="btn btn-sm btn-info"
-                                                                        onClick={() => handleViewAppointment(appt.id)}
-                                                                  >
-                                                                        👁 عرض
                                                                   </button>
 
 

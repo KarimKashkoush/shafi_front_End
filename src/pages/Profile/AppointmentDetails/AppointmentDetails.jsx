@@ -44,7 +44,7 @@ export default function AppointmentDetails() {
 
       return (
             <div className="container mt-4">
-                  <h3 className="mb-3 text-center">تفاصيل الحجز</h3>
+                  <h3 className="mb-3 text-center">تفاصيل النتيجة</h3>
                   {/* الجدول */}
 
 
