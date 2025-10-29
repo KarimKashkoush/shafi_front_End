@@ -13,6 +13,8 @@ import pdfImage from '../../../assets/images/file.png';
 import { useNavigate } from "react-router";
 
 export default function Cases() {
+      const [fromDate, setFromDate] = useState("");
+      const [toDate, setToDate] = useState("");
       const navigate = useNavigate();
       const [appointments, setAppointments] = useState([]);
       const [search, setSearch] = useState("");
@@ -190,11 +192,21 @@ export default function Cases() {
 
 
       // البحث
-      const filteredAppointments = appointments.filter((appt) =>
-            [appt.caseName, appt.phone, appt.nationalId].some(
+      const filteredAppointments = appointments.filter((appt) => {
+            const matchesSearch = [appt.caseName, appt.phone, appt.nationalId].some(
                   (field) => field && field.toString().includes(search)
-            )
-      );
+            );
+
+            const apptDate = new Date(appt.createdAt);
+
+            const afterFrom =
+                  !fromDate || apptDate >= new Date(fromDate + "T00:00:00");
+            const beforeTo =
+                  !toDate || apptDate <= new Date(toDate + "T23:59:59");
+
+            return matchesSearch && afterFrom && beforeTo;
+      });
+
 
       // ✅ ترتيب البيانات: اللي مافيهمش نتايج فوق + اللي فيهم نتايج تحت (الأحدث في الآخر)
       const sortedAppointments = [...filteredAppointments].sort((a, b) => {
@@ -237,9 +249,45 @@ ${appointmentLink}
 
 
 
+
       return (
             <section className="cases">
                   <h4 className="fw-bold">إدارة الحالات</h4>
+                  <div className="container my-4">
+                        <div className="row gap-2 align-items-end justify-content-center">
+
+                              <div className="col-md-3">
+                                    <label className="form-label fw-bold">من تاريخ:</label>
+                                    <input
+                                          type="date"
+                                          className="form-control"
+                                          value={fromDate}
+                                          onChange={(e) => setFromDate(e.target.value)}
+                                    />
+                              </div>
+
+                              <div className="col-md-3">
+                                    <label className="form-label fw-bold">إلى تاريخ:</label>
+                                    <input
+                                          type="date"
+                                          className="form-control"
+                                          value={toDate}
+                                          onChange={(e) => setToDate(e.target.value)}
+                                    />
+                              </div>
+
+                              <div className="col-md-2 text-center">
+                                    <button
+                                          className="btn btn-primary w-100"
+                                          onClick={fetchAppointments}
+                                    >
+                                          🔄 تحديث
+                                    </button>
+                              </div>
+
+                        </div>
+                  </div>
+
                   <div className="container my-4">
                         {/* البحث */}
                         <div className="mb-3">
