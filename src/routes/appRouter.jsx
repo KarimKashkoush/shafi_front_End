@@ -23,6 +23,7 @@ import UserInfo from "../pages/Profile/AdminProfile/UserInfo";
 import FinancialAccounts from "../pages/Profile/AdminProfile/FinancialAccounts";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/Auth.Context";
+import AppointmentDetails from "../pages/Profile/AppointmentDetails/AppointmentDetails";
 
 function AppRouter() {
       const { user } = useContext(AuthContext);
@@ -91,7 +92,14 @@ function AppRouter() {
                   element: <ShowUserData />,
                   children: [{ index: true, element: <PatientProfile /> }],
             },
+
+            // ✅ الراوت الجديد هنا
+            {
+                  path: "/appointment/:id",
+                  element: <AppointmentDetails />,
+            },
       ]);
+
 
       return <RouterProvider router={router} />;
 }

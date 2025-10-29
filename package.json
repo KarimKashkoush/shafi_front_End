@@ -41,7 +41,7 @@
     "react-toastify": "^11.0.5",
     "sweetalert2": "^11.23.0",
     "tailwindcss": "^4.1.11",
-    "yet-another-react-lightbox": "^3.24.0",
+    "yet-another-react-lightbox": "^3.25.0",
     "yup": "^1.6.1",
     "zod": "^4.0.16"
   },

@@ -1,8 +1,19 @@
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
+
+// ✅ كده الصح – البلجن بييجي من نفس الباكدج
+import { Zoom } from "yet-another-react-lightbox/plugins";
+
 import "./style.css";
+import whatssapIcon from "../../../assets/images/whatsapp.png";
+import pdfImage from '../../../assets/images/file.png';
+import { useNavigate } from "react-router";
+
 export default function Cases() {
+      const navigate = useNavigate();
       const [appointments, setAppointments] = useState([]);
       const [search, setSearch] = useState("");
       const [loading, setLoading] = useState(true);
@@ -12,6 +23,23 @@ export default function Cases() {
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
       const [uploading, setUploading] = useState(false);
+      const [isOpen, setIsOpen] = useState(false);
+      const [photoIndex, setPhotoIndex] = useState(0);
+      const [slides, setSlides] = useState([]);
+
+      const openGallery = (images, index) => {
+            const formattedSlides = images.map((image) => ({
+                  src: image.startsWith("http") ? image : `${apiUrl}${image}`,
+            }));
+            setSlides(formattedSlides);
+            setPhotoIndex(index);
+            setIsOpen(true);
+      };
+
+
+      const handleViewAppointment = (id) => {
+            navigate(`/appointment/${id}`);
+      };
 
 
       // جلب البيانات
@@ -185,22 +213,19 @@ export default function Cases() {
                   return Swal.fire("تنبيه", "لا يوجد رقم هاتف للدكتور!", "warning");
             }
 
-            // ✅ تجهيز نص الرسالة
+            // ✅ رابط صفحة الحجز
+            const frontendBaseUrl = window.location.origin; // بيجيب عنوان الموقع الحالي (مثلاً http://localhost:5173 أو الدومين الحقيقي)
+            const appointmentLink = `${frontendBaseUrl}/appointment/${appt.id}`;
+
+            // ✅ نص الرسالة
             const message = `
 📋 *تفاصيل الحالة:*
 👤 الاسم: ${appt.caseName}
-📞 الهاتف:${appt.phone}
 🧾 المطلوب: ${appt.testName}
-🆔 الرقم القومي: ${appt.nationalId || "غير مسجل"}
-🕒 وقت التسجيل: ${new Date(appt.createdAt).toLocaleString("ar-EG")}
 
-📄 *النتيجة:*
-${appt.resultFiles && appt.resultFiles.length > 0
-                        ? appt.resultFiles.map((f, i) => `نتيجة ${i + 1}: ${f}`).join("\n")
-                        : "❌ لم يتم إرفاق نتيجة بعد"}
+📄 *رابط النتيجة:*
+${appointmentLink}
 `.trim();
-
-
 
             // ✅ تجهيز رقم الدكتور (بدون + أو 0)
             const phone = `${appt.doctorPhone}`;
@@ -209,6 +234,7 @@ ${appt.resultFiles && appt.resultFiles.length > 0
             // ✅ فتح واتساب في تبويب جديد
             window.open(whatsappURL, "_blank");
       };
+
 
 
       return (
@@ -233,7 +259,7 @@ ${appt.resultFiles && appt.resultFiles.length > 0
                   ) : (
                         <section className="table overflow-x-auto">
                               <table className="table table-bordered table-striped text-center" style={{ width: "100%", minWidth: "1050px" }}>
-                                    <thead className="table-dark">
+                                    <thead className="table-dark" style={{ verticalAlign: "middle" }}>
                                           <tr>
                                                 <th>#</th>
                                                 <th>اسم الحالة</th>
@@ -244,10 +270,11 @@ ${appt.resultFiles && appt.resultFiles.length > 0
                                                 <th>النتيجة</th>
                                                 <th>اسم الدكتور</th>
                                                 <th>ارسال النتيجه</th>
+                                                <th>اسم الدكتور</th>
                                                 <th>الإجراءات</th>
                                           </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody style={{ verticalAlign: "middle" }}>
                                           {sortedAppointments.length > 0 ? (
                                                 sortedAppointments.map((appt, idx) => (
                                                       <tr key={`${appt.id}`} >
@@ -281,28 +308,66 @@ ${appt.resultFiles && appt.resultFiles.length > 0
                                                                         : "—"}
                                                             </td>
 
-
-
                                                             <td>
                                                                   {appt.resultFiles && appt.resultFiles.length > 0 ? (
-                                                                        <div className="d-flex flex-column gap-1">
-                                                                              {appt.resultFiles.map((file, i) => (
-                                                                                    <a
-                                                                                          key={i}
-                                                                                          href={file}
-                                                                                          target="_blank"
-                                                                                          rel="noopener noreferrer"
-                                                                                          className="text-success fw-bold"
-                                                                                    >
-                                                                                          📄 نتيجة {i + 1}
-                                                                                    </a>
-                                                                              ))}
+                                                                        <div
+                                                                              style={{
+                                                                                    display: "flex",
+                                                                                    gap: "10px",
+                                                                                    flexWrap: "wrap",
+                                                                                    justifyContent: "center",
+                                                                                    alignItems: "center",
+                                                                              }}
+                                                                        >
+                                                                              {appt.resultFiles.map((file, i) => {
+                                                                                    const fileUrl = file?.url || file;
+
+                                                                                    if (fileUrl?.toLowerCase().endsWith(".pdf")) {
+                                                                                          return (
+                                                                                                <a
+                                                                                                      key={i}
+                                                                                                      href={fileUrl}
+                                                                                                      target="_blank"
+                                                                                                      rel="noopener noreferrer"
+                                                                                                      title={`نتيجة ${i + 1}`}
+                                                                                                >
+                                                                                                      <img
+                                                                                                            src={pdfImage}
+                                                                                                            alt="PDF"
+                                                                                                            style={{ width: "40px", height: "40px", cursor: "pointer" }}
+                                                                                                      />
+                                                                                                </a>
+                                                                                          );
+                                                                                    } else {
+                                                                                          return (
+                                                                                                <img
+                                                                                                      key={i}
+                                                                                                      src={fileUrl}
+                                                                                                      alt={`نتيجة ${i + 1}`}
+                                                                                                      loading="lazy"
+                                                                                                      onClick={() =>
+                                                                                                            openGallery(
+                                                                                                                  appt.resultFiles.map((f) => f?.url || f),
+                                                                                                                  i
+                                                                                                            )
+                                                                                                      }
+                                                                                                      style={{
+                                                                                                            width: "50px",
+                                                                                                            height: "50px",
+                                                                                                            borderRadius: "5px",
+                                                                                                            cursor: "pointer",
+                                                                                                            objectFit: "cover",
+                                                                                                      }}
+                                                                                                />
+                                                                                          );
+                                                                                    }
+                                                                              })}
+
                                                                         </div>
                                                                   ) : (
-                                                                        <span className="text-danger fw-bold">
-                                                                              ❌ لم يتم إرفاق نتيجة
-                                                                        </span>
+                                                                        <span className="text-danger fw-bold">❌ لم يتم إرفاق نتيجة</span>
                                                                   )}
+
                                                             </td>
 
                                                             <td>{appt.doctorName || "—"}</td>
@@ -310,11 +375,15 @@ ${appt.resultFiles && appt.resultFiles.length > 0
 
                                                             <td>
                                                                   <button
-                                                                        className="btn btn-sm btn-success"
+                                                                        className="btn"
                                                                         onClick={() => handleSendWhatsApp(appt)}
                                                                   >
-                                                                        📩 ارسال واتساب
+                                                                        <img src={whatssapIcon} alt="icon" width="30px" />
                                                                   </button>
+                                                            </td>
+
+                                                            <td>
+                                                                  {appt.doctorName}
                                                             </td>
 
                                                             <td className="d-flex justify-content-center align-items-center flex-wrap gap-2">
@@ -338,6 +407,13 @@ ${appt.resultFiles && appt.resultFiles.length > 0
                                                                         disabled={appt.resultFiles && appt.resultFiles.length > 0} // ✅ قفل الزرار لو فيه نتيجة
                                                                   >
                                                                         📤 {appt.resultFiles && appt.resultFiles.length > 0 ? "تم رفع النتيجة" : "رفع نتيجة"}
+                                                                  </button>
+
+                                                                  <button
+                                                                        className="btn btn-sm btn-info"
+                                                                        onClick={() => handleViewAppointment(appt.id)}
+                                                                  >
+                                                                        👁 عرض
                                                                   </button>
 
 
@@ -391,7 +467,7 @@ ${appt.resultFiles && appt.resultFiles.length > 0
                                                 ))
                                           ) : (
                                                 <tr>
-                                                      <td colSpan="7" className="text-center">
+                                                      <td colSpan="11" className="text-center">
                                                             لا توجد بيانات
                                                       </td>
                                                 </tr>
@@ -400,6 +476,23 @@ ${appt.resultFiles && appt.resultFiles.length > 0
                               </table>
                         </section>
                   )}
+
+                  {isOpen && (
+                        <Lightbox
+                              open={isOpen}
+                              close={() => setIsOpen(false)}
+                              slides={slides}
+                              index={photoIndex}
+                              on={{ view: ({ index }) => setPhotoIndex(index) }}
+                              plugins={[Zoom]} // ✅ تفعيل البلجن
+                              zoom={{
+                                    maxZoomPixelRatio: 3, // أقصى تكبير للصورة (3x)
+                                    zoomInMultiplier: 1.3, // سرعة التكبير
+                                    doubleTapDelay: 300, // دبل كليك للتكبير
+                              }}
+                        />
+                  )}
+
             </section>
       );
 }
