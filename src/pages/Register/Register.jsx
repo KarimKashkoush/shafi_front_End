@@ -10,7 +10,6 @@ import { toast } from "react-toastify";
 
 export default function Register() {
       const [userType, setUserType] = useState("");
-      const [specialty, setSpecialty] = useState("");
       const navigate = useNavigate();
       const [loading, setLoading] = useState(false)
       const [validated, setValidated] = useState(false)
@@ -19,27 +18,6 @@ export default function Register() {
       const [passwordMatchError, setPasswordMatchError] = useState(false)
       const [pin, setPin] = useState(['', '', '', ''])
       const pinRefs = [useRef(), useRef(), useRef(), useRef()]
-
-
-      const specialties = [
-            { value: "internal_medicine", label: "الباطنة (Internal Medicine)" },
-            { value: "general_surgery", label: "الجراحة العامة (General Surgery)" },
-            { value: "pediatrics", label: "الأطفال (Pediatrics)" },
-            { value: "obgyn", label: "النساء والتوليد (Obstetrics & Gynecology)" },
-            { value: "ent", label: "الأنف والأذن والحنجرة (ENT)" },
-            { value: "ophthalmology", label: "العيون (Ophthalmology)" },
-            { value: "orthopedics", label: "العظام (Orthopedics)" },
-            { value: "dermatology", label: "الجلدية (Dermatology)" },
-            { value: "urology", label: "المسالك البولية (Urology)" },
-            { value: "dentistry", label: "الأسنان (Dentistry)" },
-            { value: "cardiology", label: "القلب والأوعية الدموية (Cardiology)" },
-            { value: "pulmonology", label: "الصدر (Pulmonology)" },
-            { value: "neurology", label: "المخ والأعصاب (Neurology)" },
-            { value: "psychiatry", label: "النفسية والعصبية (Psychiatry)" },
-            { value: "nutrition", label: "التغذية والسمنة (Nutrition & Obesity)" },
-            { value: "general_practice", label: "الطب العام (General Practice)" },
-      ];
-
 
       const { register, handleSubmit } = useForm({
             defaultValues: {
@@ -69,7 +47,6 @@ export default function Register() {
             const finalData = {
                   ...data,
                   role: userType, // علشان الباك اند يستقبل الدور الصحيح
-                  specialty,      // علشان التخصص يتسجل
                   pin: pin.some(p => p !== '') ? fullPin : "",
             };
 
@@ -93,14 +70,9 @@ export default function Register() {
                         <Form noValidate validated={validated} onSubmit={handleSubmit(onSubmit)} className="form col-lg-6 p-3">
 
                               <Row className="mb-2">
-                                    <Form.Group as={Col} lg="3" controlId="firstName" className='p-2'>
-                                          <Form.Label>الاسم الأول <span>*</span></Form.Label>
-                                          <Form.Control {...register('firstName')} required type="text" placeholder="أدخل الاسم الأول" />
-                                          <Form.Control.Feedback type="invalid">الاسم الأول مطلوب</Form.Control.Feedback>
-                                    </Form.Group>
-                                    <Form.Group as={Col} lg="9" controlId="fullName" className='p-2'>
-                                          <Form.Label>باقي الاسم بالكامل <span>*</span></Form.Label>
-                                          <Form.Control {...register('fullName')} required type="text" placeholder="أدخل باقي الاسم بالكامل" />
+                                    <Form.Group as={Col} md="12" controlId="fullName" className='p-2'>
+                                          <Form.Label>الاسم بالكامل<span>*</span></Form.Label>
+                                          <Form.Control {...register('fullName')} required type="text" placeholder="أدخل الاسم بالكامل" />
                                           <Form.Control.Feedback type="invalid">هذا الحقل مطلوب</Form.Control.Feedback>
                                     </Form.Group>
                               </Row>
@@ -172,7 +144,7 @@ export default function Register() {
                                           </Form.Control.Feedback>
                                     </Form.Group>
                               </Row>
-                              
+
                               {/* اختيار نوع المستخدم */}
                               <Row className="mb-3 px-2 mt-2">
                                     <Form.Group as={Col} md="12" controlId="userType">
@@ -186,14 +158,7 @@ export default function Register() {
                                                 onChange={(e) => setUserType(e.target.value)}
                                           >
                                                 <option value="">-- اختر النوع --</option>
-                                                <option value="doctor">دكتور - عيادة</option>
-                                                <option value="clinic_reception">استقبال عيادة</option>
-                                                <option value="radiology_center">مركز أشعة</option>
-                                                <option value="radiology_reception">استقبال أشعة</option>
-                                                <option value="lab">معمل تحاليل</option>
-                                                <option value="lab_reception">استقبال تحاليل</option>
-                                                <option value="pharmacy">صيدلية</option>
-                                                <option value="user">مستخدم (مريض)</option>
+                                                <option value="patient">مستخدم</option>
                                           </Form.Select>
                                           <Form.Control.Feedback type="invalid">
                                                 هذا الحقل مطلوب
@@ -201,32 +166,6 @@ export default function Register() {
                                     </Form.Group>
                               </Row>
 
-                              {/* اختيار التخصص لو اختار دكتور */}
-                              {userType === "doctor" && (
-                                    <Row className="mb-3 px-2 mt-2">
-                                          <Form.Group as={Col} md="12" controlId="specialty">
-                                                <Form.Label>
-                                                      اختر التخصص: <span>*</span>
-                                                </Form.Label>
-                                                <Form.Select
-                                                      required
-                                                      value={specialty}
-                                                      {...register("specialty")}
-                                                      onChange={(e) => setSpecialty(e.target.value)}
-                                                >
-                                                      <option value="">-- اختر التخصص --</option>
-                                                      {specialties.map((spec) => (
-                                                            <option key={spec.value} value={spec.value}>
-                                                                  {spec.label}
-                                                            </option>
-                                                      ))}
-                                                </Form.Select>
-                                                <Form.Control.Feedback type="invalid">
-                                                      هذا الحقل مطلوب
-                                                </Form.Control.Feedback>
-                                          </Form.Group>
-                                    </Row>
-                              )}
 
                               <Row className="mb-3 px-2 mt-2">
                                     <Form.Group as={Col} md="12" controlId="gender">

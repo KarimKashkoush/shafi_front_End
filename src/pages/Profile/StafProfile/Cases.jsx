@@ -45,16 +45,20 @@ export default function Cases() {
                         headers: {
                               Authorization: `Bearer ${token}`,
                         },
-                  }); const userAppointments = res.data.data.filter(
-                        (appt) => appt.userId === userId
+                  });
+
+                  const userAppointments = res.data.data.filter(
+                        (appt) => appt.userId === userId || appt.centerId === userId
                   );
+
                   setAppointments(userAppointments);
             } catch (err) {
                   console.error("Error fetching appointments", err);
             } finally {
                   setLoading(false);
             }
-      }, [apiUrl, userId]); // ✅ dependencies المطلوبة فقط
+      }, [apiUrl, userId]);
+      // ✅ dependencies المطلوبة فقط
 
       useEffect(() => {
             fetchAppointments();
