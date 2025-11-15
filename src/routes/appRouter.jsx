@@ -24,6 +24,11 @@ import FinancialAccounts from "../pages/Profile/AdminProfile/FinancialAccounts";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/Auth.Context";
 import AppointmentDetails from "../pages/Profile/AppointmentDetails/AppointmentDetails";
+import DoctorLayout from "../layouts/DoctorLayout";
+import DoctorProfile from "../pages/Profile/DoctorProfile/DoctorProfile";
+import DoctorAddAppointments from "../components/DoctorAddAppointments/DoctorAddAppointments";
+import DoctorAddResults from "../pages/Profile/DoctorProfile/DoctorAddResults";
+import DoctorCases from "../pages/Profile/DoctorProfile/DoctorCases";
 
 function AppRouter() {
       const { user } = useContext(AuthContext);
@@ -41,13 +46,7 @@ function AppRouter() {
                   {
                         path: "/profile/:id",
                         element:
-                              user.role === "patient" ? (
-                                    <PatientLayout />
-                              ) : user.role === "admin" ? (
-                                    <AdminLayout />
-                              ) : (
-                                    <StafLayout />
-                              ),
+                              user.role === "patient" ? (<PatientLayout />) : user.role === "admin" ? (<AdminLayout />) : user.role === "doctor" ? (<DoctorLayout />) : (<StafLayout />),
                         children:
                               user.role === "patient"
                                     ? [
@@ -62,14 +61,23 @@ function AppRouter() {
                                                 { path: "financial-accounts", element: <FinancialAccounts /> },
                                                 { path: "users/user-info/:id", element: <UserInfo /> },
                                           ]
-                                          : [
-                                                { index: true, element: <StafProfile /> },
-                                                { path: "userData", element: <ProfileUserData /> },
-                                                { path: "add-appointment", element: <StafAddAppointment /> },
-                                                { path: "add-result", element: <StafAddResult /> },
-                                                { path: "cases", element: <Cases /> },
-                                                { path: "manage-receptionists", element: <ManageReceptionists /> },
-                                          ],
+                                          : user.role === "doctor"
+                                                ? [
+                                                      { index: true, element: <DoctorProfile /> },
+                                                      { path: "userData", element: <ProfileUserData /> },
+                                                      { path: "cases", element: <DoctorCases /> },
+                                                      { path: "add-appointment", element: <DoctorAddAppointments /> },
+                                                      { path: "add-result", element: <DoctorAddResults /> },
+                                                      { path: "manage-receptionists", element: <ManageReceptionists /> },
+                                                ]
+                                                : [
+                                                      { index: true, element: <StafProfile /> },
+                                                      { path: "userData", element: <ProfileUserData /> },
+                                                      { path: "add-appointment", element: <StafAddAppointment /> },
+                                                      { path: "add-result", element: <StafAddResult /> },
+                                                      { path: "cases", element: <Cases /> },
+                                                      { path: "manage-receptionists", element: <ManageReceptionists /> },
+                                                ],
                   },
             ]
             : [];
