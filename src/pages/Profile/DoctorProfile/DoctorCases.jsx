@@ -19,8 +19,6 @@ export default function DoctorCases() {
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
       const [uploading, setUploading] = useState(false);
-      const [isOpen, setIsOpen] = useState(false);
-      const [photoIndex, setPhotoIndex] = useState(0);
 
       // جلب البيانات
       const fetchAppointments = useCallback(async () => {
