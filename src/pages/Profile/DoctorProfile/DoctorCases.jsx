@@ -1,11 +1,12 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
-import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
+import { z } from "zod";
+import { Row } from "react-bootstrap";
 
-// ✅ كده الصح – البلجن بييجي من نفس الباكدج
-import { Zoom } from "yet-another-react-lightbox/plugins";
 
 export default function DoctorCases() {
       const [fromDate, setFromDate] = useState("");
@@ -14,11 +15,13 @@ export default function DoctorCases() {
       const [search, setSearch] = useState("");
       const [loading, setLoading] = useState(true);
       const [uploadingId, setUploadingId] = useState(null);
-      const [files, setFiles] = useState([]);
       const apiUrl = import.meta.env.VITE_API_URL;
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
       const [uploading, setUploading] = useState(false);
+      // const [reportFile, setReportFile] = useState(null);
+      const [files, setFiles] = useState([]);
+      // const [nextVisit, setNextVisit] = useState("");
 
       // جلب البيانات
       const fetchAppointments = useCallback(async () => {
@@ -126,21 +129,44 @@ export default function DoctorCases() {
             }
       };
 
-      // رفع نتيجة
-      const handleUploadResult = async (id) => {
-            if (files.length === 0)
-                  return Swal.fire("تنبيه", "اختر ملفات أولاً", "warning");
+      const schema = z.object({
+            report: z.string().min(1, "التقرير مطلوب"),
+            nextAction: z.string().min(1, "الإجراء التالي مطلوب"),
+      });
 
-            const formData = new FormData();
-            for (let f of files) formData.append("files", f);
-            formData.append("userId", userId);
+      const {
+            register,
+            handleSubmit,
+            formState: { errors },
+      } = useForm({
+            resolver: zodResolver(schema),
+            defaultValues: {
+                  report: "",
+                  nextAction: "",
+            },
+      });
 
+      const onSubmit = async (data) => {
             try {
                   const token = localStorage.getItem("token");
-                  setUploading(true); // ✅ بدأ التحميل
+                  setUploading(true);
+
+                  // === إنشاء FormData
+                  const formData = new FormData();
+                  formData.append("report", data.report);
+                  formData.append("nextAction", data.nextAction);
+                  formData.append("userId", userId);
+
+                  // رفع الملفات
+                  files.forEach((file) => formData.append("files", file));
+
+                  // === Debug: طباعة كل الحقول قبل الإرسال
+                  for (let pair of formData.entries()) {
+                        console.log(pair[0], pair[1]);
+                  }
 
                   const res = await axios.post(
-                        `${apiUrl}/appointments/${id}/addResultAppointment`,
+                        `${apiUrl}/appointments/${uploadingId}/addResultAppointment`,
                         formData,
                         {
                               headers: {
@@ -150,11 +176,13 @@ export default function DoctorCases() {
                         }
                   );
 
-                  Swal.fire("تم", "تم رفع النتيجة بنجاح ✅", "success");
+                  console.log("✅ Response:", res.data);
+
+                  Swal.fire("تم", "تم رفع تقرير الحالة بنجاح ✅", "success");
 
                   setAppointments((prev) =>
                         prev.map((appt) =>
-                              appt.id === id
+                              appt.id === uploadingId
                                     ? { ...appt, resultFiles: res.data.data.files }
                                     : appt
                         )
@@ -164,11 +192,12 @@ export default function DoctorCases() {
                   setFiles([]);
             } catch (err) {
                   console.error("❌ خطأ أثناء رفع النتيجة:", err);
-                  Swal.fire("خطأ", "حدث خطأ أثناء رفع النتيجة", "error");
+                  Swal.fire("خطأ", "حدث خطأ أثناء الرفع", "error");
             } finally {
-                  setUploading(false); // ✅ انتهى التحميل
+                  setUploading(false);
             }
       };
+
 
 
       // البحث
@@ -198,8 +227,6 @@ export default function DoctorCases() {
 
             return new Date(a.createdAt) - new Date(b.createdAt);
       });
-
-
 
 
 
@@ -323,55 +350,80 @@ export default function DoctorCases() {
                                                                         onClick={() => setUploadingId(appt.id)}
                                                                         disabled={appt.resultFiles && appt.resultFiles.length > 0} // ✅ قفل الزرار لو فيه نتيجة
                                                                   >
-                                                                        📤 {appt.resultFiles && appt.resultFiles.length > 0 ? "تم رفع النتيجة" : "رفع نتيجة"}
+                                                                        📤 {appt.resultFiles && appt.resultFiles.length > 0 ? "تم إضافة تقرير" : "إضاف تقرير"}
                                                                   </button>
 
-
+                                                                  {/* رفع التقرير */}
                                                                   {uploadingId === appt.id && (
-                                                                        <div
-                                                                              className="modal fade show d-block"
-                                                                              tabIndex="-1"
-                                                                              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-                                                                        >
+                                                                        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
                                                                               <div className="modal-dialog modal-dialog-centered">
                                                                                     <div className="modal-content p-3">
-                                                                                          <h5 className="mb-3">رفع نتيجة الحالة</h5>
-                                                                                          <input
-                                                                                                type="file"
-                                                                                                multiple
-                                                                                                className="form-control"
-                                                                                                onChange={(e) =>
-                                                                                                      setFiles(Array.from(e.target.files))
-                                                                                                }
-                                                                                          />
-                                                                                          <div className="mt-3 d-flex justify-content-end gap-2">
-                                                                                                <button
-                                                                                                      className="btn btn-secondary"
-                                                                                                      onClick={() => setUploadingId(null)}
-                                                                                                >
-                                                                                                      إلغاء
-                                                                                                </button>
-                                                                                                <button
-                                                                                                      className="btn btn-success d-flex align-items-center justify-content-center gap-2"
-                                                                                                      onClick={() => handleUploadResult(appt.id)}
-                                                                                                      disabled={uploading} // ✅ يقفل الزرار أثناء الرفع فقط
-                                                                                                >
-                                                                                                      {uploading && (
-                                                                                                            <span
-                                                                                                                  className="spinner-border spinner-border-sm"
-                                                                                                                  role="status"
-                                                                                                                  aria-hidden="true"
-                                                                                                            ></span>
-                                                                                                      )}
-                                                                                                      {uploading ? "جاري رفع النتيجة..." : "✅ تأكيد الرفع"}
-                                                                                                </button>
 
+                                                                                          <form onSubmit={handleSubmit(onSubmit)}>
 
-                                                                                          </div>
+                                                                                                <h3 className="mb-3 fw-bold">رفع تقرير الحالة</h3>
+
+                                                                                                <Row className="mb-4 p-2">
+                                                                                                      <h4 className="text-end fw-bold">التقرير</h4>
+
+                                                                                                      <textarea
+                                                                                                            className="form-control"
+                                                                                                            placeholder="التقرير"
+                                                                                                            rows={3}
+                                                                                                            {...register("report")}
+                                                                                                      ></textarea>
+
+                                                                                                      {errors.report && <p className="text-danger">{errors.report.message}</p>}
+                                                                                                </Row>
+
+                                                                                                <Row className="mb-4 p-2">
+                                                                                                      <h4 className="text-end fw-bold">الإجراء التالي</h4>
+
+                                                                                                      <textarea
+                                                                                                            className="form-control"
+                                                                                                            placeholder="الإجراء التالي"
+                                                                                                            rows={3}
+                                                                                                            {...register("nextAction")}
+                                                                                                      ></textarea>
+
+                                                                                                      {errors.nextAction && <p className="text-danger">{errors.nextAction.message}</p>}
+                                                                                                </Row>
+
+                                                                                                <Row className="mb-4 p-2">
+                                                                                                      <h4 className="text-end fw-bold">إضافة ملفات / صور</h4>
+                                                                                                      <input
+                                                                                                            type="file"
+                                                                                                            multiple
+                                                                                                            className="form-control"
+                                                                                                            onChange={(e) => setFiles(Array.from(e.target.files))}
+                                                                                                      />
+                                                                                                </Row>
+
+                                                                                                <div className="mt-3 d-flex justify-content-end gap-2">
+                                                                                                      <button
+                                                                                                            type="button"
+                                                                                                            className="btn btn-secondary"
+                                                                                                            onClick={() => setUploadingId(null)}
+                                                                                                      >
+                                                                                                            إلغاء
+                                                                                                      </button>
+
+                                                                                                      <button
+                                                                                                            className="btn btn-success"
+                                                                                                            type="submit"
+                                                                                                            disabled={uploading}
+                                                                                                      >
+                                                                                                            {uploading ? "جاري الرفع..." : "✅ تأكيد الرفع"}
+                                                                                                      </button>
+                                                                                                </div>
+
+                                                                                          </form>
+
                                                                                     </div>
                                                                               </div>
                                                                         </div>
                                                                   )}
+
                                                             </td>
                                                       </tr>
                                                 ))
@@ -385,7 +437,8 @@ export default function DoctorCases() {
                                     </tbody>
                               </table>
                         </section>
-                  )}
-            </section>
+                  )
+                  }
+            </section >
       );
 }
