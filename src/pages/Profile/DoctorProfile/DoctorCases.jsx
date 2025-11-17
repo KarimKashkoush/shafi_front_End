@@ -19,9 +19,7 @@ export default function DoctorCases() {
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
       const [uploading, setUploading] = useState(false);
-      // const [reportFile, setReportFile] = useState(null);
       const [files, setFiles] = useState([]);
-      // const [nextVisit, setNextVisit] = useState("");
 
       // جلب البيانات
       const fetchAppointments = useCallback(async () => {
@@ -110,7 +108,6 @@ export default function DoctorCases() {
                                     },
                               }
                         );
-
 
                         if (res.data.message === "success") {
                               setAppointments((prev) =>
