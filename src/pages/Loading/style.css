@@ -1,0 +1,23 @@
+.loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #fff;
+      /* أو أي خلفية تحب */
+}
+
+.loading-logo {
+      animation: fadeInOut 2.5s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+      0%,
+      100% {
+            opacity: 0;
+      }
+
+      50% {
+            opacity: 1;
+      }
+}

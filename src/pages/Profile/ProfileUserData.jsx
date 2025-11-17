@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import api from "../../lib/api";
+import { calculateAgeUtc, formatUtcDate, formatUtcForInput } from "../../utils/date";
 
 function mapUser(user) {
       return {
@@ -80,18 +81,6 @@ export default function ProfileUserData() {
             }
       };
 
-      function calculateAge(birthDateString) {
-            if (!birthDateString) return null;
-            const today = new Date();
-            const birthDate = new Date(birthDateString);
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                  age--;
-            }
-            return age;
-      }
-
       if (loading) return <p>جاري تحميل البيانات...</p>;
       if (error) return <p className="text-danger">{error}</p>;
 
@@ -168,11 +157,7 @@ export default function ProfileUserData() {
                                                       type="date"
                                                       className="form-control"
                                                       {...register("birthDate")}
-                                                      defaultValue={
-                                                            data?.birthDate
-                                                                  ? new Date(data.birthDate).toISOString().split("T")[0]
-                                                                  : ""
-                                                      }
+                                                      defaultValue={formatUtcForInput(data?.birthDate)}
                                                 />
                                           </div>
 
@@ -228,9 +213,11 @@ export default function ProfileUserData() {
                                                             <th>تاريخ الميلاد</th>
                                                             <td>
                                                                   {data?.birthDate
-                                                                        ? `${new Date(data.birthDate).toLocaleDateString("ar-EG")} (${calculateAge(
-                                                                              data.birthDate
-                                                                        )} سنة)`
+                                                                        ? `${formatUtcDate(data.birthDate)}${
+                                                                              calculateAgeUtc(data.birthDate) !== null
+                                                                                    ? ` (${calculateAgeUtc(data.birthDate)} سنة)`
+                                                                                    : ""
+                                                                        }`
                                                                         : "غير مسجل"}
                                                             </td>
                                                       </tr>

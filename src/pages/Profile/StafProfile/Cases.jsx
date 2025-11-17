@@ -10,6 +10,7 @@ import { Zoom } from "yet-another-react-lightbox/plugins";
 import "./style.css";
 import whatssapIcon from "../../../assets/images/whatsapp.png";
 import pdfImage from '../../../assets/images/file.png';
+import { formatUtcDateTime } from "../../../utils/date";
 
 export default function Cases() {
       const [fromDate, setFromDate] = useState("");
@@ -328,29 +329,7 @@ ${appointmentLink}
                                                             <td>{appt.phone}</td>
                                                             <td>{appt.nationalId || "❌ غير مسجل"}</td>
 
-                                                            <td>
-                                                                  {appt.createdAt
-                                                                        ? (() => {
-                                                                              const dateObj = new Date(new Date(appt.createdAt).getTime() + 3 * 60 * 60 * 1000);
-
-                                                                              // الوقت (مثلاً 11:30)
-                                                                              const time = dateObj.toLocaleTimeString("ar-EN", {
-                                                                                    hour: "2-digit",
-                                                                                    minute: "2-digit",
-                                                                                    hour12: true,
-                                                                              });
-
-                                                                              // التاريخ (مثلاً 2/10/2025)
-                                                                              const date = dateObj.toLocaleDateString("en-GB", {
-                                                                                    day: "2-digit",
-                                                                                    month: "2-digit",
-                                                                                    year: "numeric",
-                                                                              });
-
-                                                                              return `${time} - ${date}`;
-                                                                        })()
-                                                                        : "—"}
-                                                            </td>
+                                                            <td>{formatUtcDateTime(appt.createdAt)}</td>
 
                                                             <td>
                                                                   {appt.resultFiles && appt.resultFiles.length > 0 ? (

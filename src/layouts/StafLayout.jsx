@@ -9,6 +9,8 @@ import registeredImg from "../assets/images/registered.png";
 import AddResultImg from "../assets/images/add-result.png";
 import ProfileImg from "../assets/images/profile.png";
 import receptionImage from "../assets/images/computer.png";
+import { useEffect, useState } from "react";
+import Loading from "../pages/Loading/Loading";
 
 const links = [
       { to: "/profile/:id", label: "التعداد", icon: dataAnalyticsImg },
@@ -20,6 +22,20 @@ const links = [
 ];
 
 export default function StafLayout() {
+
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+            const minLoadingTime = new Promise((resolve) => setTimeout(resolve, 2000));
+
+            const fetchData = new Promise((resolve) => {
+                  setTimeout(resolve, 500); // لو البيانات خلصت بسرعة
+            });
+
+            Promise.all([minLoadingTime, fetchData]).then(() => setLoading(false));
+      }, []);
+
+      if (loading) return <Loading />;
       return (
             <section className="profile-layout layout">
                   <ProfileSidebar links={links} />

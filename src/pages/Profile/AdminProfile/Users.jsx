@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { formatUtcDate } from "../../../utils/date";
 export default function Users() {
       const [users, setUsers] = useState([]);
       const [loading, setLoading] = useState(true);
@@ -81,7 +82,7 @@ export default function Users() {
                                                       </span>
                                                 </td>
                                                 <td className="py-2 px-4 border">
-                                                      {new Date(user.lastUpdated).toLocaleDateString("ar-EG")}
+                                                      {formatUtcDate(user.lastUpdated)}
                                                 </td>
                                                 <td className="py-2 px-4 border">
                                                       <button

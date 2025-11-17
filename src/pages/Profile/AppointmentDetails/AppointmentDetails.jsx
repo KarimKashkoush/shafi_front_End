@@ -7,6 +7,7 @@ import "yet-another-react-lightbox/styles.css";
 // ✅ كده الصح – البلجن بييجي من نفس الباكدج
 import { Zoom } from "yet-another-react-lightbox/plugins";
 import pdfImage from '../../../assets/images/file.png';
+import { formatUtcDateTime } from "../../../utils/date";
 export default function AppointmentDetails() {
       const { id } = useParams();
       const [appointment, setAppointment] = useState(null);
@@ -68,29 +69,7 @@ export default function AppointmentDetails() {
                                           <td>{appointment.data.phone}</td>
                                           <td>{appointment.data.nationalId || "❌ غير مسجل"}</td>
 
-                                          <td>
-                                                {appointment.data.createdAt
-                                                      ? (() => {
-                                                            const dateObj = new Date(new Date(appointment.data.createdAt).getTime() + 3 * 60 * 60 * 1000);
-
-                                                            // الوقت (مثلاً 11:30)
-                                                            const time = dateObj.toLocaleTimeString("ar-EN", {
-                                                                  hour: "2-digit",
-                                                                  minute: "2-digit",
-                                                                  hour12: true,
-                                                            });
-
-                                                            // التاريخ (مثلاً 2/10/2025)
-                                                            const date = dateObj.toLocaleDateString("en-GB", {
-                                                                  day: "2-digit",
-                                                                  month: "2-digit",
-                                                                  year: "numeric",
-                                                            });
-
-                                                            return `${time} - ${date}`;
-                                                      })()
-                                                      : "—"}
-                                          </td>
+                                          <td>{formatUtcDateTime(appointment.data.createdAt)}</td>
 
                                           <td>
                                                 {appointment.data.resultFiles && appointment.data.resultFiles.length > 0 ? (

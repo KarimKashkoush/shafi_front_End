@@ -29,6 +29,7 @@ import DoctorProfile from "../pages/Profile/DoctorProfile/DoctorProfile";
 import DoctorAddAppointments from "../components/DoctorAddAppointments/DoctorAddAppointments";
 import DoctorAddResults from "../pages/Profile/DoctorProfile/DoctorAddResults";
 import DoctorCases from "../pages/Profile/DoctorProfile/DoctorCases";
+import DoctorPatientReports from "../pages/Profile/DoctorProfile/DoctorPatientReports";
 
 function AppRouter() {
       const { user } = useContext(AuthContext);
@@ -39,7 +40,7 @@ function AppRouter() {
             return () => clearTimeout(timer);
       }, [user]);
 
-      if (loading) return <div>Loading...</div>;
+      if (loading) return <div></div>;
 
       const profileRoutes = user
             ? [
@@ -69,6 +70,7 @@ function AppRouter() {
                                                       { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                       { path: "add-result", element: <DoctorAddResults /> },
                                                       { path: "manage-receptionists", element: <ManageReceptionists /> },
+                                                      { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
                                                 ]
                                                 : [
                                                       { index: true, element: <StafProfile /> },

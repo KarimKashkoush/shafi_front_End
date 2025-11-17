@@ -5,6 +5,7 @@ import { useContext, useState } from 'react';
 import { AuthContext } from '../../../context/Auth.Context';
 import AddResult from '../../../components/AddResult/AddResult';
 import pdfImage from '../../../assets/images/file.png';
+import { formatUtcDateTime } from "../../../utils/date";
 
 export default function Reports({ reports, results }) {
       const apiUrl = import.meta.env.VITE_API_URL;
@@ -60,15 +61,7 @@ export default function Reports({ reports, results }) {
                                                 <Accordion.Item eventKey={idx.toString()} key={key}>
                                                       <Accordion.Header>
                                                             تقرير رقم {idx + 1} -{" "}
-                                                            {new Date(report.createdAt).toLocaleString("ar-EG", {
-                                                                  timeZone: "Africa/Cairo",
-                                                                  year: "numeric",
-                                                                  month: "long",
-                                                                  day: "numeric",
-                                                                  hour: "2-digit",
-                                                                  minute: "2-digit",
-                                                                  hour12: true,
-                                                            })}
+                                                            {formatUtcDateTime(report.createdAt, "HH:mm - DD/MM/YYYY")}
                                                       </Accordion.Header>
 
                                                       <Accordion.Body>
@@ -267,15 +260,7 @@ export default function Reports({ reports, results }) {
                                                                   <p><strong>نوع التحليل / الأشعة:</strong> {res.testName || "غير محدد"}</p>
                                                                   <p>
                                                                         <strong>تاريخ الإنشاء:</strong>{" "}
-                                                                        {new Date(res.createdAt).toLocaleString("ar-EG", {
-                                                                              timeZone: "Africa/Cairo",
-                                                                              year: "numeric",
-                                                                              month: "long",
-                                                                              day: "numeric",
-                                                                              hour: "2-digit",
-                                                                              minute: "2-digit",
-                                                                              hour12: true,
-                                                                        })}
+                                                                        {formatUtcDateTime(res.createdAt, "HH:mm - DD/MM/YYYY")}
                                                                   </p>
 
                                                                   {/* ✅ الملفات */}

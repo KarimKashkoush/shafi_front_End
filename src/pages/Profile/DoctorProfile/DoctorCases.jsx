@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import "yet-another-react-lightbox/styles.css";
 import { z } from "zod";
 import { Row } from "react-bootstrap";
+import { formatUtcDateTime } from "../../../utils/date";
 
 
 export default function DoctorCases() {
@@ -303,29 +304,7 @@ export default function DoctorCases() {
                                                             <td>{appt.phone}</td>
                                                             <td>{appt.nationalId || "❌ غير مسجل"}</td>
 
-                                                            <td>
-                                                                  {appt.createdAt
-                                                                        ? (() => {
-                                                                              const dateObj = new Date(new Date(appt.createdAt).getTime() + 3 * 60 * 60 * 1000);
-
-                                                                              // الوقت (مثلاً 11:30)
-                                                                              const time = dateObj.toLocaleTimeString("ar-EN", {
-                                                                                    hour: "2-digit",
-                                                                                    minute: "2-digit",
-                                                                                    hour12: true,
-                                                                              });
-
-                                                                              // التاريخ (مثلاً 2/10/2025)
-                                                                              const date = dateObj.toLocaleDateString("en-GB", {
-                                                                                    day: "2-digit",
-                                                                                    month: "2-digit",
-                                                                                    year: "numeric",
-                                                                              });
-
-                                                                              return `${time} - ${date}`;
-                                                                        })()
-                                                                        : "—"}
-                                                            </td>
+                                                            <td>{formatUtcDateTime(appt.createdAt)}</td>
 
                                                             <td className="d-flex flex-wrap gap-2 justify-content-center justify-content-center h-100 align-items-center">
                                                                   <button
@@ -344,11 +323,18 @@ export default function DoctorCases() {
                                                                   </button>
                                                                   <button
                                                                         className="btn btn-sm btn-success"
-                                                                        onClick={() => setUploadingId(appt.id)}
-                                                                        disabled={appt.resultFiles && appt.resultFiles.length > 0} // ✅ قفل الزرار لو فيه نتيجة
+                                                                        onClick={() => {
+                                                                              if (appt.nationalId) {
+                                                                                    localStorage.setItem("currentPatientNationalId", appt.nationalId);
+                                                                                    window.location.href = `/profile/${userId}/patientReports/${appt.nationalId}`; // الصفحة الجديدة
+                                                                              } else {
+                                                                                    Swal.fire("❌", "لا يوجد رقم قومي لهذا المريض", "error");
+                                                                              }
+                                                                        }}
                                                                   >
-                                                                        📤 {appt.resultFiles && appt.resultFiles.length > 0 ? "تم إضافة تقرير" : "إضاف تقرير"}
+                                                                        📄 عرض التقارير
                                                                   </button>
+
 
                                                                   {/* رفع التقرير */}
                                                                   {uploadingId === appt.id && (
