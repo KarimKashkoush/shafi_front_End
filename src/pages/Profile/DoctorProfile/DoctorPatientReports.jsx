@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Row } from "react-bootstrap";
 import { useParams } from "react-router";
+import { formatUtcDateTime } from "../../../utils/date";
 
 
 
@@ -72,26 +73,18 @@ export default function DoctorPatientReports() {
             },
       });
 
-      const onSubmit = async (data) => {
+      const onSubmit = async (data, e) => {
             try {
                   const token = localStorage.getItem("token");
                   setUploading(true);
 
-                  // === إنشاء FormData
                   const formData = new FormData();
                   formData.append("report", data.report);
                   formData.append("nextAction", data.nextAction);
                   formData.append("userId", userId);
-
-                  // رفع الملفات
                   files.forEach((file) => formData.append("files", file));
 
-                  // === Debug: طباعة كل الحقول قبل الإرسال
-                  for (let pair of formData.entries()) {
-                        console.log(pair[0], pair[1]);
-                  }
-
-                  const res = await axios.post(
+                  await axios.post(
                         `${apiUrl}/appointments/${uploadingId}/addResultAppointment`,
                         formData,
                         {
@@ -102,20 +95,16 @@ export default function DoctorPatientReports() {
                         }
                   );
 
-                  console.log("✅ Response:", res.data);
-
                   Swal.fire("تم", "تم رفع تقرير الحالة بنجاح ✅", "success");
 
-                  setAppointments((prev) =>
-                        prev.map((appt) =>
-                              appt.id === uploadingId
-                                    ? { ...appt, resultFiles: res.data.data.files }
-                                    : appt
-                        )
-                  );
+                  // ✅ مسح الفورم
+                  e.target.reset();  // يمسح قيم الفورم
+                  setFiles([]);      // يمسح ملفات الرفع
+
+                  // ✅ تحديث الجدول تلقائي
+                  await fetchAppointments();
 
                   setUploadingId(null);
-                  setFiles([]);
             } catch (err) {
                   console.error("❌ خطأ أثناء رفع النتيجة:", err);
                   Swal.fire("خطأ", "حدث خطأ أثناء الرفع", "error");
@@ -123,6 +112,7 @@ export default function DoctorPatientReports() {
                   setUploading(false);
             }
       };
+
 
       const [isOpen, setIsOpen] = useState(false);
       const [photoIndex, setPhotoIndex] = useState(0);
@@ -209,7 +199,7 @@ export default function DoctorPatientReports() {
                                                       </td>
 
                                                       {/* تاريخ الإضافة */}
-                                                      <td>{new Date(r.resultCreatedAt || r.createdAt).toLocaleString()}</td>
+                                                      <td dir="ltr">{formatUtcDateTime(r.resultCreatedAt || r.createdAt)}</td>
 
                                                       {/* زر إضافة تقرير */}
                                                       <td>

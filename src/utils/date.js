@@ -16,9 +16,12 @@ function toLocalTz(value) {
 
 // عرض التاريخ والوقت بنظام 12 ساعة
 export function formatUtcDateTime(value, format = "hh:mm A - DD/MM/YYYY") {
-      const dt = toLocalTz(value);
-      return dt ? dt.format(format) : "—";
+  const dt = toLocalTz(value);
+  if (!dt) return "—";
+  const dtPlus2 = dt.add(2, "hour"); // إضافة ساعتين
+  return dtPlus2.format(format);
 }
+
 
 // عرض التاريخ فقط
 export function formatUtcDate(value, format = "DD/MM/YYYY") {
