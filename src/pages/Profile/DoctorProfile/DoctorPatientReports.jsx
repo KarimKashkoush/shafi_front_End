@@ -1,27 +1,133 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
 import Lightbox from "yet-another-react-lightbox";
 
 import "yet-another-react-lightbox/styles.css";
 
 import { Zoom } from "yet-another-react-lightbox/plugins";
+import { z } from "zod";
 
 import pdfImage from '../../../assets/images/file.png';
+import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Row } from "react-bootstrap";
 import { useParams } from "react-router";
 
 
 
 export default function DoctorPatientReports() {
-       const { nationalId } = useParams();
-      const [reports, setReports] = useState([]);
-      const [loading, setLoading] = useState(true);
+      const { nationalId } = useParams();
 
-      const token = localStorage.getItem("token");
+      const [appointments, setAppointments] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [uploadingId, setUploadingId] = useState(null);
       const apiUrl = import.meta.env.VITE_API_URL;
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = user?.id;
+      const [uploading, setUploading] = useState(false);
+      const [files, setFiles] = useState([]);
+
+      // جلب البيانات
+      const fetchAppointments = useCallback(async () => {
+            const token = localStorage.getItem("token");
+            try {
+                  setLoading(true);
+                  const res = await axios.get(`${apiUrl}/doctor/patientFiles/${nationalId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                  });
+
+                  const userAppointments = res.data.data.filter(
+                        (appt) => appt.userId === userId || appt.centerId === userId
+                  );
+
+                  setAppointments(userAppointments);
+            } catch (err) {
+                  console.error("Error fetching appointments", err);
+            } finally {
+                  setLoading(false);
+            }
+      }, [apiUrl, userId]);
+      // ✅ dependencies المطلوبة فقط
+
+      useEffect(() => {
+            fetchAppointments();
+      }, [fetchAppointments]); // ✅ التحذير اختفى
+
+
+      const schema = z.object({
+            report: z.string().min(1, "التقرير مطلوب"),
+            nextAction: z.string().min(1, "الإجراء التالي مطلوب"),
+      });
+
+      const {
+            register,
+            handleSubmit,
+            formState: { errors },
+      } = useForm({
+            resolver: zodResolver(schema),
+            defaultValues: {
+                  report: "",
+                  nextAction: "",
+            },
+      });
+
+      const onSubmit = async (data) => {
+            try {
+                  const token = localStorage.getItem("token");
+                  setUploading(true);
+
+                  // === إنشاء FormData
+                  const formData = new FormData();
+                  formData.append("report", data.report);
+                  formData.append("nextAction", data.nextAction);
+                  formData.append("userId", userId);
+
+                  // رفع الملفات
+                  files.forEach((file) => formData.append("files", file));
+
+                  // === Debug: طباعة كل الحقول قبل الإرسال
+                  for (let pair of formData.entries()) {
+                        console.log(pair[0], pair[1]);
+                  }
+
+                  const res = await axios.post(
+                        `${apiUrl}/appointments/${uploadingId}/addResultAppointment`,
+                        formData,
+                        {
+                              headers: {
+                                    "Content-Type": "multipart/form-data",
+                                    Authorization: `Bearer ${token}`,
+                              },
+                        }
+                  );
+
+                  console.log("✅ Response:", res.data);
+
+                  Swal.fire("تم", "تم رفع تقرير الحالة بنجاح ✅", "success");
+
+                  setAppointments((prev) =>
+                        prev.map((appt) =>
+                              appt.id === uploadingId
+                                    ? { ...appt, resultFiles: res.data.data.files }
+                                    : appt
+                        )
+                  );
+
+                  setUploadingId(null);
+                  setFiles([]);
+            } catch (err) {
+                  console.error("❌ خطأ أثناء رفع النتيجة:", err);
+                  Swal.fire("خطأ", "حدث خطأ أثناء الرفع", "error");
+            } finally {
+                  setUploading(false);
+            }
+      };
+
       const [isOpen, setIsOpen] = useState(false);
       const [photoIndex, setPhotoIndex] = useState(0);
       const [slides, setSlides] = useState([]);
+
       const openGallery = (images, index) => {
             const formattedSlides = images.map((image) => ({
                   src: image.startsWith("http") ? image : `${apiUrl}${image}`,
@@ -31,26 +137,7 @@ export default function DoctorPatientReports() {
             setIsOpen(true);
       };
 
-
-      // جلب كل التقارير
-      const fetchReports = async () => {
-            try {
-                  setLoading(true);
-                  const res = await axios.get(`${apiUrl}/doctor/patientFiles/${nationalId}`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                  });
-                  setReports(res.data.data);
-            } catch (err) {
-                  console.error(err);
-                  toast.error("حدث خطأ أثناء جلب التقارير");
-            } finally {
-                  setLoading(false);
-            }
-      };
-
-      useEffect(() => { fetchReports(); }, []);
-
-
+      console.log(appointments)
       return (
             <section>
                   {loading ? <p>⏳ جاري التحميل...</p> : (
@@ -62,106 +149,156 @@ export default function DoctorPatientReports() {
                                           <th>الإجراء التالي</th>
                                           <th>الملفات</th>
                                           <th>تاريخ الإضافة</th>
+                                          <th>اضافة تقرير</th>
                                     </tr>
                               </thead>
                               <tbody style={{ verticalAlign: "middle" }}>
-                                    {reports.map((r, idx) => (
-                                          <tr key={r.id}>
-                                                <td>{idx + 1}</td>
-                                                <td>
-                                                      {r.result ? r.result.map((res) => (
-                                                            <div key={res.id}>
-                                                                  {res.report}
-                                                            </div>
-                                                      )) : (
-                                                            <span className="text-danger fw-bold">❌ لم يتم إرفاق تقرير</span>
-                                                      )}
-                                                </td>
+                                    {appointments.length > 0 ? (
+                                          appointments.map((r, idx) => (
+                                                <tr key={r.id}>
+                                                      <td>{idx + 1}</td>
 
-                                                <td>
-                                                      {r.result ? r.result.map((res) => (
-                                                            <div key={res.id}>
-                                                                  {res.nextAction}
-                                                            </div>
-                                                      )) : (
-                                                            <span className="text-danger fw-bold">❌</span>
-                                                      )}
-                                                </td>
+                                                      {/* التقرير */}
+                                                      <td>
+                                                            {r.result
+                                                                  ? r.result.map((r) => <div key={r.id}>{r.report}</div>)
+                                                                  : <span className="text-danger fw-bold">❌ لم يتم إرفاق تقرير</span>}
+                                                      </td>
 
-                                                <td>
-                                                      {r.result && r.result.length > 0 ? (
-                                                            <div
-                                                                  style={{
-                                                                        display: "flex",
-                                                                        gap: "10px",
-                                                                        flexWrap: "wrap",
-                                                                        justifyContent: "center",
-                                                                        alignItems: "center",
-                                                                  }}
-                                                            >
-                                                                  {r.result.map((res) =>
-                                                                        res.files?.map((file, i) => {
-                                                                              const fileUrl = file;
+                                                      {/* الإجراء التالي */}
+                                                      <td>
+                                                            {r.result
+                                                                  ? r.result.map((r) => <div key={r.id}>{r.nextAction}</div>)
+                                                                  : <span className="text-danger fw-bold">❌</span>}
+                                                      </td>
 
-                                                                              if (fileUrl?.toLowerCase().endsWith(".pdf")) {
-                                                                                    return (
-                                                                                          <a
-                                                                                                key={i}
-                                                                                                href={fileUrl}
-                                                                                                target="_blank"
-                                                                                                rel="noopener noreferrer"
-                                                                                                title={`نتيجة ${i + 1}`}
-                                                                                          >
+                                                      {/* الملفات */}
+                                                      <td>
+                                                            {r.result
+                                                                  ? (
+                                                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                                                              {r.result.map((r) =>
+                                                                                    r.files.map((file, i) => file.toLowerCase().endsWith(".pdf") ? (
+                                                                                          <a key={i} href={file} target="_blank" rel="noopener noreferrer">
                                                                                                 <img
-                                                                                                      src={pdfImage} // لازم يكون عندك pdfImage معرف
+                                                                                                      src={pdfImage}
                                                                                                       alt="PDF"
                                                                                                       style={{ width: "40px", height: "40px", cursor: "pointer" }}
                                                                                                 />
                                                                                           </a>
-                                                                                    );
-                                                                              } else {
-                                                                                    return (
+                                                                                    ) : (
                                                                                           <img
                                                                                                 key={i}
-                                                                                                src={fileUrl}
-                                                                                                alt={`نتيجة ${i + 1}`}
-                                                                                                loading="lazy"
-                                                                                                onClick={() =>
-                                                                                                      openGallery(
-                                                                                                            r.result.map((res) => res.files).flat(),
-                                                                                                            i
-                                                                                                      )
-                                                                                                }
+                                                                                                src={file}
+                                                                                                alt="file"
                                                                                                 style={{
                                                                                                       width: "50px",
                                                                                                       height: "50px",
-                                                                                                      borderRadius: "5px",
-                                                                                                      cursor: "pointer",
                                                                                                       objectFit: "cover",
+                                                                                                      borderRadius: "5px",
+                                                                                                      cursor: "pointer"
                                                                                                 }}
+                                                                                                onClick={() => openGallery(r.result.map(r => r.files).flat(), i)}
                                                                                           />
-                                                                                    );
-                                                                              }
-                                                                        })
-                                                                  )}
-                                                            </div>
-                                                      ) : (
-                                                            <span className="text-danger fw-bold">❌ لم يتم إرفاق ملفات / صور</span>
-                                                      )}
+                                                                                    ))
+                                                                              )}
+                                                                        </div>
+                                                                  )
+                                                                  : <span className="text-danger fw-bold">❌ لم يتم إرفاق ملفات</span>
+                                                            }
+                                                      </td>
+
+                                                      {/* تاريخ الإضافة */}
+                                                      <td>{new Date(r.resultCreatedAt || r.createdAt).toLocaleString()}</td>
+
+                                                      {/* زر إضافة تقرير */}
+                                                      <td>
+                                                            <button
+                                                                  className="btn btn-sm btn-success"
+                                                                  onClick={() => setUploadingId(r.id)}
+                                                                  disabled={r.result && r.result.length > 0} // قفل الزر لو فيه نتيجة
+                                                            >
+                                                                  {r.result && r.result.length > 0 ? "تم اضافة تقرير ✅" : "اضافة تقرير 📤"}
+                                                            </button>
+
+                                                            {/* رفع التقرير */}
+                                                            {uploadingId === r.id && (
+                                                                  <div
+                                                                        className="modal fade show d-block"
+                                                                        tabIndex="-1"
+                                                                        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+                                                                  >
+                                                                        <div className="modal-dialog modal-dialog-centered">
+                                                                              <div className="modal-content p-3">
+                                                                                    <form onSubmit={handleSubmit(onSubmit)}>
+                                                                                          <h3 className="mb-3 fw-bold">رفع تقرير الحالة</h3>
+
+                                                                                          <Row className="mb-4 p-2">
+                                                                                                <h4 className="text-end fw-bold">التقرير</h4>
+                                                                                                <textarea
+                                                                                                      className="form-control"
+                                                                                                      placeholder="التقرير"
+                                                                                                      rows={3}
+                                                                                                      {...register("report")}
+                                                                                                />
+                                                                                                {errors.report && <p className="text-danger">{errors.report.message}</p>}
+                                                                                          </Row>
+
+                                                                                          <Row className="mb-4 p-2">
+                                                                                                <h4 className="text-end fw-bold">الإجراء التالي</h4>
+                                                                                                <textarea
+                                                                                                      className="form-control"
+                                                                                                      placeholder="الإجراء التالي"
+                                                                                                      rows={3}
+                                                                                                      {...register("nextAction")}
+                                                                                                />
+                                                                                                {errors.nextAction && (
+                                                                                                      <p className="text-danger">{errors.nextAction.message}</p>
+                                                                                                )}
+                                                                                          </Row>
+
+                                                                                          <Row className="mb-4 p-2">
+                                                                                                <h4 className="text-end fw-bold">إضافة ملفات / صور</h4>
+                                                                                                <input
+                                                                                                      type="file"
+                                                                                                      multiple
+                                                                                                      className="form-control"
+                                                                                                      onChange={(e) => setFiles(Array.from(e.target.files))}
+                                                                                                />
+                                                                                          </Row>
+
+                                                                                          <div className="mt-3 d-flex justify-content-end gap-2">
+                                                                                                <button
+                                                                                                      type="button"
+                                                                                                      className="btn btn-secondary"
+                                                                                                      onClick={() => setUploadingId(null)}
+                                                                                                >
+                                                                                                      إلغاء
+                                                                                                </button>
+                                                                                                <button className="btn btn-success" type="submit" disabled={uploading}>
+                                                                                                      {uploading ? "جاري الرفع..." : "✅ تأكيد الرفع"}
+                                                                                                </button>
+                                                                                          </div>
+                                                                                    </form>
+                                                                              </div>
+                                                                        </div>
+                                                                  </div>
+                                                            )}
+                                                      </td>
+                                                </tr>
+                                          ))
+                                    ) : (
+                                          <tr>
+                                                <td colSpan="6" className="text-center">
+                                                      لا توجد بيانات
                                                 </td>
-
-
-
-                                                <td>{new Date(r.createdAt).toLocaleString()}</td>
                                           </tr>
-                                    ))}
+                                    )}
                               </tbody>
+
 
                         </table>
                   )}
-
-                  <h4>رفع تقرير جديد</h4>
-
 
                   {isOpen && (
                         <Lightbox

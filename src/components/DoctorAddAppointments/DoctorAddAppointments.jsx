@@ -4,44 +4,70 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Row } from "react-bootstrap";
 import api from "../../lib/api";
 import { toast } from "react-toastify";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const schema = z.object({
       caseName: z.string().min(1, "اسم الحالة مطلوب"),
       phone: z.string().min(1, "رقم الهاتف مطلوب"),
       dateTime: z.string().min(1, "التاريخ والوقت مطلوب"),
-      nationalId: z.string().optional()
+      nationalId: z.string().optional(),
+      birthDate: z.string().optional(),
+      hasChronicDisease: z.boolean().optional(),
+      chronicDiseaseDetails: z.string().optional(),
 });
 
 export default function DoctorAddAppointments() {
       const [loading, setLoading] = useState(false);
-      const {
-            register,
-            handleSubmit,
-            formState: { errors },
-      } = useForm({
+
+      // تحديث الوقت الحالي كل ثانية
+      const [currentDateTime, setCurrentDateTime] = useState(
+            dayjs().format("YYYY-MM-DDTHH:mm")
+      );
+
+      useEffect(() => {
+            const interval = setInterval(() => {
+                  setCurrentDateTime(dayjs().format("YYYY-MM-DDTHH:mm"));
+            }, 1000);
+            return () => clearInterval(interval);
+      }, []);
+
+      const { register, handleSubmit, watch, formState: { errors } } = useForm({
             resolver: zodResolver(schema),
             defaultValues: {
                   caseName: "",
                   phone: "",
                   nationalId: "",
-                  dateTime: "",
+                  birthDate: "",
+                  hasChronicDisease: false,
+                  chronicDiseaseDetails: "",
+                  dateTime: currentDateTime,
             },
       });
 
+      const watchChronic = watch("hasChronicDisease", false);
+
       const onSubmit = async (data) => {
             try {
-
                   setLoading(true);
                   const user = JSON.parse(localStorage.getItem("user"));
                   const token = localStorage.getItem("token");
 
+                  // تحويل الوقت المحلي إلى UTC قبل الإرسال للباك
+                  const utcDateTime = dayjs(data.dateTime).utc().format();
+
                   const payload = {
                         ...data,
+                        dateTime: utcDateTime,
                         userId: user?.id,
                   };
 
-                  console.log("DATA RECEIVED:", data);
+                  console.log("DATA SENT TO API:", payload);
 
                   const response = await api.post(`/appointments`, payload, {
                         headers: {
@@ -63,65 +89,67 @@ export default function DoctorAddAppointments() {
       return (
             <section className="staf-add-appointment">
                   <h4 className="fw-bold">إضافة حجز جديد</h4>
-                  <form
-                        className="p-2 border rounded"
-                        onSubmit={handleSubmit(onSubmit)}
-                  >
-
+                  <form className="p-2 border rounded" onSubmit={handleSubmit(onSubmit)}>
                         {/* اسم الحالة */}
                         <Row className="mb-4 p-2">
                               <h4 className="text-end fw-bold">اسم الحالة</h4>
-                              <input
-                                    className="form-control"
-                                    placeholder="اسم الحالة"
-                                    {...register("caseName")}
-                              />
-                              {errors.caseName && (
-                                    <p className="text-danger">{errors.caseName.message}</p>
-                              )}
+                              <input className="form-control" placeholder="اسم الحالة" {...register("caseName")} />
+                              {errors.caseName && <p className="text-danger">{errors.caseName.message}</p>}
                         </Row>
 
                         {/* رقم الهاتف */}
                         <Row className="mb-4 p-2">
                               <h4 className="text-end fw-bold">رقم الهاتف</h4>
-                              <input
-                                    className="form-control"
-                                    placeholder="رقم الهاتف"
-                                    {...register("phone")}
-                              />
-                              {errors.phone && (
-                                    <p className="text-danger">{errors.phone.message}</p>
-                              )}
+                              <input className="form-control" placeholder="رقم الهاتف" {...register("phone")} />
+                              {errors.phone && <p className="text-danger">{errors.phone.message}</p>}
                         </Row>
 
-                        {/* رقم الهاتف */}
+                        {/* تاريخ الميلاد */}
                         <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold">التاريخ / الوقت</h4>
-
-                              <input
-                                    type="datetime-local"
-                                    className="form-control"
-                                    {...register("dateTime", {
-                                          required: "مطلوب إدخال التاريخ والوقت"
-                                    })}
-                              />
-
-                              {errors.dateTime && (
-                                    <p className="text-danger">{errors.dateTime.message}</p>
-                              )}
+                              <h4 className="text-end fw-bold">تاريخ الميلاد</h4>
+                              <input type="date" className="form-control" {...register("birthDate")} />
                         </Row>
 
-
-                        {/* الرقم القومي (اختياري) */}
+                        {/* التاريخ / الوقت */}
                         <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold">الرقم القومي</h4>
-                              <input
-                                    className="form-control"
-                                    placeholder="الرقم القومي (اختياري)"
-                                    {...register("nationalId")}
-                              />
+                              <h4 className="text-end fw-bold">تاريخ / وقت الحجز</h4>
+                              <input type="datetime-local" className="form-control" {...register("dateTime")} />
+                              {errors.dateTime && <p className="text-danger">{errors.dateTime.message}</p>}
                         </Row>
 
+                        {/* الرقم القومي */}
+                        <Row className="mb-4 p-2">
+                              <h4 className="text-end fw-bold">الرقم القومي (اختياري)</h4>
+                              <input className="form-control" placeholder="الرقم القومي" {...register("nationalId")} />
+                        </Row>
+
+                        {/* أمراض مزمنة */}
+                        <Row className="mb-4 p-2">
+                              <div className="form-check text-end">
+                                    <label className="form-check-label" htmlFor="chronicDiseaseCheckbox">
+                                          يعاني من أمراض مزمنة
+                                    </label>
+                                    <input
+                                          type="checkbox"
+                                          className="form-check-input"
+                                          {...register("hasChronicDisease")}
+                                          id="chronicDiseaseCheckbox"
+                                    />
+                              </div>
+                        </Row>
+
+                        {/* خانة تفاصيل المرض تظهر لو checkbox مفعل */}
+                        {watchChronic && (
+                              <Row className="mb-4 p-2">
+                                    <h4 className="text-end fw-bold">تفاصيل المرض المزمن</h4>
+                                    <input
+                                          type="text"
+                                          className="form-control"
+                                          placeholder="اكتب تفاصيل المرض"
+                                          {...register("chronicDiseaseDetails")}
+                                    />
+                              </Row>
+                        )}
 
                         <button className="btn btn-primary px-4 py-2 w-100" type="submit" disabled={loading}>
                               {loading ? "جاري الإرسال..." : "إضافة الحجز"}

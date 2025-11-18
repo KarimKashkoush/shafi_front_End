@@ -5,35 +5,43 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const DEFAULT_TZ = "Africa/Cairo";
-
-function toDefaultTz(value) {
+// تحويل الوقت من UTC → توقيت جهاز المستخدم
+function toLocalTz(value) {
       if (!value) return null;
-      const dt = dayjs.utc(value);
+      const dt = dayjs.utc(value); // الوقت المخزن في DB UTC
       if (!dt.isValid()) return null;
-      return dt.tz(DEFAULT_TZ);
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone; // توقيت الجهاز
+      return dt.tz(userTz);
 }
 
-export function formatUtcDateTime(value, format = "HH:mm - DD/MM/YYYY") {
-      const dt = toDefaultTz(value);
+// عرض التاريخ والوقت بنظام 12 ساعة
+export function formatUtcDateTime(value, format = "hh:mm A - DD/MM/YYYY") {
+      const dt = toLocalTz(value);
       return dt ? dt.format(format) : "—";
 }
 
+// عرض التاريخ فقط
 export function formatUtcDate(value, format = "DD/MM/YYYY") {
-      const dt = toDefaultTz(value);
+      const dt = toLocalTz(value);
       return dt ? dt.format(format) : "—";
 }
 
+// حساب العمر
 export function calculateAgeUtc(birthDateString) {
-      const dt = toDefaultTz(birthDateString);
+      const dt = toLocalTz(birthDateString);
       if (!dt) return null;
-      const now = dayjs().tz(DEFAULT_TZ);
+      const now = dayjs().tz(Intl.DateTimeFormat().resolvedOptions().timeZone);
       return now.diff(dt, "year");
 }
 
+// تنسيق للتواريخ في input (input type="date")
 export function formatUtcForInput(value) {
-      const dt = toDefaultTz(value);
+      const dt = toLocalTz(value);
       return dt ? dt.format("YYYY-MM-DD") : "";
 }
 
-
+// تنسيق للتواريخ والوقت للـ input type="datetime-local"
+export function formatUtcForDateTimeInput(value) {
+      const dt = toLocalTz(value);
+      return dt ? dt.format("YYYY-MM-DDTHH:mm") : "";
+}
