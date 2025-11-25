@@ -2,7 +2,6 @@ import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "yet-another-react-lightbox/styles.css";
-import { Row } from "react-bootstrap";
 import { formatUtcDateTime } from "../../../utils/date";
 
 export default function DoctorCases() {
@@ -111,8 +110,6 @@ export default function DoctorCases() {
             });
       };
 
-      console.log(appointments)
-
       // تعديل الرقم القومي
       const handleEditNationalId = async (id, currentValue) => {
             const newId = window.prompt("ادخل الرقم القومي:", currentValue || "");
@@ -146,9 +143,6 @@ export default function DoctorCases() {
                   }
             }
       };
-
-
-
 
       // البحث
       const filteredAppointments = appointments.filter((appt) => {

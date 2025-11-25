@@ -30,6 +30,8 @@ import DoctorAddAppointments from "../components/DoctorAddAppointments/DoctorAdd
 import DoctorAddResults from "../pages/Profile/DoctorProfile/DoctorAddResults";
 import DoctorCases from "../pages/Profile/DoctorProfile/DoctorCases";
 import DoctorPatientReports from "../pages/Profile/DoctorProfile/DoctorPatientReports";
+import DoctorStafLayout from "../layouts/DoctorStafLayout";
+import DoctorStafProfile from "../pages/Profile/StafProfile/DoctorStafProfile";
 
 function AppRouter() {
       const { user } = useContext(AuthContext);
@@ -47,7 +49,11 @@ function AppRouter() {
                   {
                         path: "/profile/:id",
                         element:
-                              user.role === "patient" ? (<PatientLayout />) : user.role === "admin" ? (<AdminLayout />) : user.role === "doctor" ? (<DoctorLayout />) : (<StafLayout />),
+                              user.role === "patient" ? (<PatientLayout />)
+                                    : user.role === "admin" ? (<AdminLayout />)
+                                          : user.role === "doctor" ? (<DoctorLayout />)
+                                                : user.role === "clinic_reception" ? (<DoctorStafLayout />)
+                                                      : (<StafLayout />),
                         children:
                               user.role === "patient"
                                     ? [
@@ -71,15 +77,21 @@ function AppRouter() {
                                                       { path: "add-result", element: <DoctorAddResults /> },
                                                       { path: "manage-receptionists", element: <ManageReceptionists /> },
                                                       { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
-                                                ]
-                                                : [
-                                                      { index: true, element: <StafProfile /> },
-                                                      { path: "userData", element: <ProfileUserData /> },
-                                                      { path: "add-appointment", element: <StafAddAppointment /> },
-                                                      { path: "add-result", element: <StafAddResult /> },
-                                                      { path: "cases", element: <Cases /> },
-                                                      { path: "manage-receptionists", element: <ManageReceptionists /> },
-                                                ],
+                                                ] : user.role === "clinic_reception"
+                                                      ? [
+                                                            { index: true, element: <DoctorCases /> },
+                                                            { path: "userData", element: <ProfileUserData /> },
+                                                            { path: "add-appointment", element: <DoctorAddAppointments /> },
+                                                            { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
+                                                      ]
+                                                      : [
+                                                            { index: true, element: <StafProfile /> },
+                                                            { path: "userData", element: <ProfileUserData /> },
+                                                            { path: "add-appointment", element: <StafAddAppointment /> },
+                                                            { path: "add-result", element: <StafAddResult /> },
+                                                            { path: "cases", element: <Cases /> },
+                                                            { path: "manage-receptionists", element: <ManageReceptionists /> },
+                                                      ],
                   },
             ]
             : [];
