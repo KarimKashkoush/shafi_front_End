@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import Lightbox from "yet-another-react-lightbox";
-
 import "yet-another-react-lightbox/styles.css";
-
 import { Zoom } from "yet-another-react-lightbox/plugins";
 import { z } from "zod";
-
 import pdfImage from '../../../assets/images/file.png';
 import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
@@ -14,8 +11,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Row } from "react-bootstrap";
 import { useParams } from "react-router";
 import { formatUtcDateTime } from "../../../utils/date";
-
-
 
 export default function DoctorPatientReports() {
       const { nationalId } = useParams();
