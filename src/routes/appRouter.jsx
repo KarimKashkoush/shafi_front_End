@@ -114,7 +114,7 @@ function AppRouter() {
                   element: <ShowUserData />,
                   children: [{ index: true, element: <PatientProfile /> }],
             },
-
+            { path: "/patientReports/:nationalId", element: <DoctorPatientReports /> },
             // ✅ الراوت الجديد هنا
             {
                   path: "/appointment/:id",

@@ -169,9 +169,11 @@ export default function DoctorCases() {
             return new Date(a.createdAt) - new Date(b.createdAt);
       });
 
+
       return (
             <section className="cases">
                   <h4 className="fw-bold">إدارة الحالات</h4>
+
                   <div className="container my-4">
                         <div className="row gap-2 align-items-end justify-content-center">
                               <div className="col-md-3">
