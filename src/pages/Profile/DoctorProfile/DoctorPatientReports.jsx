@@ -53,6 +53,7 @@ export default function DoctorPatientReports() {
       const schema = z.object({
             report: z.string().min(1, "التقرير مطلوب"),
             nextAction: z.string().min(1, "الإجراء التالي مطلوب"),
+            sessionCost: z.string().optional(),
       });
 
       const {
@@ -64,6 +65,7 @@ export default function DoctorPatientReports() {
             defaultValues: {
                   report: "",
                   nextAction: "",
+                  sessionCost: 0,
             },
       });
 
@@ -75,6 +77,7 @@ export default function DoctorPatientReports() {
                   const formData = new FormData();
                   formData.append("report", data.report);
                   formData.append("nextAction", data.nextAction);
+                  formData.append("sessionCost", data.sessionCost);
                   formData.append("userId", userId);
                   files.forEach((file) => formData.append("files", file));
 
@@ -91,9 +94,8 @@ export default function DoctorPatientReports() {
 
                   Swal.fire("تم", "تم رفع تقرير الحالة بنجاح ✅", "success");
 
-                  // ✅ مسح الفورم
-                  e.target.reset();  // يمسح قيم الفورم
-                  setFiles([]);      // يمسح ملفات الرفع
+                  e.target.reset();
+                  setFiles([]);
 
                   // ✅ تحديث الجدول تلقائي
                   await fetchAppointments();
@@ -217,6 +219,9 @@ export default function DoctorPatientReports() {
                                                 <th>التقرير</th>
                                                 <th>الإجراء التالي</th>
                                                 <th>الملفات</th>
+                                                <th>مبلغ الجلسة</th>
+                                                <th>المدفوع</th>
+                                                <th>المتبقي</th>
                                                 <th>تاريخ الإضافة</th>
                                                 <th>اضافة تقرير</th>
                                           </tr>
@@ -231,7 +236,7 @@ export default function DoctorPatientReports() {
                                                             <td>
                                                                   {r.result
                                                                         ? r.result.map((r) => <div key={r.id}>{r.report}</div>)
-                                                                        : <span className="text-danger fw-bold">❌ لم يتم إرفاق تقرير</span>}
+                                                                        : <span className="text-danger fw-bold">❌</span>}
                                                             </td>
 
                                                             {/* الإجراء التالي */}
@@ -242,40 +247,49 @@ export default function DoctorPatientReports() {
                                                             </td>
 
                                                             {/* الملفات */}
+
                                                             <td>
-                                                                  {r.result
-                                                                        ? (
-                                                                              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                                                                                    {r.result.map((r) =>
-                                                                                          r.files.map((file, i) => file.toLowerCase().endsWith(".pdf") ? (
-                                                                                                <a key={i} href={file} target="_blank" rel="noopener noreferrer">
+                                                                  {r.result && r.result.length > 0 ? (
+                                                                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
+                                                                              {r.result.map((res, idx) =>
+                                                                                    Array.isArray(res.files) && res.files.length > 0 ? (
+                                                                                          res.files.map((file, i) =>
+                                                                                                file.toLowerCase().endsWith(".pdf") ? (
+                                                                                                      <a key={`${idx}-${i}`} href={file} target="_blank" rel="noopener noreferrer">
+                                                                                                            <img src={pdfImage} alt="PDF" style={{ width: 40, height: 40, cursor: "pointer" }} />
+                                                                                                      </a>
+                                                                                                ) : (
                                                                                                       <img
-                                                                                                            src={pdfImage}
-                                                                                                            alt="PDF"
-                                                                                                            style={{ width: "40px", height: "40px", cursor: "pointer" }}
+                                                                                                            key={`${idx}-${i}`}
+                                                                                                            src={file}
+                                                                                                            alt="file"
+                                                                                                            style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 5, cursor: "pointer" }}
+                                                                                                            onClick={() => openGallery(res.files, i)}
                                                                                                       />
-                                                                                                </a>
-                                                                                          ) : (
-                                                                                                <img
-                                                                                                      key={i}
-                                                                                                      src={file}
-                                                                                                      alt="file"
-                                                                                                      style={{
-                                                                                                            width: "50px",
-                                                                                                            height: "50px",
-                                                                                                            objectFit: "cover",
-                                                                                                            borderRadius: "5px",
-                                                                                                            cursor: "pointer"
-                                                                                                      }}
-                                                                                                      onClick={() => openGallery(r.files, i)}
-                                                                                                />
-                                                                                          ))
-                                                                                    )}
-                                                                              </div>
-                                                                        )
-                                                                        : <span className="text-danger fw-bold">❌ لم يتم إرفاق ملفات</span>
+                                                                                                )
+                                                                                          )
+                                                                                    ) : (
+                                                                                          <span key={idx} className="text-danger fw-bold">❌</span>
+                                                                                    )
+                                                                              )}
+                                                                        </div>
+                                                                  ) : (
+                                                                        <span className="text-danger fw-bold">❌</span>
+                                                                  )}
+                                                            </td>
+
+                                                            <td>
+                                                                  {r.result && r.result.length > 0
+                                                                        ? r.result.map((res) => (
+                                                                              <div key={res.id}>{res.sessionCost ? res.sessionCost : '00'}</div>
+                                                                        ))
+                                                                        : <div>00</div>
                                                                   }
                                                             </td>
+                                                            <td>11</td>
+                                                            <td>11</td>
+
+
 
                                                             {/* تاريخ الإضافة */}
                                                             <td dir="ltr">{formatUtcDateTime(r.resultCreatedAt || r.createdAt)}</td>
@@ -324,6 +338,17 @@ export default function DoctorPatientReports() {
                                                                                                       {errors.nextAction && (
                                                                                                             <p className="text-danger">{errors.nextAction.message}</p>
                                                                                                       )}
+                                                                                                </Row>
+
+                                                                                                <Row className="mb-4 p-2">
+                                                                                                      <h4 className="text-end fw-bold">تكلفة الجلسة</h4>
+                                                                                                      <input
+                                                                                                            type="number"
+                                                                                                            className="form-control"
+                                                                                                            placeholder="تكلفة الجلسة"
+                                                                                                            {...register("sessionCost")}
+                                                                                                      />
+
                                                                                                 </Row>
 
                                                                                                 <Row className="mb-4 p-2">

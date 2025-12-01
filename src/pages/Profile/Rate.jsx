@@ -7,15 +7,14 @@ export default function Rate() {
 
       const [appointments, setAppointments] = useState([]);
       const [loading, setLoading] = useState(true);
-      const [startDate, setStartDate] = useState(today); // ✅ البداية = تاريخ اليوم تلقائيًا
-      const [endDate, setEndDate] = useState(""); // النهاية فاضية
+      const [startDate, setStartDate] = useState(today); 
+      const [endDate, setEndDate] = useState(""); 
       const apiUrl = import.meta.env.VITE_API_URL;
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
 
-      // 🔹 جلب البيانات
       const fetchAppointments = async () => {
-            const token = localStorage.getItem("token"); // 🟢 جلب التوكن
+            const token = localStorage.getItem("token"); 
 
             try {
                   setLoading(true);

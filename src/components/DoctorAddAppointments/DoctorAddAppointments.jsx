@@ -20,6 +20,16 @@ const schema = z.object({
       birthDate: z.string().optional(),
       hasChronicDisease: z.boolean().optional(),
       chronicDiseaseDetails: z.string().optional(),
+      price: z
+            .union([
+                  z.coerce.number()
+                        .refine((val) => !isNaN(val), { message: "سعر الكشف مطلوب" })
+                        .min(0, "سعر الكشف لا يمكن أن يكون سالبًا"),
+                  z.literal("").transform(() => null),
+                  z.null(),
+                  z.undefined(),
+            ])
+            .optional(),
 });
 
 export default function DoctorAddAppointments() {
@@ -37,7 +47,7 @@ export default function DoctorAddAppointments() {
             return () => clearInterval(interval);
       }, []);
 
-      const { register, handleSubmit, watch, formState: { errors } } = useForm({
+      const { register,setValue, handleSubmit, watch, formState: { errors } } = useForm({
             resolver: zodResolver(schema),
             defaultValues: {
                   caseName: "",
@@ -47,6 +57,7 @@ export default function DoctorAddAppointments() {
                   hasChronicDisease: false,
                   chronicDiseaseDetails: "",
                   dateTime: currentDateTime,
+                  price: "",
             },
       });
 
@@ -86,6 +97,32 @@ export default function DoctorAddAppointments() {
             }
       };
 
+      const watchNationalId = watch("nationalId");
+
+      useEffect(() => {
+            const id = watchNationalId;
+            if (id && id.length === 14) {
+                  const centuryCode = Number(id[0]);
+                  const yearCode = id.slice(1, 3);
+                  const monthCode = id.slice(3, 5);
+                  const dayCode = id.slice(5, 7);
+
+                  let century = 0;
+                  if (centuryCode === 2) century = 1900;
+                  else if (centuryCode === 3) century = 2000;
+
+                  const year = century + Number(yearCode);
+                  const month = Number(monthCode);
+                  const day = Number(dayCode);
+
+                  // صياغة yyyy-mm-dd عشان input type=date يقبلها
+                  const birthDateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+                  // تعيين القيمة في الفورم
+                  setValue("birthDate", birthDateStr);
+            }
+      }, [watchNationalId, setValue]);
+
       return (
             <section className="staf-add-appointment">
                   <h4 className="fw-bold">إضافة حجز جديد</h4>
@@ -104,6 +141,12 @@ export default function DoctorAddAppointments() {
                               {errors.phone && <p className="text-danger">{errors.phone.message}</p>}
                         </Row>
 
+                        {/* الرقم القومي */}
+                        <Row className="mb-4 p-2">
+                              <h4 className="text-end fw-bold">الرقم القومي (اختياري)</h4>
+                              <input className="form-control" placeholder="الرقم القومي" {...register("nationalId")} />
+                        </Row>
+
                         {/* تاريخ الميلاد */}
                         <Row className="mb-4 p-2">
                               <h4 className="text-end fw-bold">تاريخ الميلاد</h4>
@@ -112,15 +155,16 @@ export default function DoctorAddAppointments() {
 
                         {/* التاريخ / الوقت */}
                         <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold">تاريخ / وقت الحجز</h4>
+                              <h4 className="text-end fw-bold"> تاريخ / وقت الحجز (اختياري)</h4>
                               <input type="datetime-local" className="form-control" {...register("dateTime")} />
                               {errors.dateTime && <p className="text-danger">{errors.dateTime.message}</p>}
                         </Row>
 
-                        {/* الرقم القومي */}
+                        {/* سعر الكشف */}
                         <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold">الرقم القومي (اختياري)</h4>
-                              <input className="form-control" placeholder="الرقم القومي" {...register("nationalId")} />
+                              <h4 className="text-end fw-bold">سعر الكشف (اختياري)</h4>
+                              <input type="number" className="form-control" placeholder="سعر الكشف" {...register("price")} />
+                              {errors.price && <p className="text-danger">{errors.price.message}</p>}
                         </Row>
 
                         {/* أمراض مزمنة */}
