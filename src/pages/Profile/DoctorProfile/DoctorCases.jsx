@@ -15,48 +15,30 @@ export default function DoctorCases() {
       const userId = user?.id;
 
       // جلب البيانات
-      const fetchAppointments = useCallback(async () => {
-            const token = localStorage.getItem("token");
-            try {
-                  setLoading(true);
-                  const res = await axios.get(`${apiUrl}/appointments`, {
-                        headers: {
-                              Authorization: `Bearer ${token}`,
-                        },
-                  });
+const fetchAppointments = useCallback(async () => {
+      const token = localStorage.getItem("token");
+      try {
+            setLoading(true);
+            const res = await axios.get(`${apiUrl}/appointments`, {
+                  headers: {
+                        Authorization: `Bearer ${token}`,
+                  },
+            });
 
-                  // فلترة حسب المستخدم أو المركز
-                  const userAppointments = res.data.data.filter(
-                        (appt) => appt.userId === userId || appt.centerId === userId
-                  );
+            // فلترة حسب المستخدم أو المركز فقط
+            const userAppointments = res.data.data.filter(
+                  (appt) => appt.userId === userId || appt.centerId === userId
+            );
 
-                  // ✅ فلترة للحصول على آخر حالة لكل رقم قومي
-                  const uniqueAppointments = Object.values(
-                        userAppointments.reduce((acc, appt) => {
-                              if (!appt.nationalId) return acc; // تجاهل الحالات بدون رقم قومي
-                              if (
-                                    !acc[appt.nationalId] ||
-                                    new Date(appt.createdAt) > new Date(acc[appt.nationalId].createdAt)
-                              ) {
-                                    acc[appt.nationalId] = appt; // خزن الحالة الأحدث فقط لكل رقم قومي
-                              }
-                              return acc;
-                        }, {})
-                  );
+            // الحالات بدون أي فلترة إضافية
+            setAppointments(userAppointments);
 
-                  // الحالات بدون رقم قومي
-                  const noNationalIdAppointments = userAppointments.filter(
-                        (appt) => !appt.nationalId
-                  );
-
-                  // دمجهم مع بعض
-                  setAppointments([...uniqueAppointments, ...noNationalIdAppointments]);
-            } catch (err) {
-                  console.error("Error fetching appointments", err);
-            } finally {
-                  setLoading(false);
-            }
-      }, [apiUrl, userId]);
+      } catch (err) {
+            console.error("Error fetching appointments", err);
+      } finally {
+            setLoading(false);
+      }
+}, [apiUrl, userId]);
 
       useEffect(() => {
             fetchAppointments();
@@ -237,7 +219,7 @@ export default function DoctorCases() {
                                     <tbody style={{ verticalAlign: "middle" }}>
                                           {sortedAppointments.length > 0 ? (
                                                 sortedAppointments.map((appt, idx) => (
-                                                      <tr key={`${appt.id}`}>
+                                                      <tr key={idx}>
                                                             <td>{idx + 1}</td>
                                                             <td>{appt.caseName}</td>
                                                             <td>{appt.phone}</td>

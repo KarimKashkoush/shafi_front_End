@@ -78,8 +78,6 @@ export default function DoctorAddAppointments() {
                         userId: user?.id,
                   };
 
-                  console.log("DATA SENT TO API:", payload);
-
                   const response = await api.post(`/appointments`, payload, {
                         headers: {
                               Authorization: `Bearer ${token}`,

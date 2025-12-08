@@ -46,6 +46,23 @@ export default function DoctorPatientReports() {
             }
       }, [apiUrl, userId]);
 
+      // قبل return
+      const totalSessionCost = appointments.reduce((sum, appt) => {
+            if (!appt.result) return sum;
+            return sum + appt.result.reduce((s, res) => s + Number(res.sessionCost || 0), 0);
+      }, 0);
+
+      const totalPaid = appointments.reduce((sum, appt) => {
+            if (!appt.result) return sum;
+            return sum + appt.result.reduce((s, res) => {
+                  const paymentsForSession = appt.payments?.filter(p => p.sessionId === res.id) || [];
+                  const paidAmount = paymentsForSession.reduce((ps, p) => ps + Number(p.amount || 0), 0);
+                  return s + paidAmount;
+            }, 0);
+      }, 0);
+
+      const totalRemaining = totalSessionCost - totalPaid;
+
       useEffect(() => {
             fetchAppointments();
       }, [fetchAppointments]); // ✅ التحذير اختفى
@@ -278,18 +295,40 @@ export default function DoctorPatientReports() {
                                                                   )}
                                                             </td>
 
+                                                            {/* مبلغ الجلسة */}
                                                             <td>
                                                                   {r.result && r.result.length > 0
                                                                         ? r.result.map((res) => (
-                                                                              <div key={res.id}>{res.sessionCost ? res.sessionCost : '00'}</div>
+                                                                              <div key={res.id}>{res.sessionCost ? Number(res.sessionCost).toLocaleString() : '0'}</div>
                                                                         ))
-                                                                        : <div>00</div>
+                                                                        : <div>0</div>
                                                                   }
                                                             </td>
-                                                            <td>11</td>
-                                                            <td>11</td>
 
+                                                            {/* المدفوع */}
+                                                            <td>
+                                                                  {r.result && r.result.length > 0
+                                                                        ? r.result.map((res) => {
+                                                                              const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
+                                                                              const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+                                                                              return <div key={res.id}>{paidAmount.toLocaleString()}</div>;
+                                                                        })
+                                                                        : <div>0</div>
+                                                                  }
+                                                            </td>
 
+                                                            {/* المتبقي */}
+                                                            <td>
+                                                                  {r.result && r.result.length > 0
+                                                                        ? r.result.map((res) => {
+                                                                              const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
+                                                                              const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+                                                                              const remaining = res.sessionCost ? Number(res.sessionCost) - paidAmount : 0;
+                                                                              return <div key={res.id}>{remaining.toLocaleString()}</div>;
+                                                                        })
+                                                                        : <div>0</div>
+                                                                  }
+                                                            </td>
 
                                                             {/* تاريخ الإضافة */}
                                                             <td dir="ltr">{formatUtcDateTime(r.resultCreatedAt || r.createdAt)}</td>
@@ -390,8 +429,13 @@ export default function DoctorPatientReports() {
                                                 </tr>
                                           )}
                                     </tbody>
-
-
+                                    <tr className="table-dark fw-bold">
+                                          <td colSpan="4"></td>
+                                          <td>{totalSessionCost.toLocaleString()}</td>
+                                          <td>{totalPaid.toLocaleString()}</td>
+                                          <td>{totalRemaining.toLocaleString()}</td>
+                                          <td colSpan="2"></td>
+                                    </tr>
                               </table>
                         </>
                   )}
