@@ -26,8 +26,6 @@ export default function ManageReceptionists() {
                   const res = await api.get("/getReceptionists", {
                         headers: { Authorization: `Bearer ${token}` },
                   });
-
-
                   const data = res.data?.data || [];
                   setReceptionists(data);
             } catch (err) {
@@ -59,14 +57,10 @@ export default function ManageReceptionists() {
                   return;
             }
 
-
             try {
                   const res = await axios.post(`${apiUrl}/addReceptionists`, formData, {
                         headers: { Authorization: `Bearer ${token}` }
                   });
-
-
-
 
                   toast.success(res.data?.message || "تمت الإضافة بنجاح");
                   setLoading(false);
