@@ -14,7 +14,7 @@ export default function ManageReceptionists() {
             phoneNumber: "",
             password: "",
             role: "",
-            specialty: "", // ← ضفنا التخصص هنا
+            specialty: "",
       });
 
       const token = localStorage.getItem("token");
@@ -76,7 +76,7 @@ export default function ManageReceptionists() {
                         email: "",
                         phoneNumber: "",
                         password: "",
-                        specialty: "", 
+                        specialty: "",
                   });
                   fetchReceptionists();
             } catch (err) {
@@ -265,20 +265,31 @@ export default function ManageReceptionists() {
                               <tbody>
                                     {receptionists.length > 0 ? (
                                           receptionists.map((r) => (
-                                                <tr key={r.id}>
+                                                <tr key={r.id} style={{ textAlign: "center", verticalAlign: "middle" }}>
                                                       <td>{r.fullName}</td>
                                                       <td>{r.role}</td>
                                                       <td>{r.email}</td>
                                                       <td>{r.phoneNumber}</td>
-                                                      <td>{r.status === "true" ? "نشط" : "مجمد"}</td>
-                                                      <td className="">
-                                                            <Button onClick={() => handleToggleStatus(r.id, r.status)}>
-                                                                  {r.status === "true" ? "🚫 تجميد" : "✅ تفعيل"}
+                                                      <td
+                                                            style={{
+                                                                  backgroundColor: r.status === "true" ? "#d4edda" : "#fff3cd", // أخضر فاتح أو أصفر فاتح
+                                                                  padding: "5px 10px",
+                                                                  borderRadius: "4px",
+                                                                  textAlign: "center",
+                                                                  fontSize: "14px",
+                                                            }}
+                                                      >
+                                                            {r.status === "true" ? "نشط" : "مجمد"}
+                                                      </td>
+                                                      <td className="d-flex">
+                                                            <Button onClick={() => handleToggleStatus(r.id, r.status)}
+                                                                  className={`border-0 px-2 w-50 ${r.status === "false" ? "bg-warning-subtle text-dark" : "bg-sucsess-subtle text-white"}`}
+                                                            >
+                                                                  {r.status === "true" ? "تجميد" : "تنشيط"}
                                                             </Button>
                                                             <Button
                                                                   onClick={() => handleDelete(r.id)}
-                                                                  style={{ marginLeft: "10px" }}
-                                                                  className="bg-danger text-white mx-1"
+                                                                  className="bg-danger text-white mx-1 border-0 px-2 w-50"
                                                             >
                                                                   🗑️ حذف
                                                             </Button>
