@@ -270,20 +270,20 @@ export default function ManageReceptionists() {
                                                       <td>{r.role}</td>
                                                       <td>{r.email}</td>
                                                       <td>{r.phoneNumber}</td>
-                                                      <td
-                                                            style={{
+                                                      <td>
+                                                            <span style={{
                                                                   backgroundColor: r.status === "true" ? "#d4edda" : "#fff3cd", // أخضر فاتح أو أصفر فاتح
-                                                                  padding: "5px 10px",
+                                                                  padding: "5px 15px",
                                                                   borderRadius: "4px",
                                                                   textAlign: "center",
                                                                   fontSize: "14px",
-                                                            }}
-                                                      >
-                                                            {r.status === "true" ? "نشط" : "مجمد"}
+                                                            }}>
+                                                                  {r.status === "true" ? "نشط" : "مجمد"}
+                                                            </span>
                                                       </td>
                                                       <td className="d-flex">
                                                             <Button onClick={() => handleToggleStatus(r.id, r.status)}
-                                                                  className={`border-0 px-2 w-50 ${r.status === "false" ? "bg-warning-subtle text-dark" : "bg-sucsess-subtle text-white"}`}
+                                                                  className={`border-0 px-2 w-50 ${r.status === "false" ? "bg-warning text-dark" : "bg-sucsess-subtle text-white"}`}
                                                             >
                                                                   {r.status === "true" ? "تجميد" : "تنشيط"}
                                                             </Button>
