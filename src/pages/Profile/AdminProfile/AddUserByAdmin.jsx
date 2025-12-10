@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 export default function AddUserByAdmin() {
       const [userType, setUserType] = useState('');
       const [specialty, setSpecialty] = useState('');
+      const [loading, setLoading] = useState(false);
 
       const { register, handleSubmit } = useForm({
             defaultValues: {
@@ -19,6 +20,7 @@ export default function AddUserByAdmin() {
       })
 
       async function onSubmit(data) {
+            setLoading(true);
             try {
                   const apiUrl = import.meta.env.VITE_API_URL;
                   const token = localStorage.getItem("token");
@@ -28,9 +30,11 @@ export default function AddUserByAdmin() {
                               Authorization: `Bearer ${token}`,
                         },
                   });
+                  setLoading(false);
 
                   alert("تم إنشاء المستخدم بنجاح ✅");
             } catch (err) {
+                  setLoading(false);
                   console.error(err);
                   alert("حدث خطأ أثناء إنشاء المستخدم ❌");
             }
@@ -59,8 +63,7 @@ export default function AddUserByAdmin() {
       return (
             <section className="add-user-by-admin">
                   <h4 className="text-center fw-bold">إضـــافة مستخدم جديد</h4>
-
-
+                  
                   <section className="form">
                         <Form noValidate onSubmit={handleSubmit(onSubmit)}>
 
@@ -104,6 +107,7 @@ export default function AddUserByAdmin() {
                                                 className="form-control"
                                           >
                                                 <option value="">-- اختر النوع --</option>
+                                                <option value="medicalCenter">مركز طبي</option>
                                                 <option value="doctor">دكتور - عيادة</option>
                                                 <option value="radiology">مركز أشعة</option>
                                                 <option value="lab">معمل تحاليل</option>
@@ -116,7 +120,7 @@ export default function AddUserByAdmin() {
                               </Row>
 
                               {/* اختيار التخصص لو اختار دكتور */}
-                              {userType === "doctor" && (
+                              {(["doctor", "medicalCenter"].includes(userType)) && (
                                     <Row className="m-3 py-2">
                                           <Form.Group as={Col} md="12" controlId="specialty">
                                                 <Form.Label>
@@ -143,6 +147,7 @@ export default function AddUserByAdmin() {
                                     </Row>
                               )}
 
+
                               <Row className="m-3 py-2">
                                     <Form.Group as={Col} md="12" controlId="gender">
                                           <Form.Label>الجنس <span>*</span></Form.Label>
@@ -156,8 +161,9 @@ export default function AddUserByAdmin() {
                               </Row>
 
                               <Row className="m-3 py-2">
-                                    <Button type="submit" className="mt-3">
-                                          إنشاء المستخدم
+                                    <Button type="submit" className="mt-3" disabled={loading}>
+                                          {loading ? 'جاري الإنشاء...' : 'إنشاء مستخدم'}
+
                                     </Button>
                               </Row>
 

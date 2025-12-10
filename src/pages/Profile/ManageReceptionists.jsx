@@ -5,13 +5,18 @@ import axios from "axios";
 import { Col, Row, Form, Button } from "react-bootstrap";
 
 export default function ManageReceptionists() {
+
+      const [loading, setLoading] = useState(false)
       const [receptionists, setReceptionists] = useState([]);
       const [formData, setFormData] = useState({
             fullName: "",
             email: "",
             phoneNumber: "",
             password: "",
+            role: "",
+            specialty: "", // ← ضفنا التخصص هنا
       });
+
       const token = localStorage.getItem("token");
       const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -21,6 +26,7 @@ export default function ManageReceptionists() {
                   const res = await api.get("/getReceptionists", {
                         headers: { Authorization: `Bearer ${token}` },
                   });
+
 
                   const data = res.data?.data || [];
                   setReceptionists(data);
@@ -36,33 +42,45 @@ export default function ManageReceptionists() {
 
       // 🟡 إضافة موظف استقبال جديد
       const handleSubmit = async (e) => {
+            setLoading(true);
+
             e.preventDefault();
 
             if (
                   !formData.fullName ||
                   !formData.email ||
                   !formData.phoneNumber ||
-                  !formData.password
+                  !formData.password ||
+                  !formData.role ||
+                  (formData.role === "doctor" && !formData.specialty) // ← شرط التخصص
             ) {
                   toast.error("يرجى ملء جميع الحقول");
+                  setLoading(false);
                   return;
             }
 
+
             try {
                   const res = await axios.post(`${apiUrl}/addReceptionists`, formData, {
-                        headers: { Authorization: `Bearer ${token}` },
+                        headers: { Authorization: `Bearer ${token}` }
                   });
+
+
 
 
                   toast.success(res.data?.message || "تمت الإضافة بنجاح");
+                  setLoading(false);
                   setFormData({
                         fullName: "",
+                        role: "",
                         email: "",
                         phoneNumber: "",
                         password: "",
+                        specialty: "", 
                   });
                   fetchReceptionists();
             } catch (err) {
+                  setLoading(false);
                   console.error("Error adding receptionist:", err);
                   toast.error(err.response?.data?.message || "حدث خطأ أثناء الإضافة");
             }
@@ -87,7 +105,8 @@ export default function ManageReceptionists() {
 
       // 🟠 تغيير حالة الموظف (تفعيل / تجميد)
       const handleToggleStatus = async (id, currentStatus) => {
-            const newStatus = currentStatus === "active" ? "frozen" : "active";
+            const newStatus = currentStatus === "true" ? "false" : "true";
+
 
             try {
                   const res = await api.patch(
@@ -104,9 +123,28 @@ export default function ManageReceptionists() {
             }
       };
 
+      const specialties = [
+            { value: "internal medicine", label: "الباطنة (Internal Medicine)" },
+            { value: "general surgery", label: "الجراحة العامة (General Surgery)" },
+            { value: "pediatrics", label: "الأطفال (Pediatrics)" },
+            { value: "obgyn", label: "النساء والتوليد (Obstetrics & Gynecology)" },
+            { value: "ent", label: "الأنف والأذن والحنجرة (ENT)" },
+            { value: "ophthalmology", label: "العيون (Ophthalmology)" },
+            { value: "orthopedics", label: "العظام (Orthopedics)" },
+            { value: "dermatology", label: "الجلدية (Dermatology)" },
+            { value: "urology", label: "المسالك البولية (Urology)" },
+            { value: "dentistry", label: "الأسنان (Dentistry)" },
+            { value: "cardiology", label: "القلب والأوعية الدموية (Cardiology)" },
+            { value: "pulmonology", label: "الصدر (Pulmonology)" },
+            { value: "neurology", label: "المخ والأعصاب (Neurology)" },
+            { value: "psychiatry", label: "النفسية والعصبية (Psychiatry)" },
+            { value: "nutrition", label: "التغذية والسمنة (Nutrition & Obesity)" },
+            { value: "general practice", label: "الطب العام (General Practice)" },
+      ];
+
       return (
             <div className="p-4">
-                  <h2 className="mb-3">إدارة موظفي الاستقبال</h2>
+                  <h2 className="mb-3">إدارة الموظفين</h2>
 
                   <form onSubmit={handleSubmit} className="mb-4 flex flex-col gap-2">
 
@@ -122,22 +160,73 @@ export default function ManageReceptionists() {
                         </Row>
 
                         <Row className="m-3 py-2">
-                              <Form.Group as={Col} md='12' controlId="email">
-                                    <Form.Label>الإيميل<span>*</span></Form.Label>
-                                    <Form.Control required type="email" placeholder="أدخل الإيميل" value={formData.email}
-                                          onChange={(e) =>
-                                                setFormData({ ...formData, email: e.target.value })
-                                          } />
-                                    <Form.Control.Feedback type="invalid">الإيميل مطلوب</Form.Control.Feedback>
-                              </Form.Group>
-                        </Row>
-
-                        <Row className="m-3 py-2">
                               <Form.Group as={Col} md='12' controlId="phoneNumber">
                                     <Form.Label>رقم الهاتف<span>*</span></Form.Label>
                                     <Form.Control required type="text" placeholder="رقم الهاتف" value={formData.phoneNumber}
                                           onChange={(e) =>
                                                 setFormData({ ...formData, phoneNumber: e.target.value })
+                                          } />
+                                    <Form.Control.Feedback type="invalid">رقم الهاتف مطلوب</Form.Control.Feedback>
+                              </Form.Group>
+                        </Row>
+
+                        <Row className="m-3 py-2">
+                              <Form.Group as={Col} md='12' controlId="role">
+                                    <Form.Label>الدور<span>*</span></Form.Label>
+
+                                    <Form.Select
+                                          required
+                                          value={formData.role}
+                                          onChange={(e) =>
+                                                setFormData({ ...formData, role: e.target.value })
+                                          }
+                                          className="form-control"
+                                    >
+                                          <option value="">-- اختر الدور --</option>
+                                          <option value="receptionist">موظف استقبال</option>
+                                          <option value="doctor">دكتور</option>
+                                    </Form.Select>
+                                    <Form.Control.Feedback type="invalid">النوع مطلوب</Form.Control.Feedback>
+                              </Form.Group>
+                        </Row>
+
+                        {formData.role === "doctor" && (
+                              <Row className="m-3 py-2">
+                                    <Form.Group as={Col} md="12" controlId="specialty">
+                                          <Form.Label>
+                                                اختر التخصص <span>*</span>
+                                          </Form.Label>
+
+                                          <Form.Select
+                                                required
+                                                value={formData.specialty}
+                                                onChange={(e) =>
+                                                      setFormData({ ...formData, specialty: e.target.value })
+                                                }
+                                                className="form-control"
+                                          >
+                                                <option value="">-- اختر التخصص --</option>
+                                                {specialties.map((spec) => (
+                                                      <option key={spec.value} value={spec.value}>
+                                                            {spec.label}
+                                                      </option>
+                                                ))}
+                                          </Form.Select>
+
+                                          <Form.Control.Feedback type="invalid">
+                                                هذا الحقل مطلوب
+                                          </Form.Control.Feedback>
+                                    </Form.Group>
+                              </Row>
+                        )}
+
+
+                        <Row className="m-3 py-2">
+                              <Form.Group as={Col} md='12' controlId="email">
+                                    <Form.Label>الإيميل<span>*</span></Form.Label>
+                                    <Form.Control required type="email" placeholder="أدخل الإيميل" value={formData.email}
+                                          onChange={(e) =>
+                                                setFormData({ ...formData, email: e.target.value })
                                           } />
                                     <Form.Control.Feedback type="invalid">الإيميل مطلوب</Form.Control.Feedback>
                               </Form.Group>
@@ -155,8 +244,8 @@ export default function ManageReceptionists() {
                         </Row>
 
                         <Row className="m-3 py-2">
-                              <Button type="submit" className="mt-3">
-                                    إضافة موظف استقبال
+                              <Button type="submit" className="mt-3" disabled={loading}>
+                                    {loading ? "جاري الإضافة..." : "إضافة موظف"}
                               </Button>
                         </Row>
                   </form>
@@ -166,6 +255,7 @@ export default function ManageReceptionists() {
                               <thead className="table-dark">
                                     <tr>
                                           <th>الاسم</th>
+                                          <th>الحاله</th>
                                           <th>الإيميل</th>
                                           <th>رقم الهاتف</th>
                                           <th>الحالة</th>
@@ -177,12 +267,13 @@ export default function ManageReceptionists() {
                                           receptionists.map((r) => (
                                                 <tr key={r.id}>
                                                       <td>{r.fullName}</td>
+                                                      <td>{r.role}</td>
                                                       <td>{r.email}</td>
                                                       <td>{r.phoneNumber}</td>
-                                                      <td>{r.status === "active" ? "نشط" : "مجمد"}</td>
+                                                      <td>{r.status === "true" ? "نشط" : "مجمد"}</td>
                                                       <td className="">
                                                             <Button onClick={() => handleToggleStatus(r.id, r.status)}>
-                                                                  {r.status === "active" ? "🚫 تجميد" : "✅ تفعيل"}
+                                                                  {r.status === "true" ? "🚫 تجميد" : "✅ تفعيل"}
                                                             </Button>
                                                             <Button
                                                                   onClick={() => handleDelete(r.id)}

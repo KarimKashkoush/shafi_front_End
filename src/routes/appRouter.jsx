@@ -32,6 +32,8 @@ import DoctorCases from "../pages/Profile/DoctorProfile/DoctorCases";
 import DoctorPatientReports from "../pages/Profile/DoctorProfile/DoctorPatientReports";
 import DoctorStafLayout from "../layouts/DoctorStafLayout";
 import DoctorStafProfile from "../pages/Profile/StafProfile/DoctorStafProfile";
+import MedicalCenter from "../layouts/MedicalCenter";
+import DashboardMedicalCenter from "../pages/DashboardMedicalCenter/DashboardMedicalCenter";
 
 function AppRouter() {
       const { user } = useContext(AuthContext);
@@ -53,7 +55,8 @@ function AppRouter() {
                                     : user.role === "admin" ? (<AdminLayout />)
                                           : user.role === "doctor" ? (<DoctorLayout />)
                                                 : user.role === "clinic_reception" ? (<DoctorStafLayout />)
-                                                      : (<StafLayout />),
+                                                      : user.role === "medicalCenter" ? (<MedicalCenter />)
+                                                            : (<StafLayout />),
                         children:
                               user.role === "patient"
                                     ? [
@@ -70,28 +73,36 @@ function AppRouter() {
                                           ]
                                           : user.role === "doctor"
                                                 ? [
-                                                      { index: true, element: <DoctorProfile /> },
+                                                      { index: true, element: <DoctorCases /> },
                                                       { path: "userData", element: <ProfileUserData /> },
-                                                      { path: "cases", element: <DoctorCases /> },
                                                       { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                       { path: "add-result", element: <DoctorAddResults /> },
-                                                      { path: "manage-receptionists", element: <ManageReceptionists /> },
                                                       { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
-                                                ] : user.role === "clinic_reception"
-                                                      ? [
-                                                            { index: true, element: <DoctorCases /> },
+                                                ] : user.role === "receptionist"
+                                                ? [
+                                                      { index: true, element: <DoctorCases /> },
                                                             { path: "userData", element: <ProfileUserData /> },
                                                             { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                             { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
                                                       ]
-                                                      : [
-                                                            { index: true, element: <StafProfile /> },
+                                                      :
+                                                      user.role === "medicalCenter"
+                                                      ? [
+                                                            { index: true, element: <DoctorCases /> },
                                                             { path: "userData", element: <ProfileUserData /> },
-                                                            { path: "add-appointment", element: <StafAddAppointment /> },
-                                                            { path: "add-result", element: <StafAddResult /> },
-                                                            { path: "cases", element: <Cases /> },
+                                                            { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                             { path: "manage-receptionists", element: <ManageReceptionists /> },
-                                                      ],
+                                                            { path: "dashboard", element: <DashboardMedicalCenter /> },
+                                                            { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
+                                                            ]
+                                                            : [
+                                                                  { index: true, element: <StafProfile /> },
+                                                                  { path: "userData", element: <ProfileUserData /> },
+                                                                  { path: "add-appointment", element: <StafAddAppointment /> },
+                                                                  { path: "add-result", element: <StafAddResult /> },
+                                                                  { path: "cases", element: <Cases /> },
+                                                                  { path: "manage-receptionists", element: <ManageReceptionists /> },
+                                                            ],
                   },
             ]
             : [];

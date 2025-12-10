@@ -75,7 +75,7 @@ export default function DoctorAddAppointments() {
                   const payload = {
                         ...data,
                         dateTime: utcDateTime,
-                        userId: user?.id,
+                        userId: user?.medicalCenterId,
                   };
 
                   const response = await api.post(`/appointments`, payload, {

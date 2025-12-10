@@ -13,6 +13,7 @@ export default function DoctorCases() {
       const apiUrl = import.meta.env.VITE_API_URL;
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
+      const medicalCenterId = user?.medicalCenterId;
 
       // جلب البيانات
 const fetchAppointments = useCallback(async () => {
@@ -27,7 +28,7 @@ const fetchAppointments = useCallback(async () => {
 
             // فلترة حسب المستخدم أو المركز فقط
             const userAppointments = res.data.data.filter(
-                  (appt) => appt.userId === userId || appt.centerId === userId
+                  (appt) => appt.userId === userId || appt.userId === medicalCenterId
             );
 
             // الحالات بدون أي فلترة إضافية
