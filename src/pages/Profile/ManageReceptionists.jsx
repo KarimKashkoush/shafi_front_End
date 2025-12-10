@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../../lib/api";
 import { toast } from "react-toastify";
 import axios from "axios";
@@ -21,7 +21,7 @@ export default function ManageReceptionists() {
       const apiUrl = import.meta.env.VITE_API_URL;
 
       // 🟢 جلب موظفي الاستقبال
-      const fetchReceptionists = async () => {
+      const fetchReceptionists = useCallback(async () => {
             try {
                   const res = await api.get("/getReceptionists", {
                         headers: { Authorization: `Bearer ${token}` },
@@ -32,11 +32,12 @@ export default function ManageReceptionists() {
                   console.error("Error fetching receptionists:", err);
                   toast.error("حدث خطأ أثناء جلب موظفي الاستقبال");
             }
-      };
+      }, [token]); // تعتمد على token لو هو ممكن يتغير
 
       useEffect(() => {
             fetchReceptionists();
-      }, []);
+      }, [fetchReceptionists]);
+
 
       // 🟡 إضافة موظف استقبال جديد
       const handleSubmit = async (e) => {
