@@ -153,19 +153,13 @@ export default function MainDashboard() {
             return acc + (parseFloat(item.price) || 0);
       }, 0);
 
-
-
-      const totalPaid =
-            filteredPayments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0)
-            + totalVisitsPaid;
+      const totalPaid = filteredPayments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0) + totalVisitsPaid;
 
       const totalRemaining = Math.abs(totalIncome - totalPaid);
-
 
       const getVisitStats = (list) => {
             const newVisits = list.filter(a => !a.isRevisit).length;
             const revisits = list.filter(a => a.isRevisit).length;
-
             return { newVisits, revisits };
       };
 
@@ -179,7 +173,6 @@ export default function MainDashboard() {
             return acc + 5;
       }, 0);
 
-
       // فلترة المواعيد الخاصة بالنهارده
       const todaysAppointments = appointments.filter((a) => {
             const d = normalizeDate(a.createdAt || a.date);
@@ -190,13 +183,6 @@ export default function MainDashboard() {
       });
       const todayStats = getVisitStats(todaysAppointments);
       const totalStats = getVisitStats(filteredAppointments);
-
-      console.log("=======================================")
-      console.log("عدد الحالات:", filteredAppointments.length);
-      console.log("الحالات:", filteredAppointments);
-      console.log("الحالات:", todayStats);
-      console.log("الحالات:", totalStats);
-      console.log("=======================================")
 
       { loading && <p>Loading...</p> }
 
@@ -333,7 +319,6 @@ export default function MainDashboard() {
                               </div>
                         </div>
                   </section>
-
             </section>
       )
 }
