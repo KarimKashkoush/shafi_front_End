@@ -293,7 +293,7 @@ export default function ManageReceptionists() {
                                           ))
                                     ) : (
                                           <tr>
-                                                <td colSpan="5" className="text-center">
+                                                <td colSpan="6" className="text-center">
                                                       لا يوجد موظفون حاليًا
                                                 </td>
                                           </tr>

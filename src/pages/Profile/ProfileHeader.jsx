@@ -9,11 +9,11 @@ export default function ProfileHeader() {
 
       return (
             <section className="profile-header">
-                  <h4>أهــلا، <span>{firstName}</span> {fullName}</h4>
+                  <p className="m-0">أهــلا، {fullName}</p>
                   <Avatar
                         src={userImage || undefined}
                         alt={firstName}
-                        sx={{ width: 56, height: 56 }}
+                        sx={{ width: 46, height: 46 }}
                         loading="lazy"
 
                   >

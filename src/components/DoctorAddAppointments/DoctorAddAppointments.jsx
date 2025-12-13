@@ -20,6 +20,7 @@ const schema = z.object({
       birthDate: z.string().optional(),
       hasChronicDisease: z.boolean().optional(),
       chronicDiseaseDetails: z.string().optional(),
+      isRevisit: z.boolean().optional(),
       price: z
             .union([
                   z.coerce.number()
@@ -47,7 +48,7 @@ export default function DoctorAddAppointments() {
             return () => clearInterval(interval);
       }, []);
 
-      const { register,setValue, handleSubmit, watch, formState: { errors } } = useForm({
+      const { register, setValue, handleSubmit, watch, formState: { errors } } = useForm({
             resolver: zodResolver(schema),
             defaultValues: {
                   caseName: "",
@@ -55,6 +56,7 @@ export default function DoctorAddAppointments() {
                   nationalId: "",
                   birthDate: "",
                   hasChronicDisease: false,
+                  isRevisit: false,
                   chronicDiseaseDetails: "",
                   dateTime: currentDateTime,
                   price: "",
@@ -157,6 +159,21 @@ export default function DoctorAddAppointments() {
                               <input type="datetime-local" className="form-control" {...register("dateTime")} />
                               {errors.dateTime && <p className="text-danger">{errors.dateTime.message}</p>}
                         </Row>
+
+                        <Row className="mb-4 p-2">
+                              <div className="form-check text-end">
+                                    <label className="form-check-label" htmlFor="revisitCheckbox">
+                                          إعادة كشف ؟
+                                    </label>
+                                    <input
+                                          type="checkbox"
+                                          className="form-check-input"
+                                          id="revisitCheckbox"
+                                          {...register("isRevisit")}
+                                    />
+                              </div>
+                        </Row>
+
 
                         {/* سعر الكشف */}
                         <Row className="mb-4 p-2">

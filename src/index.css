@@ -5,6 +5,10 @@
       --p-100: 100px;
 }
 
+.main-color {
+      color: var(--main-color);
+}
+
 ul {
       list-style: none;
       margin: 0;

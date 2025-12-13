@@ -25,15 +25,13 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/Auth.Context";
 import AppointmentDetails from "../pages/Profile/AppointmentDetails/AppointmentDetails";
 import DoctorLayout from "../layouts/DoctorLayout";
-import DoctorProfile from "../pages/Profile/DoctorProfile/DoctorProfile";
 import DoctorAddAppointments from "../components/DoctorAddAppointments/DoctorAddAppointments";
 import DoctorAddResults from "../pages/Profile/DoctorProfile/DoctorAddResults";
 import DoctorCases from "../pages/Profile/DoctorProfile/DoctorCases";
 import DoctorPatientReports from "../pages/Profile/DoctorProfile/DoctorPatientReports";
 import DoctorStafLayout from "../layouts/DoctorStafLayout";
-import DoctorStafProfile from "../pages/Profile/StafProfile/DoctorStafProfile";
 import MedicalCenter from "../layouts/MedicalCenter";
-import DashboardMedicalCenter from "../pages/DashboardMedicalCenter/DashboardMedicalCenter";
+import MainDashboard from "../pages/Dashboard/MainDashboard";
 
 function AppRouter() {
       const { user } = useContext(AuthContext);
@@ -79,21 +77,21 @@ function AppRouter() {
                                                       { path: "add-result", element: <DoctorAddResults /> },
                                                       { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
                                                 ] : user.role === "receptionist"
-                                                ? [
-                                                      { index: true, element: <DoctorCases /> },
+                                                      ? [
+                                                            { index: true, element: <DoctorCases /> },
                                                             { path: "userData", element: <ProfileUserData /> },
                                                             { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                             { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
                                                       ]
                                                       :
                                                       user.role === "medicalCenter"
-                                                      ? [
-                                                            { index: true, element: <DoctorCases /> },
-                                                            { path: "userData", element: <ProfileUserData /> },
-                                                            { path: "add-appointment", element: <DoctorAddAppointments /> },
-                                                            { path: "manage-receptionists", element: <ManageReceptionists /> },
-                                                            { path: "dashboard", element: <DashboardMedicalCenter /> },
-                                                            { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
+                                                            ? [
+                                                                  { index: true, element: <DoctorCases /> },
+                                                                  { path: "userData", element: <ProfileUserData /> },
+                                                                  { path: "dashboard", element: <MainDashboard /> },
+                                                                  { path: "add-appointment", element: <DoctorAddAppointments /> },
+                                                                  { path: "manage-receptionists", element: <ManageReceptionists /> },
+                                                                  { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
                                                             ]
                                                             : [
                                                                   { index: true, element: <StafProfile /> },
@@ -126,7 +124,10 @@ function AppRouter() {
                   children: [{ index: true, element: <PatientProfile /> }],
             },
             { path: "/patientReports/:nationalId", element: <DoctorPatientReports /> },
-            // ✅ الراوت الجديد هنا
+
+
+
+            // ✅الراوت الجديد هنا
             {
                   path: "/appointment/:id",
                   element: <AppointmentDetails />,

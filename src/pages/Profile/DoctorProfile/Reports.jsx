@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Row } from "react-bootstrap";
 import { Modal, Button, Table } from "react-bootstrap";
+import { GitGraph } from 'lucide-react';
 export default function Reports({ nationalId }) {
       const [appointments, setAppointments] = useState([]);
       const [uploadingId, setUploadingId] = useState(null);
@@ -105,6 +106,8 @@ export default function Reports({ nationalId }) {
                   formData.append("nextAction", data.nextAction);
                   formData.append("sessionCost", data.sessionCost);
                   formData.append("userId", userId);
+                  formData.append("medicalCenterId", medicalCenterId);
+
                   files.forEach((file) => formData.append("files", file));
 
                   await axios.post(
@@ -135,7 +138,6 @@ export default function Reports({ nationalId }) {
             }
       };
 
-      console.log(appointments)
 
       const [isOpen, setIsOpen] = useState(false);
       const [photoIndex, setPhotoIndex] = useState(0);
@@ -169,18 +171,19 @@ export default function Reports({ nationalId }) {
       }) => {
             try {
                   const token = localStorage.getItem("token");
-
-
                   await axios.post(`${apiUrl}/addPayment`, {
-                        patientNationalId: nationalId,
+                        appointmentId: payingSession.appointmentId,  // <<==== أهو
+                        patientNationalId: payingSession.patientNationalId,
                         doctorId: userId,
                         sessionId: payingSession.sessionId,
                         amount: paymentData.amount,
                         paymentMethod: paymentData.paymentMethod,
-                        notes: paymentData.notes
+                        notes: paymentData.notes,
+                        medicalCenterId: medicalCenterId,
                   }, {
                         headers: { Authorization: `Bearer ${token}` }
                   });
+
 
                   Swal.fire("تم الدفع", "تم تسجيل الدفع بنجاح 💰", "success");
 
@@ -194,6 +197,7 @@ export default function Reports({ nationalId }) {
                   Swal.fire("خطأ", "حدث خطأ أثناء الدفع", "error");
             }
       };
+
 
       return (
             <>
@@ -219,10 +223,13 @@ export default function Reports({ nationalId }) {
                               {appointments.length > 0 ? (
                                     appointments.map((r, idx) => (
                                           <tr key={r.id}>
+
+
                                                 <td>{idx + 1}</td>
 
                                                 {/* التقرير */}
                                                 <td>
+
                                                       {r.result && r.result.length > 0 ? (
                                                             [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
                                                                   <div key={res.id}>{res.report}</div>
@@ -491,17 +498,19 @@ export default function Reports({ nationalId }) {
                                                                         disabled={!hasRemaining}
                                                                         onClick={() => {
                                                                               if (!hasRemaining) return;
+
                                                                               const target = r.result.find((res, i) => allRemaining[i] > 0);
                                                                               const remaining = allRemaining[r.result.indexOf(target)];
 
-                                                                              // ✅ هنا نخزن الـ sessionId جوه object
                                                                               setPayingSession({
+                                                                                    appointmentId: r.id,   // <<======== أهم سطر
                                                                                     sessionId: target.id,
                                                                                     patientNationalId: r.nationalId,
                                                                                     doctorId: r.doctorId,
                                                                                     remaining: remaining
                                                                               });
                                                                         }}
+
                                                                   >
                                                                         دفع
                                                                   </button>
@@ -519,7 +528,6 @@ export default function Reports({ nationalId }) {
                               )}
                         </tbody>
                         <tfoot>
-
                               <tr className="table-dark fw-bold">
                                     <td colSpan="4"></td>
                                     <td>{totalSessionCost.toLocaleString()}</td>

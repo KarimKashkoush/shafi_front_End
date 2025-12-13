@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import "yet-another-react-lightbox/styles.css";
 import { formatUtcDateTime } from "../../../utils/date";
+import { getAppointments } from "../../../api";
 
 export default function DoctorCases() {
       const [fromDate, setFromDate] = useState("");
@@ -16,34 +17,24 @@ export default function DoctorCases() {
       const medicalCenterId = user?.medicalCenterId;
 
       // جلب البيانات
-const fetchAppointments = useCallback(async () => {
-      const token = localStorage.getItem("token");
-      try {
-            setLoading(true);
-            const res = await axios.get(`${apiUrl}/appointments`, {
-                  headers: {
-                        Authorization: `Bearer ${token}`,
-                  },
-            });
+      const fetchAppointments = useCallback(async () => {
+            try {
+                  setLoading(true);
+                  const data = await getAppointments(userId, medicalCenterId);
+                  setAppointments(data);
 
-            // فلترة حسب المستخدم أو المركز فقط
-            const userAppointments = res.data.data.filter(
-                  (appt) => appt.userId === userId || appt.userId === medicalCenterId
-            );
-
-            // الحالات بدون أي فلترة إضافية
-            setAppointments(userAppointments);
-
-      } catch (err) {
-            console.error("Error fetching appointments", err);
-      } finally {
-            setLoading(false);
-      }
-}, [apiUrl, userId]);
+            } catch (err) {
+                  console.error("Error fetching appointments", err);
+            } finally {
+                  setLoading(false);
+            }
+      }, [userId, medicalCenterId]);
 
       useEffect(() => {
             fetchAppointments();
       }, [fetchAppointments]);
+
+      console.log(appointments)
 
       const handleDelete = async (id, nationalId) => {
             Swal.fire({
