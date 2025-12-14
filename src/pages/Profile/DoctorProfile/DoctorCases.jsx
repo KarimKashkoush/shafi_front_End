@@ -34,8 +34,6 @@ export default function DoctorCases() {
             fetchAppointments();
       }, [fetchAppointments]);
 
-      console.log(appointments)
-
       const handleDelete = async (id, nationalId) => {
             Swal.fire({
                   title: "هل أنت متأكد؟",

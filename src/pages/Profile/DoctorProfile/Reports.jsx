@@ -21,6 +21,7 @@ export default function Reports({ nationalId }) {
       const medicalCenterId = user?.medicalCenterId;
       const [uploading, setUploading] = useState(false);
       const [files, setFiles] = useState([]);
+      const [loading, setLoading] = useState(false);
 
       // جوه الـ component
       const [paymentModal, setPaymentModal] = useState({
@@ -75,7 +76,7 @@ export default function Reports({ nationalId }) {
 
       useEffect(() => {
             fetchAppointments();
-      }, [fetchAppointments]); // ✅ التحذير اختفى
+      }, [fetchAppointments]);
 
       const schema = z.object({
             report: z.string().min(1, "التقرير مطلوب"),
@@ -100,6 +101,7 @@ export default function Reports({ nationalId }) {
             try {
                   const token = localStorage.getItem("token");
                   setUploading(true);
+                  setLoading(true);
 
                   const formData = new FormData();
                   formData.append("report", data.report);
@@ -121,6 +123,8 @@ export default function Reports({ nationalId }) {
                         }
                   );
 
+
+
                   Swal.fire("تم", "تم رفع تقرير الحالة بنجاح ✅", "success");
 
                   e.target.reset();
@@ -130,10 +134,13 @@ export default function Reports({ nationalId }) {
                   await fetchAppointments();
 
                   setUploadingId(null);
+                  setLoading(false);
             } catch (err) {
+                  setLoading(false);
                   console.error("- خطأ أثناء رفع النتيجة:", err);
                   Swal.fire("خطأ", "حدث خطأ أثناء الرفع", "error");
             } finally {
+                  setLoading(false);
                   setUploading(false);
             }
       };
@@ -170,6 +177,7 @@ export default function Reports({ nationalId }) {
             setPaymentData
       }) => {
             try {
+                  setLoading(true);
                   const token = localStorage.getItem("token");
                   await axios.post(`${apiUrl}/addPayment`, {
                         appointmentId: payingSession.appointmentId,  // <<==== أهو
@@ -183,6 +191,7 @@ export default function Reports({ nationalId }) {
                   }, {
                         headers: { Authorization: `Bearer ${token}` }
                   });
+                  setLoading(false);
 
 
                   Swal.fire("تم الدفع", "تم تسجيل الدفع بنجاح 💰", "success");
@@ -192,8 +201,8 @@ export default function Reports({ nationalId }) {
 
                   await fetchAppointments(); // تحديث بعد الدفع
 
-            } catch (err) {
-                  console.log(err);
+            } catch {
+                  setLoading(false);
                   Swal.fire("خطأ", "حدث خطأ أثناء الدفع", "error");
             }
       };
@@ -503,7 +512,7 @@ export default function Reports({ nationalId }) {
                                                                               const remaining = allRemaining[r.result.indexOf(target)];
 
                                                                               setPayingSession({
-                                                                                    appointmentId: r.id,   // <<======== أهم سطر
+                                                                                    appointmentId: r.id,
                                                                                     sessionId: target.id,
                                                                                     patientNationalId: r.nationalId,
                                                                                     doctorId: r.doctorId,
@@ -579,8 +588,6 @@ export default function Reports({ nationalId }) {
                                                 <small className="text-muted">أقصى مبلغ متبقي: {payingSession.remaining.toLocaleString()} جنيه</small>
                                           </Row>
 
-
-
                                           <Row className="mb-4 p-2">
                                                 <h4 className="fw-bold">طريقة الدفع</h4>
                                                 <select
@@ -625,11 +632,11 @@ export default function Reports({ nationalId }) {
                                                                   setPaymentData
                                                             })
                                                       }
+                                                      disabled={loading || paymentData.amount <= 0}
                                                 >
-                                                      تأكيد الدفع
+                                                      {loading ? "جاري الدفع..." : "تأكيد الدفع"}
                                                 </button>
                                           </div>
-
                                     </div>
                               </div>
                         </div>
