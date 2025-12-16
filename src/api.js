@@ -9,12 +9,22 @@ export const getAppointments = async (userId, medicalCenterId) => {
             },
       });
 
-      // فلترة البيانات
+
       const filtered = res.data.data.filter(
             appt => appt.userId === userId || appt.userId === medicalCenterId
       );
 
       return filtered;
+};
+
+export const getAppointmentsForDashboard = async (medicalCenterId) => {
+      const res = await axios.get(`${apiUrl}/getAppointmentsForDashboard/${medicalCenterId}`, {
+            headers: {
+                  Authorization: `Bearer ${token}`,
+            },
+      });
+
+      return res.data.data;
 };
 
 export const getPaymentsByMedicalCenter = async (medicalCenterId) => {

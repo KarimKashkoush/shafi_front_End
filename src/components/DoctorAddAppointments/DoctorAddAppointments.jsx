@@ -29,8 +29,7 @@ const schema = z.object({
                   z.literal("").transform(() => null),
                   z.null(),
                   z.undefined(),
-            ])
-            .optional(),
+            ]),
 });
 
 export default function DoctorAddAppointments() {
@@ -177,7 +176,7 @@ export default function DoctorAddAppointments() {
 
                         {/* سعر الكشف */}
                         <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold">سعر الكشف (اختياري)</h4>
+                              <h4 className="text-end fw-bold">سعر الكشف</h4>
                               <input type="number" className="form-control" placeholder="سعر الكشف" {...register("price")} />
                               {errors.price && <p className="text-danger">{errors.price.message}</p>}
                         </Row>

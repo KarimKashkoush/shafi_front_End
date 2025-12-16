@@ -27,19 +27,18 @@ const options = {
       },
 };
 
-export default function MyChart({ cases }) {
-      // cases = Array طولها 7: [عدد السبت، الأحد ... الجمعة]
+export default function WeeklyReportGraph({ cases }) {
       return (
-            <div style={{ maxWidth: 700, margin: "0 auto" }}>
+            <div style={{ maxWidth: '90%', margin: 'auto' }}>
                   <h4 style={{ textAlign: "center" }}>عدد حالات الأسبوع الحالي</h4>
                   <Bar
                         data={{
                               labels,
                               datasets: [
-                                    {
-                                          label: "عدد حالات الأسبوع",
-                                          data: cases || [], // لو مفيش بيانات يبقى فاضية
-                                          backgroundColor: "rgba(75, 192, 192, 0.6)",
+                                    {     
+                                          label: "عدد الحالات",     
+                                          data: cases || [],     
+                                          backgroundColor: "#0d6efd",     
                                     },
                               ],
                         }}

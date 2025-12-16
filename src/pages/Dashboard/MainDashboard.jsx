@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { getAppointments, getPaymentsByMedicalCenter } from '../../api';
+import { getAppointmentsForDashboard, getPaymentsByMedicalCenter } from '../../api';
 import MyChart from './MyChart';
+import { Chart } from 'chart.js';
+import WeeklyReportGraph from './WeeklyReportGraph';
+import MonthlyReportGraph from './MonthlyReportGraph';
 
 export default function MainDashboard() {
       const user = JSON.parse(localStorage.getItem("user"));
-      const userId = user?.id;
       const medicalCenterId = user?.medicalCenterId;
       const [appointments, setAppointments] = useState([]);
       const [loading, setLoading] = useState(false);
@@ -17,7 +19,7 @@ export default function MainDashboard() {
       const fetchAppointments = useCallback(async () => {
             try {
                   setLoading(true);
-                  const data = await getAppointments(userId, medicalCenterId);
+                  const data = await getAppointmentsForDashboard(medicalCenterId);
                   setAppointments(data);
 
             } catch (err) {
@@ -25,8 +27,9 @@ export default function MainDashboard() {
             } finally {
                   setLoading(false);
             }
-      }, [userId, medicalCenterId]);
+      }, [medicalCenterId]);
 
+      console.log(appointments)
 
       const fetchPayments = useCallback(async () => {
             try {
@@ -40,8 +43,6 @@ export default function MainDashboard() {
                   setLoading(false);
             }
       }, [medicalCenterId]);
-
-
 
 
       useEffect(() => {
@@ -74,7 +75,6 @@ export default function MainDashboard() {
 
             return d >= start && d <= endDate;
       };
-
 
 
       const filterByDate = (data, type) => {
@@ -165,7 +165,7 @@ export default function MainDashboard() {
 
       const totalNet = filteredAppointments.reduce((acc, item) => {
             // لو عنده تقرير
-            if (item.resultReports || (Array.isArray(item.resultFiles) && item.resultFiles.length > 0)) {
+            if (item.report) {
                   return acc + 10;
             }
 
@@ -184,6 +184,94 @@ export default function MainDashboard() {
       const todayStats = getVisitStats(todaysAppointments);
       const totalStats = getVisitStats(filteredAppointments);
 
+
+      const getCurrentWeekDates = () => {
+            const now = new Date();
+            const day = now.getDay(); // 0 = الأحد، 6 = السبت
+            // في مصر الأسبوع يبدأ من السبت
+            const saturday = new Date(now);
+            saturday.setDate(now.getDate() - ((day + 1) % 7)); // حساب السبت
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                  const d = new Date(saturday);
+                  d.setDate(saturday.getDate() + i);
+                  weekDates.push(d);
+            }
+            return weekDates;
+      };
+      const getWeeklyCases = (appointments) => {
+            const weekDates = getCurrentWeekDates();
+            const cases = weekDates.map((date) => {
+                  const dateStr = date.toISOString().split("T")[0]; // yyyy-mm-dd
+
+                  return appointments.filter(a => {
+                        const d = normalizeDate(a.createdAt || a.date); // استخدم normalizeDate
+                        if (!d) return false;
+                        return d.toISOString().split("T")[0] === dateStr;
+                  }).length;
+            });
+            return cases;
+      };
+      const weeklyCases = getWeeklyCases(appointments);
+
+      const getCurrentMonthDates = () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth(); // 0 = يناير
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); // عدد أيام الشهر
+
+            const dates = [];
+            for (let i = 1; i <= daysInMonth; i++) {
+                  dates.push(new Date(year, month, i));
+            }
+            return dates;
+      };
+
+      const getMonthlyCases = (appointments) => {
+            const monthDates = getCurrentMonthDates();
+
+            const cases = monthDates.map((date) => {
+                  const dateStr = date.toISOString().split("T")[0]; // yyyy-mm-dd
+                  return appointments.filter(a => {
+                        const d = normalizeDate(a.createdAt || a.date);
+                        if (!d) return false;
+                        return d.toISOString().split("T")[0] === dateStr;
+                  }).length;
+            });
+
+            return cases; // Array طولها عدد أيام الشهر
+      };
+      const monthlyCases = getMonthlyCases(appointments);
+
+
+
+      const [selectedDoctor, setSelectedDoctor] = useState("all");
+      const doctors = [
+            { id: "all", name: "كل الدكاترة" },
+            ...Array.from(
+                  new Map(
+                        appointments
+                              .filter(a => a.doctorId)
+                              .map(a => [a.doctorId, { id: a.doctorId, name: a.doctorName }])
+                  ).values()
+            )
+      ];
+
+
+      const doctorFilteredAppointments = selectedDoctor === "all"
+            ? filteredAppointments
+            : appointments.filter(a => a.doctorId === selectedDoctor);
+
+
+      const totalMoney = doctorFilteredAppointments.reduce((acc, a) => {
+            return acc + (Number(a.sessionCost) || Number(a.price) || 0);
+      }, 0);
+
+
+
+      console.log(appointments)
+
+
       { loading && <p>Loading...</p> }
 
       return (
@@ -192,7 +280,7 @@ export default function MainDashboard() {
                         <h3 className='section-title'>لـــوحة القيادة</h3>
                   </section>
 
-                  <div className="row my-3">
+                  <div className="row my-3 " >
                         <div className="col-md-4">
                               <select
                                     className="form-control"
@@ -231,7 +319,7 @@ export default function MainDashboard() {
                         )}
                   </div>
 
-                  <section className="boxs row">
+                  <section className="boxs row border-bottom border-3 mb-3">
                         <div className="box col-12 col-md-6 col-lg-3 p-3 text-center">
                               <div className="box-content p-3 rounded-3 shadow-sm">
                                     <h4 className="mb-2 main-color"></h4>
@@ -319,6 +407,71 @@ export default function MainDashboard() {
                               </div>
                         </div>
                   </section>
+
+                  <section className="side-doctors border-bottom border-3 mb-3"
+                        style={{ overflowX: "auto", marginBottom: "20px" }}>
+                        <div className="row mb-3">
+                              <div className="col-md-4">
+                                    <select
+                                          className="form-control"
+                                          value={selectedDoctor}
+                                          onChange={(e) => setSelectedDoctor(e.target.value)}
+                                    >
+                                          {doctors.map(d => (
+                                                <option key={d.id} value={d.id}>
+                                                      {d.name}
+                                                </option>
+                                          ))}
+                                    </select>
+                              </div>
+                        </div>
+
+                        {/* Table Of appoinments for side doctor */}
+                        <table
+                              className="table table-bordered table-striped text-center"
+                              style={{ width: "100%", minWidth: "1050px" }}
+                        >
+                              <thead className="table-dark" style={{ verticalAlign: "middle" }}>
+                                    <tr>
+                                          <th>#</th>
+                                          <th>اسم الحالة</th>
+                                          <th>الدكتور</th>
+                                          <th>تاريخ الحجز</th>
+                                          <th>تكلفة الجلسة</th>
+                                    </tr>
+                              </thead>
+                              <tbody>
+                                    {doctorFilteredAppointments.map((appt, index) => (
+                                          <tr key={appt.id}>
+                                                <td>{index + 1}</td>
+                                                <td>{appt.caseName}</td>
+                                                <td>{appt.doctorName || "لم يتم تعيين دكتور"}</td>
+                                                <td dir='ltr'>{new Date(appt.createdAt).toLocaleString()}</td>
+                                                <td>{appt.sessionCost || appt.price || 0}$</td>
+                                          </tr>
+                                    ))}
+                              </tbody>
+                              <tfoot className="table-dark fw-bold">
+                                    <tr>
+                                          <td colSpan={4}>عدد الحالات: {doctorFilteredAppointments.length}</td>
+                                          
+                                          <td>الإجمالي: ${totalMoney.toLocaleString()}</td>
+                                    </tr>
+                              </tfoot>
+
+                        </table>
+                  </section>
+
+                  <section className="charts row border-bottom border-3 mb-3">
+                        <div className="col-12 col-lg-6 mb-3">
+                              <WeeklyReportGraph cases={weeklyCases} />
+                        </div>
+
+                        <div className="col-12 col-lg-6 mb-3">
+                              <MonthlyReportGraph cases={monthlyCases} />
+                        </div>
+                  </section>
+
             </section>
       )
 }
