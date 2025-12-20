@@ -29,6 +29,7 @@ export default function DoctorCases() {
                   setLoading(false);
             }
       }, [userId, medicalCenterId]);
+      console.log(appointments)
 
       useEffect(() => {
             fetchAppointments();
@@ -132,19 +133,69 @@ export default function DoctorCases() {
 
       // ترتيب البيانات
       const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-            const aHasResult = a.resultFiles && a.resultFiles.length > 0;
-            const bHasResult = b.resultFiles && b.resultFiles.length > 0;
+            const aHasReport = a.resultReports && a.resultReports.length > 0;
+            const bHasReport = b.resultReports && b.resultReports.length > 0;
 
-            if (!aHasResult && bHasResult) return -1;
-            if (aHasResult && !bHasResult) return 1;
+            // ⬇️ اللي عنده تقارير ينزل تحت
+            if (!aHasReport && bHasReport) return -1;
+            if (aHasReport && !bHasReport) return 1;
 
+            // ⏱️ نفس الحالة → ترتيب حسب وقت التسجيل
             return new Date(a.createdAt) - new Date(b.createdAt);
       });
+
+      // تاريخ اليوم (من غير وقت)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // حالات اليوم فقط
+      const todayCases = appointments.filter(appt => {
+            const apptDate = new Date(appt.createdAt);
+            apptDate.setHours(0, 0, 0, 0);
+            return apptDate.getTime() === today.getTime();
+      });
+
+      // اللي لهم نتايج
+      const casesWithResults = todayCases.filter(
+            appt => appt.resultReports && appt.resultReports.length > 0
+      );
+
+      // اللي مالهمش نتايج
+      const casesWithoutResults = todayCases.filter(
+            appt => !appt.resultReports || appt.resultReports.length === 0
+      );
 
 
       return (
             <section className="cases">
                   <h4 className="fw-bold">إدارة الحالات</h4>
+
+                  <section className="boxs row">
+                        <section className="box col-4">
+                              <section className="content m-1 p-2 shadow rounded-2 text-center">
+                                    <p> حالات اليوم</p>
+                                    <span>
+                                          {todayCases.length}           
+                                    </span>
+                              </section>
+                        </section>
+                        <section className="box col-4">
+                              <section className="content m-1 p-2 shadow rounded-2 text-center">
+                                    <p>تـــم الكشف</p>
+                                    <span>
+                                          {casesWithResults.length}
+                                    </span>
+                              </section>
+                        </section>
+                        <section className="box col-4">
+                              <section className="content m-1 p-2 shadow rounded-2 text-center">
+                                    <p> في الإنتظار</p>
+                                    <span>
+                                          {casesWithoutResults.length}
+                                    </span>
+                              </section>
+                        </section>
+                  </section>
 
                   <div className="container my-4">
                         <div className="row gap-2 align-items-end justify-content-center">
@@ -186,8 +237,9 @@ export default function DoctorCases() {
                         </div>
                   </div>
 
+
                   {loading ? (
-                        <div className="text-center my-4 fw-bold">⏳ جاري التحميل...</div>
+                        <div className="text-center my-4 fw-bold">جاري التحميل...</div>
                   ) : (
                         <section className="table overflow-x-auto">
                               <table
@@ -201,6 +253,7 @@ export default function DoctorCases() {
                                                 <th>رقم الهاتف</th>
                                                 <th>الرقم القومي</th>
                                                 <th>العمر</th>
+                                                <th>الحاله</th>
                                                 <th>أمراض مزمنة</th>
                                                 <th>وقت التسجيل</th>
                                                 <th>الإجراءات</th>
@@ -210,11 +263,11 @@ export default function DoctorCases() {
                                           {sortedAppointments.length > 0 ? (
                                                 sortedAppointments.map((appt, idx) => (
                                                       <tr key={idx}>
-                                                            <td>{idx + 1}</td>
-                                                            <td>{appt.caseName}</td>
-                                                            <td>{appt.phone}</td>
-                                                            <td>{appt.nationalId || "❌ غير مسجل"}</td>
-                                                            <td>
+                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}>{idx + 1}</td>
+                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}>{appt.caseName}</td>
+                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}>{appt.phone}</td>
+                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}>{appt.nationalId || "❌ غير مسجل"}</td>
+                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}>
                                                                   {appt.birthDate
                                                                         ? (() => {
                                                                               const birth = new Date(appt.birthDate);
@@ -228,20 +281,21 @@ export default function DoctorCases() {
                                                                         })()
                                                                         : "❌"}
                                                             </td>
-                                                            <td>{appt.chronicDiseaseDetails || "❌"}</td>
-                                                            <td dir="ltr">{formatUtcDateTime(appt.createdAt)}</td>
-                                                            <td className="d-flex flex-wrap gap-2 justify-content-center align-items-center">
+                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}>{appt.isRevisit ? <span className="bg-warning px-2 rounded">إعادة</span> : <span className="bg-success px-2 rounded">جديدة</span>}</td>
+                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}>{appt.chronicDiseaseDetails || "❌"}</td>
+                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'} dir="ltr">{formatUtcDateTime(appt.createdAt)}</td>
+                                                            <td className={`d-flex flex-wrap gap-2 justify-content-center align-items-center ${appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}`}>
                                                                   <button
                                                                         className="btn btn-sm btn-warning"
                                                                         onClick={() => handleEditNationalId(appt.id, appt.nationalId)}
                                                                   >
-                                                                        ✏ تعديل
+                                                                        تعديل
                                                                   </button>
                                                                   <button
                                                                         className="btn btn-sm btn-danger"
                                                                         onClick={() => handleDelete(appt.id)}
                                                                   >
-                                                                        🗑 حذف
+                                                                        حذف
                                                                   </button>
                                                                   <button
                                                                         className="btn btn-sm btn-success"
@@ -257,7 +311,7 @@ export default function DoctorCases() {
                                                                               }
                                                                         }}
                                                                   >
-                                                                        📄 عرض التقارير
+                                                                        عرض التقارير
                                                                   </button>
                                                             </td>
                                                       </tr>

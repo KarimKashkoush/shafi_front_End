@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import api from "../../lib/api";
 import { calculateAgeUtc, formatUtcDate, formatUtcForInput } from "../../utils/date";
+import { Row } from "react-bootstrap";
+
 
 function mapUser(user) {
       return {
@@ -23,10 +25,13 @@ function mapUser(user) {
 
 export default function ProfileUserData() {
       const { id } = useParams(); // ✅ هنا بناخد الـ id من الـ URL
+      const [show, setShow] = useState(false);
+      const [showPassword, setShowPassword] = useState(false);
       const [data, setData] = useState(null);
       const [editMode, setEditMode] = useState(false);
       const [loading, setLoading] = useState(true);
       const [error, setError] = useState("");
+      const [loadingPassword, setLoadingPassword] = useState(false);
 
       const {
             register,
@@ -52,6 +57,28 @@ export default function ProfileUserData() {
 
             if (id) fetchUser();
       }, [id, reset]);
+
+      const onChangePassword = async (formData) => {
+            setLoadingPassword(true)
+            if (formData.newPassword !== formData.confirmPassword) {
+                  return alert("كلمة السر الجديدة غير متطابقة");
+            }
+
+            try {
+                  await api.put(`/users/${id}/change-password`, {
+                        currentPassword: formData.currentPassword,
+                        newPassword: formData.newPassword,
+                  });
+
+                  alert("تم تغيير كلمة السر بنجاح");
+                  setShowPassword(false);
+                  reset();
+            } catch (error) {
+                  setLoadingPassword(false)
+                  alert(error.response?.data?.message || "فشل تغيير كلمة السر");
+            }
+      };
+
 
       const onSubmit = async (formData) => {
             try {
@@ -85,7 +112,7 @@ export default function ProfileUserData() {
       if (error) return <p className="text-danger">{error}</p>;
 
       return (
-            <section className="profile-user-data">
+            <section className="profile-user-data position-relative">
                   <section className="content">
                         <h2>بيانات الحساب</h2>
                         <div className="user-data">
@@ -179,6 +206,48 @@ export default function ProfileUserData() {
                                     </form>
                               ) : (
                                     <>
+                                          {showPassword &&
+                                                <section className="position-absolute bg-white p-5 rounded shadow" style={{ top: "50%", right: "50%", transform: "translate(50%, -50%)", width: "60%" }}>
+                                                      
+                                                      <button className="btn btn-sm btn-danger position-absolute" style={{ top: "10px", right: "10px" }} onClick={() => { setShowPassword(false) }}>X</button>
+                                                      <p className="text-center">
+                                                            تغيير كلمة المرور
+                                                      </p>
+                                                      <form onSubmit={handleSubmit(onChangePassword)}>
+                                                            {[
+                                                                  { name: "currentPassword", placeholder: "كلمة المرور الحالية" },
+                                                                  { name: "newPassword", placeholder: "كلمة المرور الجديدة" },
+                                                                  { name: "confirmPassword", placeholder: "إعادة إدخال كلمة السر الجديدة" },
+                                                            ].map((item, index) => (
+                                                                  <Row className="mb-2 p-2" key={index}>
+                                                                        <div className="input-group" dir="ltr">
+                                                                              <input
+                                                                                    type={show ? "text" : "password"}
+                                                                                    className="form-control text-center"
+                                                                                    placeholder={item.placeholder}
+                                                                                    {...register(item.name, { required: true })}
+                                                                              />
+                                                                              <button
+                                                                                    type="button"
+                                                                                    className="btn btn-outline-secondary"
+                                                                                    onClick={() => setShow(!show)}
+                                                                              >
+                                                                                    <i className={`bi ${show ? "bi-eye-slash" : "bi-eye"}`}></i>
+                                                                              </button>
+                                                                        </div>
+                                                                        {errors[item.name] && (
+                                                                              <small className="text-danger">هذا الحقل مطلوب</small>
+                                                                        )}
+                                                                  </Row>
+                                                            ))}
+
+                                                            <button type="submit" className="btn btn-warning w-100" disabled={loadingPassword}>
+                                                                  {loadingPassword ? "جاري التغيير..." : "تغيير كلمة المرور"}
+                                                            </button>
+                                                      </form>
+                                                </section>
+                                          }
+
                                           <table className="table w-100">
                                                 <tbody>
                                                       <tr>
@@ -213,12 +282,23 @@ export default function ProfileUserData() {
                                                             <th>تاريخ الميلاد</th>
                                                             <td>
                                                                   {data?.birthDate
-                                                                        ? `${formatUtcDate(data.birthDate)}${
-                                                                              calculateAgeUtc(data.birthDate) !== null
-                                                                                    ? ` (${calculateAgeUtc(data.birthDate)} سنة)`
-                                                                                    : ""
+                                                                        ? `${formatUtcDate(data.birthDate)}${calculateAgeUtc(data.birthDate) !== null
+                                                                              ? ` (${calculateAgeUtc(data.birthDate)} سنة)`
+                                                                              : ""
                                                                         }`
                                                                         : "غير مسجل"}
+                                                            </td>
+                                                      </tr>
+                                                      <tr>
+                                                            <th>تاريخ إنشاء الحساب</th>
+                                                            <td>{formatUtcDate(data?.createdAt)}</td>
+                                                      </tr>
+                                                      <tr>
+                                                            <th>
+                                                                  كلمة المرور
+                                                            </th>
+                                                            <td>
+                                                                  <button className="btn btn-danger" onClick={() => { setShowPassword(true) }}>تغير كلمة المرور</button>
                                                             </td>
                                                       </tr>
                                                 </tbody>

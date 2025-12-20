@@ -17,12 +17,13 @@ export default function MainDashboard() {
 
 
       const fetchAppointments = useCallback(async () => {
+            setLoading(true);
             try {
-                  setLoading(true);
                   const data = await getAppointmentsForDashboard(medicalCenterId);
-                  setAppointments(data);
-
+                  setAppointments(Array.isArray(data) ? data : []);
+                  setLoading(false);
             } catch (err) {
+                  setLoading(false);
                   console.error("Error fetching appointments", err);
             } finally {
                   setLoading(false);
@@ -32,12 +33,14 @@ export default function MainDashboard() {
       console.log(appointments)
 
       const fetchPayments = useCallback(async () => {
+            setLoading(true);
             try {
-                  setLoading(true);
                   const data = await getPaymentsByMedicalCenter(medicalCenterId);
                   setPayments(data);
+                  setLoading(false);
                   // معالجة البيانات حسب الحاجة
             } catch (err) {
+                  setLoading(false);
                   console.error("Error fetching payments", err);
             } finally {
                   setLoading(false);
@@ -57,19 +60,26 @@ export default function MainDashboard() {
       const today = new Date().toISOString().split("T")[0];
 
 
-      const normalizeDate = (dateString) => {
-            if (!dateString) return null;
+      const normalizeDate = (item) => {
+            if (!item || typeof item !== "object") return null;
 
-            // لو التاريخ فيه مسافة بدلاً من T → نستبدلها
-            const fixed = dateString.replace(" ", "T");
+            const raw =
+                  item.dateTime ||
+                  item.createdAt ||
+                  item.paymentdate ||
+                  item.date;
 
-            return new Date(fixed);
+            if (!raw) return null;
+
+            const d = new Date(raw);
+            return isNaN(d.getTime()) ? null : d;
       };
+
+
 
       const isInRange = (date, start, end) => {
             const d = new Date(date);
 
-            // لو custom end فقط
             const endDate = new Date(end);
             endDate.setHours(23, 59, 59, 999);
 
@@ -114,26 +124,26 @@ export default function MainDashboard() {
                         end = new Date();
                         break;
 
-                  case "custom":
-                        return data;
-
                   default:
                         return data;
             }
 
-            return data.filter((item) => {
-                  const d = normalizeDate(item.createdAt || item.paymentdate || item.date);
+            return data.filter(item => {
+                  const d = normalizeDate(item);
                   return d && d >= start && d <= end;
             });
       };
 
 
+
       const filteredAppointments =
             filterType === "custom"
-                  ? appointments.filter(a =>
-                        isInRange(a.createdAt, new Date(customStart), new Date(customEnd))
-                  )
+                  ? appointments.filter(a => {
+                        const d = normalizeDate(a);
+                        return d && isInRange(d, new Date(customStart), new Date(customEnd));
+                  })
                   : filterByDate(appointments, filterType);
+
 
       const filteredPayments =
             filterType === "custom"
@@ -174,23 +184,22 @@ export default function MainDashboard() {
       }, 0);
 
       // فلترة المواعيد الخاصة بالنهارده
-      const todaysAppointments = appointments.filter((a) => {
-            const d = normalizeDate(a.createdAt || a.date);
+      const todaysAppointments = appointments.filter(a => {
+            const d = normalizeDate(a);
             if (!d) return false;
 
-            const dateOnly = d.toISOString().split("T")[0];
-            return dateOnly === today;
+            return d.toISOString().split("T")[0] === today;
       });
+
       const todayStats = getVisitStats(todaysAppointments);
       const totalStats = getVisitStats(filteredAppointments);
 
 
       const getCurrentWeekDates = () => {
             const now = new Date();
-            const day = now.getDay(); // 0 = الأحد، 6 = السبت
-            // في مصر الأسبوع يبدأ من السبت
+            const day = now.getDay();
             const saturday = new Date(now);
-            saturday.setDate(now.getDate() - ((day + 1) % 7)); // حساب السبت
+            saturday.setDate(now.getDate() - ((day + 1) % 7));
             const weekDates = [];
             for (let i = 0; i < 7; i++) {
                   const d = new Date(saturday);
@@ -199,19 +208,19 @@ export default function MainDashboard() {
             }
             return weekDates;
       };
-      const getWeeklyCases = (appointments) => {
+      const getWeeklyCases = (appointments = []) => {
             const weekDates = getCurrentWeekDates();
-            const cases = weekDates.map((date) => {
-                  const dateStr = date.toISOString().split("T")[0]; // yyyy-mm-dd
+
+            return weekDates.map(date => {
+                  const dateStr = date.toISOString().split("T")[0];
 
                   return appointments.filter(a => {
-                        const d = normalizeDate(a.createdAt || a.date); // استخدم normalizeDate
-                        if (!d) return false;
-                        return d.toISOString().split("T")[0] === dateStr;
+                        const d = normalizeDate(a);
+                        return d && d.toISOString().split("T")[0] === dateStr;
                   }).length;
             });
-            return cases;
       };
+
       const weeklyCases = getWeeklyCases(appointments);
 
       const getCurrentMonthDates = () => {
@@ -227,20 +236,19 @@ export default function MainDashboard() {
             return dates;
       };
 
-      const getMonthlyCases = (appointments) => {
+      const getMonthlyCases = (appointments = []) => {
             const monthDates = getCurrentMonthDates();
 
-            const cases = monthDates.map((date) => {
-                  const dateStr = date.toISOString().split("T")[0]; // yyyy-mm-dd
+            return monthDates.map(date => {
+                  const dateStr = date.toISOString().split("T")[0];
+
                   return appointments.filter(a => {
-                        const d = normalizeDate(a.createdAt || a.date);
-                        if (!d) return false;
-                        return d.toISOString().split("T")[0] === dateStr;
+                        const d = normalizeDate(a);
+                        return d && d.toISOString().split("T")[0] === dateStr;
                   }).length;
             });
-
-            return cases; // Array طولها عدد أيام الشهر
       };
+
       const monthlyCases = getMonthlyCases(appointments);
 
 
@@ -257,20 +265,14 @@ export default function MainDashboard() {
             )
       ];
 
-
       const doctorFilteredAppointments = selectedDoctor === "all"
             ? filteredAppointments
             : appointments.filter(a => a.doctorId === selectedDoctor);
 
 
       const totalMoney = doctorFilteredAppointments.reduce((acc, a) => {
-            return acc + (Number(a.sessionCost) || Number(a.price) || 0);
+            return acc + (Number(a.sessionCost) || 0);
       }, 0);
-
-
-
-      console.log(appointments)
-
 
       { loading && <p>Loading...</p> }
 
@@ -436,6 +438,7 @@ export default function MainDashboard() {
                                           <th>#</th>
                                           <th>اسم الحالة</th>
                                           <th>الدكتور</th>
+                                          <th>الحاله</th>
                                           <th>تاريخ الحجز</th>
                                           <th>تكلفة الجلسة</th>
                                     </tr>
@@ -446,15 +449,15 @@ export default function MainDashboard() {
                                                 <td>{index + 1}</td>
                                                 <td>{appt.caseName}</td>
                                                 <td>{appt.doctorName || "لم يتم تعيين دكتور"}</td>
+                                                <td>{appt.isRevisit ? 'إعادة' : 'جديد'}</td>
                                                 <td dir='ltr'>{new Date(appt.createdAt).toLocaleString()}</td>
-                                                <td>{appt.sessionCost || appt.price || 0}$</td>
+                                                <td>{appt.sessionCost || 0}$</td>
                                           </tr>
                                     ))}
                               </tbody>
                               <tfoot className="table-dark fw-bold">
                                     <tr>
-                                          <td colSpan={4}>عدد الحالات: {doctorFilteredAppointments.length}</td>
-                                          
+                                          <td colSpan={5}>عدد الحالات: {doctorFilteredAppointments.length}</td>
                                           <td>الإجمالي: ${totalMoney.toLocaleString()}</td>
                                     </tr>
                               </tfoot>
@@ -471,7 +474,6 @@ export default function MainDashboard() {
                               <MonthlyReportGraph cases={monthlyCases} />
                         </div>
                   </section>
-
             </section>
       )
 }

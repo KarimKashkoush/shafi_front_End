@@ -22,13 +22,16 @@ export default function ManageReceptionists() {
 
       // 🟢 جلب موظفي الاستقبال
       const fetchReceptionists = useCallback(async () => {
+            setLoading(true);
             try {
                   const res = await api.get("/getReceptionists", {
                         headers: { Authorization: `Bearer ${token}` },
                   });
                   const data = res.data?.data || [];
                   setReceptionists(data);
+                  setLoading(false);
             } catch (err) {
+                  setLoading(false);
                   console.error("Error fetching receptionists:", err);
                   toast.error("حدث خطأ أثناء جلب موظفي الاستقبال");
             }
@@ -258,7 +261,13 @@ export default function ManageReceptionists() {
                                     </tr>
                               </thead>
                               <tbody>
-                                    {receptionists.length > 0 ? (
+                                    {loading ? (
+                                          <tr>
+                                                <td colSpan="6" className="text-center">
+                                                      جاري التحميل...
+                                                </td>
+                                          </tr>
+                                    ) : receptionists.length > 0 ? (
                                           receptionists.map((r) => (
                                                 <tr key={r.id} style={{ textAlign: "center", verticalAlign: "middle" }}>
                                                       <td>{r.fullName}</td>
@@ -266,22 +275,29 @@ export default function ManageReceptionists() {
                                                       <td>{r.email}</td>
                                                       <td>{r.phoneNumber}</td>
                                                       <td>
-                                                            <span style={{
-                                                                  backgroundColor: r.status === "true" ? "#d4edda" : "#fff3cd", // أخضر فاتح أو أصفر فاتح
-                                                                  padding: "5px 15px",
-                                                                  borderRadius: "4px",
-                                                                  textAlign: "center",
-                                                                  fontSize: "14px",
-                                                            }}>
+                                                            <span
+                                                                  style={{
+                                                                        backgroundColor:
+                                                                              r.status === "true" ? "#d4edda" : "#fff3cd",
+                                                                        padding: "5px 15px",
+                                                                        borderRadius: "4px",
+                                                                        fontSize: "14px",
+                                                                  }}
+                                                            >
                                                                   {r.status === "true" ? "نشط" : "مجمد"}
                                                             </span>
                                                       </td>
                                                       <td className="d-flex">
-                                                            <Button onClick={() => handleToggleStatus(r.id, r.status)}
-                                                                  className={`border-0 px-2 w-50 ${r.status === "false" ? "bg-warning text-dark" : "bg-sucsess-subtle text-white"}`}
+                                                            <Button
+                                                                  onClick={() => handleToggleStatus(r.id, r.status)}
+                                                                  className={`border-0 px-2 w-50 ${r.status === "false"
+                                                                              ? "bg-warning text-dark"
+                                                                              : "bg-success text-white"
+                                                                        }`}
                                                             >
                                                                   {r.status === "true" ? "تجميد" : "تنشيط"}
                                                             </Button>
+
                                                             <Button
                                                                   onClick={() => handleDelete(r.id)}
                                                                   className="bg-danger text-white mx-1 border-0 px-2 w-50"
@@ -299,6 +315,7 @@ export default function ManageReceptionists() {
                                           </tr>
                                     )}
                               </tbody>
+
                         </table>
                   </section>
             </div>
