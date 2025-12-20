@@ -1,7 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getAppointmentsForDashboard, getPaymentsByMedicalCenter } from '../../api';
-import MyChart from './MyChart';
-import { Chart } from 'chart.js';
 import WeeklyReportGraph from './WeeklyReportGraph';
 import MonthlyReportGraph from './MonthlyReportGraph';
 
@@ -29,8 +27,6 @@ export default function MainDashboard() {
                   setLoading(false);
             }
       }, [medicalCenterId]);
-
-      console.log(appointments)
 
       const fetchPayments = useCallback(async () => {
             setLoading(true);
@@ -75,6 +71,11 @@ export default function MainDashboard() {
             return isNaN(d.getTime()) ? null : d;
       };
 
+      const getLocalDateString = (date) => {
+            if (!date) return null;
+            const d = new Date(date);
+            return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+      };
 
 
       const isInRange = (date, start, end) => {
@@ -240,14 +241,14 @@ export default function MainDashboard() {
             const monthDates = getCurrentMonthDates();
 
             return monthDates.map(date => {
-                  const dateStr = date.toISOString().split("T")[0];
-
+                  const dateStr = getLocalDateString(date); // بدل toISOString
                   return appointments.filter(a => {
                         const d = normalizeDate(a);
-                        return d && d.toISOString().split("T")[0] === dateStr;
+                        return getLocalDateString(d) === dateStr;
                   }).length;
             });
       };
+
 
       const monthlyCases = getMonthlyCases(appointments);
 

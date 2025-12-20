@@ -37,8 +37,7 @@ export default function AddResult({ addResult, setAddResult }) {
                   }
 
             } catch (err) {
-                  console.log(err);
-                  toast.error("حدث خطأ أثناء رفع النتيجة 😞");
+                  toast.error("حدث خطأ أثناء رفع النتيجة 😞", err.message);
             } finally {
                   setLoading(false);
                   setAddResult(false);

@@ -29,7 +29,6 @@ export default function DoctorCases() {
                   setLoading(false);
             }
       }, [userId, medicalCenterId]);
-      console.log(appointments)
 
       useEffect(() => {
             fetchAppointments();
