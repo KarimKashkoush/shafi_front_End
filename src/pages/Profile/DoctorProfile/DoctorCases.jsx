@@ -174,7 +174,7 @@ export default function DoctorCases() {
                               <section className="content m-1 p-2 shadow rounded-2 text-center">
                                     <p> حالات اليوم</p>
                                     <span>
-                                          {todayCases.length}           
+                                          {todayCases.length}
                                     </span>
                               </section>
                         </section>
