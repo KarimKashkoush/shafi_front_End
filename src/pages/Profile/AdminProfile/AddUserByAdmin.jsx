@@ -111,6 +111,7 @@ export default function AddUserByAdmin() {
                                                 <option value="doctor">دكتور - عيادة</option>
                                                 <option value="radiology">مركز أشعة</option>
                                                 <option value="lab">معمل تحاليل</option>
+                                                <option value="admin"> مسؤول </option>
                                                 <option value="pharmacy">صيدلية</option>
                                           </Form.Select>
                                           <Form.Control.Feedback type="invalid">

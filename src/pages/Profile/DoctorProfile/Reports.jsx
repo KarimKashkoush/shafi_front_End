@@ -210,342 +210,344 @@ export default function Reports({ nationalId }) {
 
       return (
             <>
-                  <table
-                        className="table table-bordered table-striped text-center"
-                        style={{ width: "100%", minWidth: "1050px" }}
-                  >
-                        <thead className="table-dark" style={{ verticalAlign: "middle" }}>
-                              <tr>
-                                    <th>#</th>
-                                    <th>التقرير</th>
-                                    <th>الإجراء التالي</th>
-                                    <th>الملفات</th>
-                                    <th>مبلغ الجلسة</th>
-                                    <th>المدفوع</th>
-                                    <th>المتبقي</th>
-                                    <th>تاريخ الإضافة</th>
-                                    <th>اضافة تقرير</th>
-                                    <th>الدفع</th>
-                              </tr>
-                        </thead>
-                        <tbody style={{ verticalAlign: "middle" }}>
-                              {appointments.length > 0 ? (
-                                    appointments.map((r, idx) => (
-                                          <tr key={r.id}>
+                  <section className="table overflow-auto">
+                        <table
+                              className="table table-bordered table-striped text-center"
+                              style={{ width: "100%", minWidth: "1050px" }}
+                        >
+                              <thead className="table-dark" style={{ verticalAlign: "middle" }}>
+                                    <tr>
+                                          <th>#</th>
+                                          <th>التقرير</th>
+                                          <th>الإجراء التالي</th>
+                                          <th>الملفات</th>
+                                          <th>مبلغ الجلسة</th>
+                                          <th>المدفوع</th>
+                                          <th>المتبقي</th>
+                                          <th>تاريخ الإضافة</th>
+                                          <th>اضافة تقرير</th>
+                                          <th>الدفع</th>
+                                    </tr>
+                              </thead>
+                              <tbody style={{ verticalAlign: "middle" }}>
+                                    {appointments.length > 0 ? (
+                                          appointments.map((r, idx) => (
+                                                <tr key={r.id}>
 
 
-                                                <td>{idx + 1}</td>
+                                                      <td>{idx + 1}</td>
 
-                                                {/* التقرير */}
-                                                <td>
+                                                      {/* التقرير */}
+                                                      <td>
 
-                                                      {r.result && r.result.length > 0 ? (
-                                                            [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
-                                                                  <div key={res.id}>{res.report}</div>
-                                                            ))
-                                                      ) : (
-                                                            <span className="text-danger fw-bold">-</span>
-                                                      )}
-                                                </td>
-
-
-                                                {/* الإجراء التالي */}
-                                                <td>
-                                                      {r.result && r.result.length > 0 ? (
-                                                            [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
-                                                                  <div key={res.id}>{res.nextAction}</div>
-                                                            ))
-                                                      ) : (
-                                                            <span className="text-danger fw-bold">-</span>
-                                                      )}
-                                                </td>
+                                                            {r.result && r.result.length > 0 ? (
+                                                                  [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
+                                                                        <div key={res.id}>{res.report}</div>
+                                                                  ))
+                                                            ) : (
+                                                                  <span className="text-danger fw-bold">-</span>
+                                                            )}
+                                                      </td>
 
 
-                                                {/* الملفات */}
-                                                <td>
-                                                      {r.result && r.result.length > 0 ? (
-                                                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
-                                                                  {[...new Map(r.result.map(item => [item.id, item])).values()].map((res, idx) =>
-                                                                        Array.isArray(res.files) && res.files.length > 0 ? (
-                                                                              res.files.map((file, i) =>
-                                                                                    file.toLowerCase().endsWith(".pdf") ? (
-                                                                                          <a key={`${idx}-${i}`} href={file} target="_blank" rel="noopener noreferrer">
-                                                                                                <img src={pdfImage} alt="PDF" style={{ width: 40, height: 40, cursor: "pointer" }} />
-                                                                                          </a>
-                                                                                    ) : (
-                                                                                          <img
-                                                                                                key={`${idx}-${i}`}
-                                                                                                src={file}
-                                                                                                alt="file"
-                                                                                                style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 5, cursor: "pointer" }}
-                                                                                                onClick={() => openGallery(res.files, i)}
-                                                                                          />
+                                                      {/* الإجراء التالي */}
+                                                      <td>
+                                                            {r.result && r.result.length > 0 ? (
+                                                                  [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
+                                                                        <div key={res.id}>{res.nextAction}</div>
+                                                                  ))
+                                                            ) : (
+                                                                  <span className="text-danger fw-bold">-</span>
+                                                            )}
+                                                      </td>
+
+
+                                                      {/* الملفات */}
+                                                      <td>
+                                                            {r.result && r.result.length > 0 ? (
+                                                                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
+                                                                        {[...new Map(r.result.map(item => [item.id, item])).values()].map((res, idx) =>
+                                                                              Array.isArray(res.files) && res.files.length > 0 ? (
+                                                                                    res.files.map((file, i) =>
+                                                                                          file.toLowerCase().endsWith(".pdf") ? (
+                                                                                                <a key={`${idx}-${i}`} href={file} target="_blank" rel="noopener noreferrer">
+                                                                                                      <img src={pdfImage} alt="PDF" style={{ width: 40, height: 40, cursor: "pointer" }} />
+                                                                                                </a>
+                                                                                          ) : (
+                                                                                                <img
+                                                                                                      key={`${idx}-${i}`}
+                                                                                                      src={file}
+                                                                                                      alt="file"
+                                                                                                      style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 5, cursor: "pointer" }}
+                                                                                                      onClick={() => openGallery(res.files, i)}
+                                                                                                />
+                                                                                          )
                                                                                     )
+                                                                              ) : (
+                                                                                    <span key={res.id} className="text-danger fw-bold">-</span>
                                                                               )
-                                                                        ) : (
-                                                                              <span key={res.id} className="text-danger fw-bold">-</span>
-                                                                        )
-                                                                  )}
-                                                            </div>
-                                                      ) : (
-                                                            <span className="text-danger fw-bold">-</span>
-                                                      )}
-                                                </td>
-
-
-                                                {/* مبلغ الجلسة */}
-                                                <td>
-                                                      {r.result && r.result.length > 0 ? (
-                                                            [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
-                                                                  <div key={res.id}>
-                                                                        {res.sessionCost ? Number(res.sessionCost).toLocaleString() : '0'}
+                                                                        )}
                                                                   </div>
-                                                            ))
-                                                      ) : (
-                                                            <div>0</div>
-                                                      )}
-                                                </td>
+                                                            ) : (
+                                                                  <span className="text-danger fw-bold">-</span>
+                                                            )}
+                                                      </td>
 
-                                                {/* المدفوع */}
-                                                <td>
-                                                      {r.result && r.result.length > 0 ? (
-                                                            [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => {
-                                                                  const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
-                                                                  const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+                                                      {/* مبلغ الجلسة */}
+                                                      <td>
+                                                            {r.result && r.result.length > 0 ? (
+                                                                  [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
+                                                                        <div key={res.id}>
+                                                                              {res.sessionCost ? Number(res.sessionCost).toLocaleString() : '0'}
+                                                                        </div>
+                                                                  ))
+                                                            ) : (
+                                                                  <div>0</div>
+                                                            )}
+                                                      </td>
+
+                                                      {/* المدفوع */}
+                                                      <td>
+                                                            {r.result && r.result.length > 0 ? (
+                                                                  [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => {
+                                                                        const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
+                                                                        const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+                                                                        return (
+                                                                              <div key={res.id}>
+                                                                                    <span
+                                                                                          style={{ cursor: "pointer" }}
+                                                                                          className="fw-bold"
+                                                                                          onClick={() =>
+                                                                                                setPaymentModal({
+                                                                                                      isOpen: true,
+                                                                                                      payments: paymentsForSession,
+                                                                                                })
+                                                                                          }
+                                                                                    >
+                                                                                          {paidAmount.toLocaleString()}
+                                                                                    </span>
+                                                                              </div>
+                                                                        );
+                                                                  })
+                                                            ) : (
+                                                                  <div>0</div>
+                                                            )}
+                                                            <Modal
+                                                                  show={paymentModal.isOpen}
+                                                                  onHide={() => setPaymentModal({ isOpen: false, payments: [] })}
+                                                                  centered
+                                                                  size="lg"
+                                                                  className="pe-0"
+                                                            >
+                                                                  <Modal.Header>
+                                                                        <Modal.Title>تفاصيل المدفوعات</Modal.Title>
+                                                                  </Modal.Header>
+                                                                  <Modal.Body style={{ maxHeight: "70vh", overflowY: "auto" }}>
+                                                                        {paymentModal.payments.length > 0 ? (
+                                                                              <Table bordered striped>
+                                                                                    <thead>
+                                                                                          <tr style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                                                                                <th>طريقة الدفع</th>
+                                                                                                <th>المبلغ</th>
+                                                                                                <th>التاريخ</th>
+                                                                                                <th>ملاحظات</th>
+                                                                                          </tr>
+                                                                                    </thead>
+                                                                                    <tbody>
+                                                                                          {paymentModal.payments
+                                                                                                .filter(p => p) // ✅ فلترة العناصر غير الموجودة
+                                                                                                .slice()
+                                                                                                .sort((a, b) => new Date(b.paymentdate) - new Date(a.paymentdate))
+                                                                                                .map((p) => (
+                                                                                                      <tr key={p.id} style={{ textAlign: "center", verticalAlign: "middle" }}>
+                                                                                                            <td>{p.paymentMethod}</td>
+                                                                                                            <td>{Number(p.amount).toLocaleString()}</td>
+                                                                                                            <td dir="ltr">{formatUtcDateTime(p.paymentdate, "DD/MM/YYYY - hh:mm A")}</td>
+                                                                                                            <td>{p.notes || "-"}</td>
+                                                                                                      </tr>
+                                                                                                ))}
+                                                                                    </tbody>
+
+                                                                              </Table>
+                                                                        ) : (
+                                                                              <p className="text-center text-danger">لا توجد مدفوعات</p>
+                                                                        )}
+                                                                  </Modal.Body>
+                                                                  <Modal.Footer>
+                                                                        <Button variant="secondary" onClick={() => setPaymentModal({ isOpen: false, payments: [] })}>
+                                                                              غلق
+                                                                        </Button>
+                                                                  </Modal.Footer>
+                                                            </Modal>
+                                                      </td>
+
+                                                      {/* Modal */}
+
+
+                                                      {/* المتبقي */}
+                                                      <td>
+                                                            {r.result && r.result.length > 0 ? (
+                                                                  [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => {
+                                                                        const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
+                                                                        const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+                                                                        const remaining = res.sessionCost ? Number(res.sessionCost) - paidAmount : 0;
+
+                                                                        return <div key={res.id}>{remaining.toLocaleString()}</div>;
+                                                                  })
+                                                            ) : (
+                                                                  <div>0</div>
+                                                            )}
+                                                      </td>
+
+
+                                                      {/* تاريخ الإضافة */}
+                                                      <td dir="ltr">{formatUtcDateTime(r.resultCreatedAt || r.createdAt)}</td>
+
+                                                      {/* زر إضافة تقرير */}
+                                                      <td>
+                                                            <button
+                                                                  className="btn btn-sm btn-warning"
+                                                                  onClick={() => setUploadingId(r.id)}
+                                                                  disabled={r.result && r.result.length > 0} // قفل الزر لو فيه نتيجة
+                                                            >
+                                                                  {r.result && r.result.length > 0 ? "تم اضافة تقرير ✅" : "اضافة تقرير 📤"}
+                                                            </button>
+
+                                                            {/* رفع التقرير */}
+                                                            {uploadingId === r.id && (
+                                                                  <div
+                                                                        className="modal fade show d-block"
+                                                                        tabIndex="-1"
+                                                                        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+                                                                  >
+                                                                        <div className="modal-dialog modal-dialog-centered">
+                                                                              <div className="modal-content p-3">
+                                                                                    <form onSubmit={handleSubmit(onSubmit)}>
+                                                                                          <h3 className="mb-3 fw-bold">رفع تقرير الحالة</h3>
+
+                                                                                          <Row className="mb-4 p-2">
+                                                                                                <h4 className="text-end fw-bold">التقرير</h4>
+                                                                                                <textarea
+                                                                                                      className="form-control"
+                                                                                                      placeholder="التقرير"
+                                                                                                      rows={3}
+                                                                                                      {...register("report")}
+                                                                                                />
+                                                                                                {errors.report && <p className="text-danger">{errors.report.message}</p>}
+                                                                                          </Row>
+
+                                                                                          <Row className="mb-4 p-2">
+                                                                                                <h4 className="text-end fw-bold">الإجراء التالي</h4>
+                                                                                                <textarea
+                                                                                                      className="form-control"
+                                                                                                      placeholder="الإجراء التالي"
+                                                                                                      rows={3}
+                                                                                                      {...register("nextAction")}
+                                                                                                />
+                                                                                                {errors.nextAction && (
+                                                                                                      <p className="text-danger">{errors.nextAction.message}</p>
+                                                                                                )}
+                                                                                          </Row>
+
+                                                                                          <Row className="mb-4 p-2">
+                                                                                                <h4 className="text-end fw-bold">تكلفة الجلسة</h4>
+                                                                                                <input
+                                                                                                      type="number"
+                                                                                                      className="form-control"
+                                                                                                      placeholder="تكلفة الجلسة"
+                                                                                                      {...register("sessionCost")}
+                                                                                                />
+
+                                                                                          </Row>
+
+                                                                                          <Row className="mb-4 p-2">
+                                                                                                <h4 className="text-end fw-bold">إضافة ملفات / صور</h4>
+                                                                                                <input
+                                                                                                      type="file"
+                                                                                                      multiple
+                                                                                                      className="form-control"
+                                                                                                      onChange={(e) => setFiles(Array.from(e.target.files))}
+                                                                                                />
+                                                                                          </Row>
+
+                                                                                          <div className="mt-3 d-flex justify-content-end gap-2">
+                                                                                                <button
+                                                                                                      type="button"
+                                                                                                      className="btn btn-secondary"
+                                                                                                      onClick={() => setUploadingId(null)}
+                                                                                                >
+                                                                                                      إلغاء
+                                                                                                </button>
+                                                                                                <button className="btn btn-success" type="submit" disabled={uploading}>
+                                                                                                      {uploading ? "جاري الرفع..." : "✅ تأكيد الرفع"}
+                                                                                                </button>
+                                                                                          </div>
+                                                                                    </form>
+                                                                              </div>
+                                                                        </div>
+                                                                  </div>
+                                                            )}
+                                                      </td>
+
+                                                      {/* الدفع */}
+                                                      <td>
+                                                            {r.result && r.result.length > 0 ? (() => {
+                                                                  const allRemaining = r.result.map((res) => {
+                                                                        const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
+                                                                        const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+                                                                        return res.sessionCost ? Number(res.sessionCost) - paidAmount : 0;
+                                                                  });
+
+                                                                  const hasRemaining = allRemaining.some(x => x > 0);
 
                                                                   return (
-                                                                        <div key={res.id}>
-                                                                              <span
-                                                                                    style={{ cursor: "pointer" }}
-                                                                                    className="fw-bold"
-                                                                                    onClick={() =>
-                                                                                          setPaymentModal({
-                                                                                                isOpen: true,
-                                                                                                payments: paymentsForSession,
-                                                                                          })
-                                                                                    }
-                                                                              >
-                                                                                    {paidAmount.toLocaleString()}
-                                                                              </span>
-                                                                        </div>
+                                                                        <button
+                                                                              className="btn btn-sm btn-primary"
+                                                                              disabled={!hasRemaining}
+                                                                              onClick={() => {
+                                                                                    if (!hasRemaining) return;
+
+                                                                                    const target = r.result.find((res, i) => allRemaining[i] > 0);
+                                                                                    const remaining = allRemaining[r.result.indexOf(target)];
+
+                                                                                    setPayingSession({
+                                                                                          appointmentId: r.id,
+                                                                                          sessionId: target.id,
+                                                                                          patientNationalId: r.nationalId,
+                                                                                          doctorId: r.doctorId,
+                                                                                          remaining: remaining
+                                                                                    });
+                                                                              }}
+
+                                                                        >
+                                                                              دفع
+                                                                        </button>
                                                                   );
-                                                            })
-                                                      ) : (
-                                                            <div>0</div>
-                                                      )}
-                                                      <Modal
-                                                            show={paymentModal.isOpen}
-                                                            onHide={() => setPaymentModal({ isOpen: false, payments: [] })}
-                                                            centered
-                                                            size="lg"
-                                                            className="pe-0"
-                                                      >
-                                                            <Modal.Header>
-                                                                  <Modal.Title>تفاصيل المدفوعات</Modal.Title>
-                                                            </Modal.Header>
-                                                            <Modal.Body style={{ maxHeight: "70vh", overflowY: "auto" }}>
-                                                                  {paymentModal.payments.length > 0 ? (
-                                                                        <Table bordered striped>
-                                                                              <thead>
-                                                                                    <tr style={{ textAlign: "center", verticalAlign: "middle" }}>
-                                                                                          <th>طريقة الدفع</th>
-                                                                                          <th>المبلغ</th>
-                                                                                          <th>التاريخ</th>
-                                                                                          <th>ملاحظات</th>
-                                                                                    </tr>
-                                                                              </thead>
-                                                                              <tbody>
-                                                                                    {paymentModal.payments
-                                                                                          .filter(p => p) // ✅ فلترة العناصر غير الموجودة
-                                                                                          .slice()
-                                                                                          .sort((a, b) => new Date(b.paymentdate) - new Date(a.paymentdate))
-                                                                                          .map((p) => (
-                                                                                                <tr key={p.id} style={{ textAlign: "center", verticalAlign: "middle" }}>
-                                                                                                      <td>{p.paymentMethod}</td>
-                                                                                                      <td>{Number(p.amount).toLocaleString()}</td>
-                                                                                                      <td dir="ltr">{formatUtcDateTime(p.paymentdate, "DD/MM/YYYY - hh:mm A")}</td>
-                                                                                                      <td>{p.notes || "-"}</td>
-                                                                                                </tr>
-                                                                                          ))}
-                                                                              </tbody>
-
-                                                                        </Table>
-                                                                  ) : (
-                                                                        <p className="text-center text-danger">لا توجد مدفوعات</p>
-                                                                  )}
-                                                            </Modal.Body>
-                                                            <Modal.Footer>
-                                                                  <Button variant="secondary" onClick={() => setPaymentModal({ isOpen: false, payments: [] })}>
-                                                                        غلق
-                                                                  </Button>
-                                                            </Modal.Footer>
-                                                      </Modal>
-                                                </td>
-
-                                                {/* Modal */}
-
-
-                                                {/* المتبقي */}
-                                                <td>
-                                                      {r.result && r.result.length > 0 ? (
-                                                            [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => {
-                                                                  const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
-                                                                  const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-                                                                  const remaining = res.sessionCost ? Number(res.sessionCost) - paidAmount : 0;
-
-                                                                  return <div key={res.id}>{remaining.toLocaleString()}</div>;
-                                                            })
-                                                      ) : (
-                                                            <div>0</div>
-                                                      )}
-                                                </td>
-
-
-                                                {/* تاريخ الإضافة */}
-                                                <td dir="ltr">{formatUtcDateTime(r.resultCreatedAt || r.createdAt)}</td>
-
-                                                {/* زر إضافة تقرير */}
-                                                <td>
-                                                      <button
-                                                            className="btn btn-sm btn-warning"
-                                                            onClick={() => setUploadingId(r.id)}
-                                                            disabled={r.result && r.result.length > 0} // قفل الزر لو فيه نتيجة
-                                                      >
-                                                            {r.result && r.result.length > 0 ? "تم اضافة تقرير ✅" : "اضافة تقرير 📤"}
-                                                      </button>
-
-                                                      {/* رفع التقرير */}
-                                                      {uploadingId === r.id && (
-                                                            <div
-                                                                  className="modal fade show d-block"
-                                                                  tabIndex="-1"
-                                                                  style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-                                                            >
-                                                                  <div className="modal-dialog modal-dialog-centered">
-                                                                        <div className="modal-content p-3">
-                                                                              <form onSubmit={handleSubmit(onSubmit)}>
-                                                                                    <h3 className="mb-3 fw-bold">رفع تقرير الحالة</h3>
-
-                                                                                    <Row className="mb-4 p-2">
-                                                                                          <h4 className="text-end fw-bold">التقرير</h4>
-                                                                                          <textarea
-                                                                                                className="form-control"
-                                                                                                placeholder="التقرير"
-                                                                                                rows={3}
-                                                                                                {...register("report")}
-                                                                                          />
-                                                                                          {errors.report && <p className="text-danger">{errors.report.message}</p>}
-                                                                                    </Row>
-
-                                                                                    <Row className="mb-4 p-2">
-                                                                                          <h4 className="text-end fw-bold">الإجراء التالي</h4>
-                                                                                          <textarea
-                                                                                                className="form-control"
-                                                                                                placeholder="الإجراء التالي"
-                                                                                                rows={3}
-                                                                                                {...register("nextAction")}
-                                                                                          />
-                                                                                          {errors.nextAction && (
-                                                                                                <p className="text-danger">{errors.nextAction.message}</p>
-                                                                                          )}
-                                                                                    </Row>
-
-                                                                                    <Row className="mb-4 p-2">
-                                                                                          <h4 className="text-end fw-bold">تكلفة الجلسة</h4>
-                                                                                          <input
-                                                                                                type="number"
-                                                                                                className="form-control"
-                                                                                                placeholder="تكلفة الجلسة"
-                                                                                                {...register("sessionCost")}
-                                                                                          />
-
-                                                                                    </Row>
-
-                                                                                    <Row className="mb-4 p-2">
-                                                                                          <h4 className="text-end fw-bold">إضافة ملفات / صور</h4>
-                                                                                          <input
-                                                                                                type="file"
-                                                                                                multiple
-                                                                                                className="form-control"
-                                                                                                onChange={(e) => setFiles(Array.from(e.target.files))}
-                                                                                          />
-                                                                                    </Row>
-
-                                                                                    <div className="mt-3 d-flex justify-content-end gap-2">
-                                                                                          <button
-                                                                                                type="button"
-                                                                                                className="btn btn-secondary"
-                                                                                                onClick={() => setUploadingId(null)}
-                                                                                          >
-                                                                                                إلغاء
-                                                                                          </button>
-                                                                                          <button className="btn btn-success" type="submit" disabled={uploading}>
-                                                                                                {uploading ? "جاري الرفع..." : "✅ تأكيد الرفع"}
-                                                                                          </button>
-                                                                                    </div>
-                                                                              </form>
-                                                                        </div>
-                                                                  </div>
-                                                            </div>
-                                                      )}
-                                                </td>
-
-                                                {/* الدفع */}
-                                                <td>
-                                                      {r.result && r.result.length > 0 ? (() => {
-                                                            const allRemaining = r.result.map((res) => {
-                                                                  const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
-                                                                  const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-                                                                  return res.sessionCost ? Number(res.sessionCost) - paidAmount : 0;
-                                                            });
-
-                                                            const hasRemaining = allRemaining.some(x => x > 0);
-
-                                                            return (
-                                                                  <button
-                                                                        className="btn btn-sm btn-primary"
-                                                                        disabled={!hasRemaining}
-                                                                        onClick={() => {
-                                                                              if (!hasRemaining) return;
-
-                                                                              const target = r.result.find((res, i) => allRemaining[i] > 0);
-                                                                              const remaining = allRemaining[r.result.indexOf(target)];
-
-                                                                              setPayingSession({
-                                                                                    appointmentId: r.id,
-                                                                                    sessionId: target.id,
-                                                                                    patientNationalId: r.nationalId,
-                                                                                    doctorId: r.doctorId,
-                                                                                    remaining: remaining
-                                                                              });
-                                                                        }}
-
-                                                                  >
-                                                                        دفع
-                                                                  </button>
-                                                            );
-                                                      })() : <span className="text-danger fw-bold">-</span>}
+                                                            })() : <span className="text-danger fw-bold">-</span>}
+                                                      </td>
+                                                </tr>
+                                          ))
+                                    ) : (
+                                          <tr>
+                                                <td colSpan="10" className="text-center">
+                                                      لا توجد بيانات
                                                 </td>
                                           </tr>
-                                    ))
-                              ) : (
-                                    <tr>
-                                          <td colSpan="10" className="text-center">
-                                                لا توجد بيانات
-                                          </td>
+                                    )}
+                              </tbody>
+                              <tfoot>
+                                    <tr className="table-dark fw-bold">
+                                          <td colSpan="4"></td>
+                                          <td>{totalSessionCost.toLocaleString()}</td>
+                                          <td>{totalPaid.toLocaleString()}</td>
+                                          <td>{totalRemaining.toLocaleString()}</td>
+                                          <td colSpan="3"></td>
                                     </tr>
-                              )}
-                        </tbody>
-                        <tfoot>
-                              <tr className="table-dark fw-bold">
-                                    <td colSpan="4"></td>
-                                    <td>{totalSessionCost.toLocaleString()}</td>
-                                    <td>{totalPaid.toLocaleString()}</td>
-                                    <td>{totalRemaining.toLocaleString()}</td>
-                                    <td colSpan="3"></td>
-                              </tr>
-                        </tfoot>
-                  </table>
+                              </tfoot>
+                        </table>
+                  </section>
 
 
                   {isOpen && (

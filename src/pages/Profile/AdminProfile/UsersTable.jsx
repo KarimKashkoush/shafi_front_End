@@ -34,7 +34,6 @@ export default function UsersTable({ users }) {
             }
       };
 
-      console.log(users)
       return (
             <section className="users-table">
                   <section className="table overflow-auto">

@@ -68,6 +68,7 @@ function AppRouter() {
                                                 { path: "users", element: <Users /> },
                                                 { path: "financial-accounts", element: <FinancialAccounts /> },
                                                 { path: "users/user-info/:id", element: <UserInfo /> },
+                                                { path: "userData", element: <ProfileUserData /> },
                                           ]
                                           : user.role === "doctor"
                                                 ? [

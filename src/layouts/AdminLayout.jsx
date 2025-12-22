@@ -5,6 +5,7 @@ import userImage from "../assets/images/profile.png"
 import addUserImage from "../assets/images/registered.png"
 import usersImage from "../assets/images/about-team.png"
 import financialAccountImage from "../assets/images/accounting.png"
+import ProfileImg from "../assets/images/profile.png";
 import { useEffect, useState } from "react";
 import Loading from "../pages/Loading/Loading"
 export default function AdminLayout() {
@@ -14,6 +15,7 @@ export default function AdminLayout() {
             { to: "add-user", label: "إضافة حساب جديد", icon: addUserImage },
             { to: "users", label: "المستخدمين", icon: usersImage },
             { to: "financial-accounts", label: "الحسابات", icon: financialAccountImage },
+            { to: "userData", label: "بيانات الحساب", icon: ProfileImg },
       ];
       const [loading, setLoading] = useState(true);
 
