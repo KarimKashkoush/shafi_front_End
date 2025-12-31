@@ -42,7 +42,7 @@ function AppRouter() {
             return () => clearTimeout(timer);
       }, [user]);
 
-      if (loading) return <div></div>;
+      if (loading) return <div>Loading...</div>;
 
       const profileRoutes = user
             ? [

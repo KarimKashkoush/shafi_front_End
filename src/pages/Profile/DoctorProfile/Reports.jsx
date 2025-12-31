@@ -7,11 +7,10 @@ import "yet-another-react-lightbox/styles.css";
 import { Zoom } from "yet-another-react-lightbox/plugins";
 import { z } from "zod";
 import Swal from "sweetalert2";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Row } from "react-bootstrap";
+import { Col, Row } from "react-bootstrap";
 import { Modal, Button, Table } from "react-bootstrap";
-import { GitGraph } from 'lucide-react';
 export default function Reports({ nationalId }) {
       const [appointments, setAppointments] = useState([]);
       const [uploadingId, setUploadingId] = useState(null);
@@ -22,6 +21,8 @@ export default function Reports({ nationalId }) {
       const [uploading, setUploading] = useState(false);
       const [files, setFiles] = useState([]);
       const [loading, setLoading] = useState(false);
+
+
 
       // جوه الـ component
       const [paymentModal, setPaymentModal] = useState({
@@ -81,19 +82,42 @@ export default function Reports({ nationalId }) {
       const schema = z.object({
             report: z.string().min(1, "التقرير مطلوب"),
             nextAction: z.string().min(1, "الإجراء التالي مطلوب"),
-            sessionCost: z.string().optional(),
+            sessionCost: z.any().optional(),
+
+            medications: z.array(z.object({
+                  name: z.string().optional(),
+                  startDate: z.string().optional(),
+                  endDate: z.string().optional(),
+                  times: z.string().optional(),
+            })).optional(),
+
+            radiology: z.array(z.object({
+                  name: z.string().optional(),
+                  notes: z.string().optional(),
+            })).optional(),
+
+            labTests: z.array(z.object({
+                  name: z.string().optional(),
+                  notes: z.string().optional(),
+            })).optional(),
       });
+
 
       const {
             register,
             handleSubmit,
             formState: { errors },
+            control
       } = useForm({
             resolver: zodResolver(schema),
             defaultValues: {
                   report: "",
                   nextAction: "",
                   sessionCost: 0,
+                  pharmaceutical: "",
+                  medications: [{ name: "", startDate: "", endDate: "", times: "" }],
+                  radiology: [{ name: "", notes: "" }],
+                  labTests: [{ name: "", notes: "" }]
             },
       });
 
@@ -109,6 +133,11 @@ export default function Reports({ nationalId }) {
                   formData.append("sessionCost", data.sessionCost);
                   formData.append("userId", userId);
                   formData.append("medicalCenterId", medicalCenterId);
+                  formData.append("medications", JSON.stringify(data.medications));
+                  formData.append("radiology", JSON.stringify(data.radiology));
+                  formData.append("labTests", JSON.stringify(data.labTests));
+
+
 
                   files.forEach((file) => formData.append("files", file));
 
@@ -206,6 +235,12 @@ export default function Reports({ nationalId }) {
                   Swal.fire("خطأ", "حدث خطأ أثناء الدفع", "error");
             }
       };
+
+
+      const { fields: medFields, append: addMedication } = useFieldArray({ control, name: "medications" });
+      const { fields: radFields, append: addRadiology } = useFieldArray({ control, name: "radiology" });
+      const { fields: labFields, append: addLabTest } = useFieldArray({ control, name: "labTests" });
+
 
 
       return (
@@ -382,7 +417,6 @@ export default function Reports({ nationalId }) {
                                                                   </Modal.Footer>
                                                             </Modal>
                                                       </td>
-
                                                       {/* Modal */}
 
 
@@ -422,37 +456,110 @@ export default function Reports({ nationalId }) {
                                                                         tabIndex="-1"
                                                                         style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
                                                                   >
-                                                                        <div className="modal-dialog modal-dialog-centered">
+                                                                        <div className="modal-dialog modal-dialog-centered modal-xl w-100">
                                                                               <div className="modal-content p-3">
                                                                                     <form onSubmit={handleSubmit(onSubmit)}>
                                                                                           <h3 className="mb-3 fw-bold">رفع تقرير الحالة</h3>
+                                                                                          <Row className="mb-2">
+                                                                                                <Col xs={12} md={6} className='p-1'>
+                                                                                                      <p className="text-end fw-bold mb-1">التقرير</p>
+                                                                                                      <textarea
+                                                                                                            className="form-control"
+                                                                                                            placeholder="التقرير"
+                                                                                                            rows={2}
+                                                                                                            {...register("report")}
+                                                                                                      />
+                                                                                                      {errors.report && <p className="text-danger">{errors.report.message}</p>}
+                                                                                                </Col>
 
-                                                                                          <Row className="mb-4 p-2">
-                                                                                                <h4 className="text-end fw-bold">التقرير</h4>
-                                                                                                <textarea
-                                                                                                      className="form-control"
-                                                                                                      placeholder="التقرير"
-                                                                                                      rows={3}
-                                                                                                      {...register("report")}
-                                                                                                />
-                                                                                                {errors.report && <p className="text-danger">{errors.report.message}</p>}
+                                                                                                <Col xs={12} md={6} className='p-1'>
+                                                                                                      <p className="text-end fw-bold mb-1">الإجراء التالي</p>
+                                                                                                      <textarea
+                                                                                                            className="form-control"
+                                                                                                            placeholder="الإجراء التالي"
+                                                                                                            rows={2}
+                                                                                                            {...register("nextAction")}
+                                                                                                      />
+                                                                                                      {errors.nextAction && (
+                                                                                                            <p className="text-danger">{errors.nextAction.message}</p>
+                                                                                                      )}
+                                                                                                </Col>
                                                                                           </Row>
 
-                                                                                          <Row className="mb-4 p-2">
-                                                                                                <h4 className="text-end fw-bold">الإجراء التالي</h4>
-                                                                                                <textarea
-                                                                                                      className="form-control"
-                                                                                                      placeholder="الإجراء التالي"
-                                                                                                      rows={3}
-                                                                                                      {...register("nextAction")}
-                                                                                                />
-                                                                                                {errors.nextAction && (
-                                                                                                      <p className="text-danger">{errors.nextAction.message}</p>
-                                                                                                )}
+                                                                                          {/* الأدوية */}
+                                                                                          <Row className='mb-2 border p-2 rounded'>
+                                                                                                <p className='text-end fw-bold mb-1'>وصف الأدوية</p>
+                                                                                                {medFields.map((item, index) => (
+                                                                                                      <Row className="mb-3" key={item.id}>
+                                                                                                            <Col md={3} className='p-1'>
+                                                                                                                  <label>اسم الدواء</label>
+                                                                                                                  <input type="text" placeholder="اسم الدواء" className="form-control" {...register(`medications.${index}.name`)} />
+                                                                                                            </Col>
+                                                                                                            <Col md={3} className='p-1'>
+                                                                                                                  <label >من يوم</label>
+                                                                                                                  <input type="date" className="form-control"  {...register(`medications.${index}.startDate`)} />
+                                                                                                            </Col>
+                                                                                                            <Col md={3} className='p-1'>
+                                                                                                                  <label >الي يوم</label>
+                                                                                                                  <input type="date" className="form-control"  {...register(`medications.${index}.endDate`)} />
+                                                                                                            </Col>
+                                                                                                            <Col md={3} className='p-1'>
+                                                                                                                  <label >أوقات الدواء</label>
+                                                                                                                  <input type="text" placeholder="أوقات الدواء" className="form-control" {...register(`medications.${index}.times`)} />
+                                                                                                            </Col>
+                                                                                                      </Row>
+                                                                                                ))}
+                                                                                                <Button type="button" className='bg-warning border-0' onClick={() => addMedication({ name: "", startDate: "", endDate: "", times: "" })}>
+                                                                                                      إضافة دواء آخر
+                                                                                                </Button>
                                                                                           </Row>
 
-                                                                                          <Row className="mb-4 p-2">
-                                                                                                <h4 className="text-end fw-bold">تكلفة الجلسة</h4>
+                                                                                          {/* الأشعة */}
+                                                                                          <Row className='mb-2'>
+                                                                                                <Col xs={12} md={6}>
+                                                                                                      <div className="rounded border p-1">
+                                                                                                            <p className='text-end fw-bold mb-1'>طلب اشعة</p>
+                                                                                                            {radFields.map((item, index) => (
+                                                                                                                  <Row className="mb-3" key={item.id}>
+                                                                                                                        <Col md={6} className='p-1'>
+                                                                                                                              <input type="text" placeholder="اسم الأشعة" className="form-control" {...register(`radiology.${index}.name`)} />
+                                                                                                                        </Col>
+                                                                                                                        <Col md={6} className='p-1'>
+                                                                                                                              <input type="text" placeholder="ملاحظات" className="form-control" {...register(`radiology.${index}.notes`)} />
+                                                                                                                        </Col>
+                                                                                                                  </Row>
+                                                                                                            ))}
+                                                                                                            <Button type="button" className='bg-warning border-0 w-100' onClick={() => addRadiology({ name: "", date: "", notes: "" })}>
+                                                                                                                  إضافة أشعة أخرى
+                                                                                                            </Button>
+                                                                                                      </div>
+                                                                                                </Col>
+
+                                                                                                {/* التحاليل */}
+                                                                                                <Col xs={12} md={6}>
+                                                                                                      <div className="rounded border p-1">
+                                                                                                            <p className='text-end fw-bold mb-1'>طلب تحليل</p>
+                                                                                                            {labFields.map((item, index) => (
+                                                                                                                  <Row className="mb-3" key={item.id}>
+                                                                                                                        <Col md={6} className='p-1'>
+                                                                                                                              <input type="text" placeholder="اسم التحليل" className="form-control" {...register(`labTests.${index}.name`)} />
+                                                                                                                        </Col>
+                                                                                                                        <Col md={6} className='p-1'>
+                                                                                                                              <input type="text" placeholder="ملاحظات" className="form-control" {...register(`labTests.${index}.notes`)} />
+                                                                                                                        </Col>
+                                                                                                                  </Row>
+                                                                                                            ))}
+                                                                                                            <Button type="button" className='bg-warning border-0 w-100' onClick={() => addLabTest({ name: "", date: "", notes: "" })}>
+                                                                                                                  إضافة تحليل آخر
+                                                                                                            </Button>
+                                                                                                      </div>
+                                                                                                </Col>
+                                                                                          </Row>
+
+
+                                                                                          <Row className="mb-2">
+                                                                                                <p className='text-end fw-bold mb-1'>تكلفة الجلسة</p>
+
                                                                                                 <input
                                                                                                       type="number"
                                                                                                       className="form-control"
@@ -462,8 +569,8 @@ export default function Reports({ nationalId }) {
 
                                                                                           </Row>
 
-                                                                                          <Row className="mb-4 p-2">
-                                                                                                <h4 className="text-end fw-bold">إضافة ملفات / صور</h4>
+                                                                                          <Row className="mb-2">
+                                                                                                <p className="text-end fw-bold mb-1">إضافة ملفات / صور</p>
                                                                                                 <input
                                                                                                       type="file"
                                                                                                       multiple

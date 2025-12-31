@@ -28,6 +28,8 @@ export default function Reports({ reports, results }) {
 
       const reportEntries = Object.entries(reports || {});
 
+      console.log(reports)
+
       return (
             <>
                   <AddResult addResult={addResult} setAddResult={setAddResult} />
@@ -57,7 +59,7 @@ export default function Reports({ reports, results }) {
                         {activeTab === "reports" ? (
                               <Accordion defaultActiveKey="0" flush>
                                     {reportEntries.length > 0 ? (
-                                          reportEntries.map(([key, report], idx) => (
+                                          reportEntries?.map(([key, report], idx) => (
                                                 <Accordion.Item eventKey={idx.toString()} key={key}>
                                                       <Accordion.Header>
                                                             تقرير رقم {idx + 1} -{" "}
@@ -67,7 +69,7 @@ export default function Reports({ reports, results }) {
                                                       <Accordion.Body>
                                                             <section className="content">
                                                                   <h3>التشخيص:</h3>
-                                                                  <p>{report.reportText}</p>
+                                                                  <p>{report.reportText || report.report}</p>
                                                             </section>
 
                                                             <section className="content">
@@ -77,8 +79,7 @@ export default function Reports({ reports, results }) {
 
                                                             <section className="content">
                                                                   <h3>الآشعة:</h3>
-                                                                  {Array.isArray(report.radiology) &&
-                                                                        report.radiology.length > 0 ? (
+                                                                  {Array.isArray(report.radiology) && report.radiology.length > 0 ? (
                                                                         <table className="pharmaceutical">
                                                                               <thead>
                                                                                     <tr>
@@ -129,7 +130,7 @@ export default function Reports({ reports, results }) {
                                                                                                                         </div>
                                                                                                                   );
                                                                                                             })()
-                                                                                                      ) : ["patient", "doctor", "pharmacist", "clinical", undefined].includes(userType) ? (
+                                                                                                      ) : ["patient", "doctor", "pharmacist", "clinical", "medicalCenter", undefined].includes(userType) ? (
                                                                                                             <p>لم يتم اضافة نتيجة حتى الآن</p>
                                                                                                       ) : ["lab", "radiology"].includes(userType) ? (
                                                                                                             <button
@@ -158,8 +159,8 @@ export default function Reports({ reports, results }) {
 
                                                             <section className="content">
                                                                   <h3>التحاليل:</h3>
-                                                                  {Array.isArray(report.labTests) &&
-                                                                        report.labTests.length > 0 ? (
+                                                                  {Array.isArray(report.labTests) && report.labTests.length > 0 ? (
+
                                                                         <table className="pharmaceutical">
                                                                               <thead>
                                                                                     <tr>
@@ -210,7 +211,7 @@ export default function Reports({ reports, results }) {
                                                                                                                         </div>
                                                                                                                   );
                                                                                                             })()
-                                                                                                      ) : ["patient", "doctor", "pharmacist", "clinical", undefined].includes(userType) ? (
+                                                                                                      ) : ["patient", "doctor", "pharmacist", "clinical", "medicalCenter", undefined].includes(userType) ? (
                                                                                                             <p>لم يتم اضافة نتيجة حتى الآن</p>
                                                                                                       ) : ["lab", "radiology"].includes(userType) ? (
                                                                                                             <button

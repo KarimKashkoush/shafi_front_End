@@ -15,7 +15,6 @@ export default function PatientProfile() {
       const [loading, setLoading] = useState(true);
       const [pinVerified, setPinVerified] = useState(false);
       const [pinDigits, setPinDigits] = useState(["", "", "", ""]);
-      const [results, setResults] = useState([]);
 
       const handleChange = (index, value) => {
             if (/^\d?$/.test(value)) {
@@ -31,57 +30,65 @@ export default function PatientProfile() {
 
       const enteredPin = pinDigits.join("");
 
-      useEffect(() => {
-            const token = localStorage.getItem("token");
-            async function fetchPatientData() {
-                  try {
+useEffect(() => {
+      const token = localStorage.getItem("token");
 
-                        const res = await api.get(`/user/${id}`, {
+      async function fetchPatientData() {
+            try {
+                  const res = await api.get(`/user/${id}`, {
+                        headers: {
+                              Authorization: `Bearer ${token}`,
+                        },
+                  });
+
+                  const user = res?.data?.user || {};
+                  const fetchedReports = res?.data?.reports || [];
+
+                  setUserData(user);
+
+                  if (!user?.pin || user?.pin.trim() === "") {
+                        setPinVerified(true);
+                  }
+
+                  let nationalReports = [];
+
+                  if (user?.nationalId) {
+                        nationalReports = await getResultByNationalId(
+                              user.nationalId,
+                              token
+                        );
+                  }
+
+                  // ✅ دمج الاتنين في reports واحدة
+                  setReports([...fetchedReports, ...nationalReports]);
+
+            } catch (error) {
+                  console.error("Error fetching patient data:", error);
+            } finally {
+                  setLoading(false);
+            }
+      }
+
+      async function getResultByNationalId(nationalId, token) {
+            try {
+                  const res = await axios.get(
+                        `${import.meta.env.VITE_API_URL}/reports/nationalId/${nationalId}`,
+                        {
                               headers: {
                                     Authorization: `Bearer ${token}`,
                               },
-                        });
-
-                        const user = res?.data?.user || {};
-                        const fetchedReports = res?.data?.reports || [];
-
-                        setUserData(user);
-                        setReports(fetchedReports);
-
-                        if (!user?.pin || user?.pin.trim() === "") {
-                              setPinVerified(true);
                         }
-
-                        // ✅ بعد ما نجيب بيانات المستخدم نجيب النتائج بناءً على الرقم القومي
-                        if (user?.nationalId) {
-                              getResultByNationalId(user.nationalId, token);
-                        }
-
-                  } catch (error) {
-                        console.error("Error fetching patient data:", error);
-                  } finally {
-                        setLoading(false);
-                  }
+                  );
+                  return res.data.data || [];
+            } catch (err) {
+                  console.error("Error fetching results:", err);
+                  return [];
             }
+      }
 
-            async function getResultByNationalId(nationalId, token) {
-                  try {
-                        const res = await axios.get(
-                              `${import.meta.env.VITE_API_URL}/results/nationalId/${nationalId}`,
-                              {
-                                    headers: {
-                                          Authorization: `Bearer ${token}`,
-                                    },
-                              }
-                        );
-                        setResults(res.data.data || []);
-                  } catch (err) {
-                        console.error("Error fetching results:", err);
-                  }
-            }
+      fetchPatientData();
+}, [id]);
 
-            fetchPatientData();
-      }, [id]);
 
       if (loading) {
             return (
@@ -100,7 +107,7 @@ export default function PatientProfile() {
                               <>
                                     <ChronicDiseases reports={reports} />
                                     <Pharmaceutical reports={reports} />
-                                    <Reports reports={reports} results={results}/>
+                                    <Reports reports={reports}/>
                               </>
                         ) : (
                               <div className="verify-pin mt-4">
