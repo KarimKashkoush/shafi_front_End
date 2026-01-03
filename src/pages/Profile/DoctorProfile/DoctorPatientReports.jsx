@@ -6,35 +6,37 @@ import { useParams } from "react-router";
 import whatssappImage from '../../../assets/images/whatsapp.png';
 import Reports from './Reports';
 export default function DoctorPatientReports() {
-      const { nationalId } = useParams();
+      const { identifier } = useParams();
       const [appointments, setAppointments] = useState([]);
       const [loading, setLoading] = useState(true);
       const apiUrl = import.meta.env.VITE_API_URL;
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
       const medicalCenterId = user?.medicalCenterId;
+      console.log(identifier)
 
 
+      const fetchAppointments = useCallback(async () => {
+            const token = localStorage.getItem("token");
+            try {
+                  setLoading(true);
+                  const res = await axios.get(`${apiUrl}/doctor/patientFiles/${identifier}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                  });
 
-const fetchAppointments = useCallback(async () => {
-      const token = localStorage.getItem("token");
-      try {
-            setLoading(true);
-            const res = await axios.get(`${apiUrl}/doctor/patientFiles/${nationalId}`, {
-                  headers: { Authorization: `Bearer ${token}` }
-            });
+                  console.log(res.data)
 
-            const userAppointments = res.data.data.filter(
-                  (appt) => appt.userId === userId || appt.userId === medicalCenterId
-            );
+                  const userAppointments = res.data.data.filter(
+                        (appt) => appt.userId === userId || appt.userId === medicalCenterId
+                  );
 
-            setAppointments(userAppointments);
-      } catch (err) {
-            console.error("Error fetching appointments", err);
-      } finally {
-            setLoading(false);
-      }
-}, [apiUrl, userId, medicalCenterId, nationalId]); 
+                  setAppointments(userAppointments);
+            } catch (err) {
+                  console.error("Error fetching appointments", err);
+            } finally {
+                  setLoading(false);
+            }
+      }, [apiUrl, userId, medicalCenterId, identifier]);
 
 
 
@@ -64,8 +66,7 @@ const fetchAppointments = useCallback(async () => {
       };
 
       const patientAge = calculateAgeFromBirthDate(appointments[0]?.birthDate);
-      // لينك صفحة المريض
-      const patientLink = `${window.location.origin}/patientReports/${appointments[0]?.nationalId}`;
+      const patientLink = `${window.location.origin}/PatientReportsPage/${identifier}`;
 
       return (
             <section className="table overflow-x-auto">
@@ -120,7 +121,7 @@ const fetchAppointments = useCallback(async () => {
                               </section>
 
 
-                              <Reports nationalId={nationalId} />
+                              <Reports identifier={identifier} />
                         </>
                   )}
             </section>

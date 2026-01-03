@@ -11,7 +11,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Col, Row } from "react-bootstrap";
 import { Modal, Button, Table } from "react-bootstrap";
-export default function Reports({ nationalId }) {
+export default function Reports({ identifier }) {
       const [appointments, setAppointments] = useState([]);
       const [uploadingId, setUploadingId] = useState(null);
       const apiUrl = import.meta.env.VITE_API_URL;
@@ -34,7 +34,7 @@ export default function Reports({ nationalId }) {
 
             const token = localStorage.getItem("token");
             try {
-                  const res = await axios.get(`${apiUrl}/doctor/patientFiles/${nationalId}`, {
+                  const res = await axios.get(`${apiUrl}/doctor/patientFiles/${identifier}`, {
                         headers: { Authorization: `Bearer ${token}` }
                   });
 
@@ -46,7 +46,7 @@ export default function Reports({ nationalId }) {
             } catch (err) {
                   console.error("Error fetching appointments", err);
             }
-      }, [apiUrl, userId, medicalCenterId, nationalId]);
+      }, [apiUrl, userId, medicalCenterId, identifier]);
 
       // إزالة التكرار حسب res.id
       const allResults = appointments.flatMap(a => a.result || []);
@@ -81,7 +81,7 @@ export default function Reports({ nationalId }) {
 
       const schema = z.object({
             report: z.string().min(1, "التقرير مطلوب"),
-            nextAction: z.string().min(1, "الإجراء التالي مطلوب"),
+            nextAction: z.string().optional(),
             sessionCost: z.any().optional(),
 
             medications: z.array(z.object({

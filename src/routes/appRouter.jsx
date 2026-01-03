@@ -32,6 +32,7 @@ import DoctorPatientReports from "../pages/Profile/DoctorProfile/DoctorPatientRe
 import DoctorStafLayout from "../layouts/DoctorStafLayout";
 import MedicalCenter from "../layouts/MedicalCenter";
 import MainDashboard from "../pages/Dashboard/MainDashboard";
+import PatientReportsPage from "../pages/Profile/PatientProfile/PatientReportsPage";
 
 function AppRouter() {
       const { user } = useContext(AuthContext);
@@ -76,13 +77,13 @@ function AppRouter() {
                                                       { path: "userData", element: <ProfileUserData /> },
                                                       { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                       { path: "add-result", element: <DoctorAddResults /> },
-                                                      { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
+                                                      { path: "patientReports/:identifier", element: <DoctorPatientReports /> },
                                                 ] : user.role === "receptionist"
                                                       ? [
                                                             { index: true, element: <DoctorCases /> },
                                                             { path: "userData", element: <ProfileUserData /> },
                                                             { path: "add-appointment", element: <DoctorAddAppointments /> },
-                                                            { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
+                                                            { path: "patientReports/:identifier", element: <DoctorPatientReports /> },
                                                       ]
                                                       :
                                                       user.role === "medicalCenter"
@@ -92,7 +93,7 @@ function AppRouter() {
                                                                   { path: "dashboard", element: <MainDashboard /> },
                                                                   { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                                   { path: "manage-receptionists", element: <ManageReceptionists /> },
-                                                                  { path: "patientReports/:nationalId", element: <DoctorPatientReports /> },
+                                                                  { path: "patientReports/:identifier", element: <DoctorPatientReports /> },
                                                             ]
                                                             : [
                                                                   { index: true, element: <StafProfile /> },
@@ -124,9 +125,11 @@ function AppRouter() {
                   element: <ShowUserData />,
                   children: [{ index: true, element: <PatientProfile /> }],
             },
-            { path: "/patientReports/:nationalId", element: <DoctorPatientReports /> },
 
-
+            {
+                  path: "/PatientReportsPage/:identifier",
+                  element: <PatientReportsPage />
+            },
 
             // ✅الراوت الجديد هنا
             {

@@ -299,15 +299,14 @@ export default function DoctorCases() {
                                                                   <button
                                                                         className="btn btn-sm btn-success"
                                                                         onClick={() => {
-                                                                              if (appt.nationalId) {
-                                                                                    localStorage.setItem(
-                                                                                          "currentPatientNationalId",
-                                                                                          appt.nationalId
-                                                                                    );
-                                                                                    window.location.href = `/profile/${userId}/patientReports/${appt.nationalId}`;
-                                                                              } else {
-                                                                                    Swal.fire("❌", "لا يوجد رقم قومي لهذا المريض", "error");
+                                                                              const identifier = appt.nationalId || appt.phone;
+
+                                                                              if (!identifier) {
+                                                                                    Swal.fire("❌", "لا يوجد رقم قومي أو رقم هاتف لهذا المريض", "error");
+                                                                                    return;
                                                                               }
+
+                                                                              window.location.href = `/profile/${userId}/patientReports/${identifier}`;
                                                                         }}
                                                                   >
                                                                         عرض التقارير
