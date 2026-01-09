@@ -13,7 +13,6 @@ export default function DoctorPatientReports() {
       const user = JSON.parse(localStorage.getItem("user"));
       const userId = user?.id;
       const medicalCenterId = user?.medicalCenterId;
-      console.log(identifier)
 
 
       const fetchAppointments = useCallback(async () => {
@@ -38,15 +37,9 @@ export default function DoctorPatientReports() {
             }
       }, [apiUrl, userId, medicalCenterId, identifier]);
 
-
-
-
-
       useEffect(() => {
             fetchAppointments();
       }, [fetchAppointments]);
-
-
 
       // حساب عمر المريض
       const calculateAgeFromBirthDate = (birthDate) => {
@@ -61,7 +54,6 @@ export default function DoctorPatientReports() {
             if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
                   age--;
             }
-
             return age;
       };
 

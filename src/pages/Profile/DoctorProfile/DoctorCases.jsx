@@ -83,38 +83,63 @@ export default function DoctorCases() {
       };
 
       // تعديل الرقم القومي
-      const handleEditNationalId = async (id, currentValue) => {
-            const newId = window.prompt("ادخل الرقم القومي:", currentValue || "");
-            if (newId && newId !== currentValue) {
-                  try {
-                        const token = localStorage.getItem("token");
+const handleEditAppointment = async (appt) => {
+      // تحويل التاريخ للعرض في input datetime-local
+      const localDateTime = appt.dateTime
+            ? new Date(appt.dateTime).toISOString().slice(0, 16) // yyyy-MM-ddTHH:mm
+            : "";
 
-                        const res = await axios.put(
-                              `${apiUrl}/appointments/${id}/nationalId`,
-                              { nationalId: newId },
-                              {
-                                    headers: {
-                                          Authorization: `Bearer ${token}`,
-                                    },
-                              }
-                        );
-
-                        if (res.data.message === "success") {
-                              setAppointments((prev) =>
-                                    prev.map((appt) =>
-                                          appt.id === id ? { ...appt, nationalId: newId } : appt
-                                    )
-                              );
-                              Swal.fire("تم التحديث", "تم تعديل الرقم القومي", "success");
-                        } else {
-                              Swal.fire("خطأ", "لم يتم تعديل الرقم القومي", "error");
-                        }
-                  } catch (err) {
-                        console.error("❌ خطأ أثناء التعديل:", err);
-                        Swal.fire("خطأ", "حدث خطأ أثناء التعديل", "error");
-                  }
+      const { value: formValues } = await Swal.fire({
+            title: "تعديل بيانات الحالة",
+            html: `
+                  <input id="caseName" class="swal2-input" placeholder="اسم الحالة" value="${appt.caseName || ""}">
+                  <input id="phone" class="swal2-input" placeholder="رقم الهاتف" value="${appt.phone || ""}">
+                  <input id="nationalId" class="swal2-input" placeholder="الرقم القومي" value="${appt.nationalId || ""}">
+                  <input id="chronicDiseaseDetails" class="swal2-input" placeholder="أمراض مزمنة" value="${appt.chronicDiseaseDetails || ""}">
+                  <input type="datetime-local" id="dateTime" class="swal2-input" placeholder="تاريخ ووقت الموعد" value="${localDateTime}">
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: "حفظ",
+            cancelButtonText: "إلغاء",
+            preConfirm: () => {
+                  return {
+                        caseName: document.getElementById("caseName").value,
+                        phone: document.getElementById("phone").value,
+                        nationalId: document.getElementById("nationalId").value,
+                        chronicDiseaseDetails: document.getElementById("chronicDiseaseDetails").value,
+                        dateTime: document.getElementById("dateTime").value, // هي بترجع بالصيغة: "2026-01-07T18:36"
+                  };
             }
-      };
+      });
+
+      if (!formValues) return;
+
+      try {
+            const token = localStorage.getItem("token");
+
+            const res = await axios.put(
+                  `${apiUrl}/appointments/${appt.id}`,
+                  formValues,
+                  { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (res.data.message === "success") {
+                  setAppointments(prev =>
+                        prev.map(a =>
+                              a.id === appt.id ? { ...a, ...formValues } : a
+                        )
+                  );
+
+                  Swal.fire("تم التحديث", "تم تعديل بيانات الحالة", "success");
+            }
+      } catch (err) {
+            console.error(err);
+            Swal.fire("خطأ", "حدث خطأ أثناء التعديل", "error");
+      }
+};
+
+
 
       // البحث
       const filteredAppointments = appointments.filter((appt) => {
@@ -122,7 +147,7 @@ export default function DoctorCases() {
                   (field) => field && field.toString().includes(search)
             );
 
-            const apptDate = new Date(appt.createdAt);
+            const apptDate = new Date(appt.dateTime);
 
             const afterFrom = !fromDate || apptDate >= new Date(fromDate + "T00:00:00");
             const beforeTo = !toDate || apptDate <= new Date(toDate + "T23:59:59");
@@ -135,13 +160,14 @@ export default function DoctorCases() {
             const aHasReport = a.resultReports && a.resultReports.length > 0;
             const bHasReport = b.resultReports && b.resultReports.length > 0;
 
-            // ⬇️ اللي عنده تقارير ينزل تحت
+            // اللي عنده تقارير ينزل تحت
             if (!aHasReport && bHasReport) return -1;
             if (aHasReport && !bHasReport) return 1;
 
-            // ⏱️ نفس الحالة → ترتيب حسب وقت التسجيل
-            return new Date(a.createdAt) - new Date(b.createdAt);
+            // 🔼 أحدث تاريخ يطلع فوق
+            return new Date(b.dateTime) - new Date(a.dateTime);
       });
+
 
       // تاريخ اليوم (من غير وقت)
       const today = new Date();
@@ -149,7 +175,7 @@ export default function DoctorCases() {
 
       // حالات اليوم فقط
       const todayCases = appointments.filter(appt => {
-            const apptDate = new Date(appt.createdAt);
+            const apptDate = new Date(appt.dateTime);
             apptDate.setHours(0, 0, 0, 0);
             return apptDate.getTime() === today.getTime();
       });
@@ -254,7 +280,7 @@ export default function DoctorCases() {
                                                 <th>العمر</th>
                                                 <th>الحاله</th>
                                                 <th>أمراض مزمنة</th>
-                                                <th>وقت التسجيل</th>
+                                                <th>تاريخ الحجز</th>
                                                 <th>الإجراءات</th>
                                           </tr>
                                     </thead>
@@ -282,14 +308,15 @@ export default function DoctorCases() {
                                                             </td>
                                                             <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}>{appt.isRevisit ? <span className="bg-warning px-2 rounded">إعادة</span> : <span className="bg-success px-2 rounded">جديدة</span>}</td>
                                                             <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}>{appt.chronicDiseaseDetails || "❌"}</td>
-                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'} dir="ltr">{formatUtcDateTime(appt.createdAt)}</td>
+                                                            <td className={appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'} dir="ltr">{formatUtcDateTime(appt.dateTime)}</td>
                                                             <td className={`d-flex flex-wrap gap-2 justify-content-center align-items-center ${appt.resultReports ? 'bg-success-subtle' : 'bg-warning-subtle'}`}>
                                                                   <button
                                                                         className="btn btn-sm btn-warning"
-                                                                        onClick={() => handleEditNationalId(appt.id, appt.nationalId)}
+                                                                        onClick={() => handleEditAppointment(appt)}
                                                                   >
                                                                         تعديل
                                                                   </button>
+
                                                                   <button
                                                                         className="btn btn-sm btn-danger"
                                                                         onClick={() => handleDelete(appt.id)}

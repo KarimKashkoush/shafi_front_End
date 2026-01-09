@@ -11,6 +11,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Col, Row } from "react-bootstrap";
 import { Modal, Button, Table } from "react-bootstrap";
+
 export default function Reports({ identifier }) {
       const [appointments, setAppointments] = useState([]);
       const [uploadingId, setUploadingId] = useState(null);
@@ -21,6 +22,7 @@ export default function Reports({ identifier }) {
       const [uploading, setUploading] = useState(false);
       const [files, setFiles] = useState([]);
       const [loading, setLoading] = useState(false);
+      const [uploadProgress, setUploadProgress] = useState({});
 
 
 
@@ -47,6 +49,7 @@ export default function Reports({ identifier }) {
                   console.error("Error fetching appointments", err);
             }
       }, [apiUrl, userId, medicalCenterId, identifier]);
+
 
       // إزالة التكرار حسب res.id
       const allResults = appointments.flatMap(a => a.result || []);
@@ -82,7 +85,9 @@ export default function Reports({ identifier }) {
       const schema = z.object({
             report: z.string().min(1, "التقرير مطلوب"),
             nextAction: z.string().optional(),
-            sessionCost: z.any().optional(),
+            sessionCost: z
+                  .number({ invalid_type_error: "يجب إدخال رقم" }) // يتحقق إنها رقم
+                  .min(0, "القيمة يجب أن تكون 0 أو أكبر"),
 
             medications: z.array(z.object({
                   name: z.string().optional(),
@@ -137,8 +142,6 @@ export default function Reports({ identifier }) {
                   formData.append("radiology", JSON.stringify(data.radiology));
                   formData.append("labTests", JSON.stringify(data.labTests));
 
-
-
                   files.forEach((file) => formData.append("files", file));
 
                   await axios.post(
@@ -149,23 +152,30 @@ export default function Reports({ identifier }) {
                                     "Content-Type": "multipart/form-data",
                                     Authorization: `Bearer ${token}`,
                               },
+                              onUploadProgress: (progressEvent) => {
+                                    const total = progressEvent.total;
+                                    const current = progressEvent.loaded;
+                                    const percentCompleted = Math.round((current / total) * 100);
+
+                                    const progressObj = {};
+                                    files.forEach((f, i) => {
+                                          progressObj[i] = percentCompleted;
+                                    });
+                                    setUploadProgress(progressObj);
+                              },
                         }
                   );
 
-
-
+                  // ✅ Swal بعد ما الرفع يخلص
                   Swal.fire("تم", "تم رفع تقرير الحالة بنجاح ✅", "success");
 
                   e.target.reset();
                   setFiles([]);
-
-                  // ✅ تحديث الجدول تلقائي
+                  setUploadProgress({});
                   await fetchAppointments();
 
                   setUploadingId(null);
-                  setLoading(false);
             } catch (err) {
-                  setLoading(false);
                   console.error("- خطأ أثناء رفع النتيجة:", err);
                   Swal.fire("خطأ", "حدث خطأ أثناء الرفع", "error");
             } finally {
@@ -174,22 +184,24 @@ export default function Reports({ identifier }) {
             }
       };
 
-
       const [isOpen, setIsOpen] = useState(false);
-      const [photoIndex, setPhotoIndex] = useState(0);
       const [slides, setSlides] = useState([]);
 
-      const openGallery = (images, index) => {
-            const formattedSlides = images.map((image) => ({
-                  src: image.startsWith("http") ? image : `${apiUrl}${image}`,
-            }));
+      const openGallery = (files) => {
+            const formattedSlides = files.map(file => {
+                  const lowerFile = file.toLowerCase();
+                  if (lowerFile.endsWith(".mp4") || lowerFile.endsWith(".webm") || lowerFile.endsWith(".ogg")) {
+                        return { type: "video", src: file };
+                  }
+                  return { type: "image", src: file.startsWith("http") ? file : `${apiUrl}${file}` };
+            });
+
             setSlides(formattedSlides);
-            setPhotoIndex(index);
             setIsOpen(true);
       };
 
-      // لينك صفحة المريض
 
+      // لينك صفحة المريض
       const [payingSession, setPayingSession] = useState(null);
       const [paymentData, setPaymentData] = useState({
             amount: "",
@@ -268,13 +280,10 @@ export default function Reports({ identifier }) {
                                     {appointments.length > 0 ? (
                                           appointments.map((r, idx) => (
                                                 <tr key={r.id}>
-
-
                                                       <td>{idx + 1}</td>
 
                                                       {/* التقرير */}
                                                       <td>
-
                                                             {r.result && r.result.length > 0 ? (
                                                                   [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
                                                                         <div key={res.id}>{res.report}</div>
@@ -283,7 +292,6 @@ export default function Reports({ identifier }) {
                                                                   <span className="text-danger fw-bold">-</span>
                                                             )}
                                                       </td>
-
 
                                                       {/* الإجراء التالي */}
                                                       <td>
@@ -296,28 +304,33 @@ export default function Reports({ identifier }) {
                                                             )}
                                                       </td>
 
-
                                                       {/* الملفات */}
                                                       <td>
                                                             {r.result && r.result.length > 0 ? (
                                                                   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
                                                                         {[...new Map(r.result.map(item => [item.id, item])).values()].map((res, idx) =>
                                                                               Array.isArray(res.files) && res.files.length > 0 ? (
-                                                                                    res.files.map((file, i) =>
-                                                                                          file.toLowerCase().endsWith(".pdf") ? (
-                                                                                                <a key={`${idx}-${i}`} href={file} target="_blank" rel="noopener noreferrer">
-                                                                                                      <img src={pdfImage} alt="PDF" style={{ width: 40, height: 40, cursor: "pointer" }} />
-                                                                                                </a>
-                                                                                          ) : (
-                                                                                                <img
-                                                                                                      key={`${idx}-${i}`}
-                                                                                                      src={file}
-                                                                                                      alt="file"
-                                                                                                      style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 5, cursor: "pointer" }}
-                                                                                                      onClick={() => openGallery(res.files, i)}
-                                                                                                />
-                                                                                          )
-                                                                                    )
+                                                                                    res.files.map((file, i) => {
+                                                                                          const lowerFile = file.toLowerCase();
+                                                                                          if (lowerFile.endsWith(".pdf")) {
+                                                                                                return (
+                                                                                                      <a key={`${idx}-${i}`} href={file} target="_blank" rel="noopener noreferrer">
+                                                                                                            <img src={pdfImage} alt="PDF" style={{ width: 40, height: 40, cursor: "pointer" }} />
+                                                                                                      </a>
+                                                                                                );
+                                                                                          } else {
+                                                                                                // صور وفيديوهات
+                                                                                                return (
+                                                                                                      <img
+                                                                                                            key={`${idx}-${i}`}
+                                                                                                            src={lowerFile.endsWith(".mp4") ? "https://cdn-icons-png.flaticon.com/512/727/727245.png" : file} // أيقونة فيديو للـ thumbnail
+                                                                                                            alt="file"
+                                                                                                            style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 5, cursor: "pointer" }}
+                                                                                                            onClick={() => openGallery(res.files, i)}
+                                                                                                      />
+                                                                                                );
+                                                                                          }
+                                                                                    })
                                                                               ) : (
                                                                                     <span key={res.id} className="text-danger fw-bold">-</span>
                                                                               )
@@ -328,8 +341,6 @@ export default function Reports({ identifier }) {
                                                             )}
                                                       </td>
 
-
-                                                      {/* مبلغ الجلسة */}
                                                       <td>
                                                             {r.result && r.result.length > 0 ? (
                                                                   [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
@@ -342,7 +353,6 @@ export default function Reports({ identifier }) {
                                                             )}
                                                       </td>
 
-                                                      {/* المدفوع */}
                                                       <td>
                                                             {r.result && r.result.length > 0 ? (
                                                                   [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => {
@@ -417,8 +427,6 @@ export default function Reports({ identifier }) {
                                                                   </Modal.Footer>
                                                             </Modal>
                                                       </td>
-                                                      {/* Modal */}
-
 
                                                       {/* المتبقي */}
                                                       <td>
@@ -434,7 +442,6 @@ export default function Reports({ identifier }) {
                                                                   <div>0</div>
                                                             )}
                                                       </td>
-
 
                                                       {/* تاريخ الإضافة */}
                                                       <td dir="ltr">{formatUtcDateTime(r.resultCreatedAt || r.createdAt)}</td>
@@ -556,7 +563,6 @@ export default function Reports({ identifier }) {
                                                                                                 </Col>
                                                                                           </Row>
 
-
                                                                                           <Row className="mb-2">
                                                                                                 <p className='text-end fw-bold mb-1'>تكلفة الجلسة</p>
 
@@ -575,8 +581,38 @@ export default function Reports({ identifier }) {
                                                                                                       type="file"
                                                                                                       multiple
                                                                                                       className="form-control"
-                                                                                                      onChange={(e) => setFiles(Array.from(e.target.files))}
+                                                                                                      onChange={(e) => {
+                                                                                                            const selectedFiles = Array.from(e.target.files);
+                                                                                                            setFiles(selectedFiles);
+
+                                                                                                            // تصفير الـ progress
+                                                                                                            const progressObj = {};
+                                                                                                            selectedFiles.forEach((_, i) => {
+                                                                                                                  progressObj[i] = 0;
+                                                                                                            });
+                                                                                                            setUploadProgress(progressObj);
+                                                                                                      }}
                                                                                                 />
+                                                                                                {files.length > 0 && (
+                                                                                                      <div className="mt-2">
+                                                                                                            {files.map((file, index) => (
+                                                                                                                  <div key={index} className="mb-2">
+                                                                                                                        <div className="d-flex justify-content-between">
+                                                                                                                              <small>{file.name}</small>
+                                                                                                                              <small>{uploadProgress[index] || 0}%</small>
+                                                                                                                        </div>
+
+                                                                                                                        <div className="progress" style={{ height: "6px" }}>
+                                                                                                                              <div
+                                                                                                                                    className="progress-bar progress-bar-striped progress-bar-animated"
+                                                                                                                                    style={{ width: `${uploadProgress[index] || 0}%` }}
+                                                                                                                              />
+                                                                                                                        </div>
+                                                                                                                  </div>
+                                                                                                            ))}
+                                                                                                      </div>
+                                                                                                )}
+
                                                                                           </Row>
 
                                                                                           <div className="mt-3 d-flex justify-content-end gap-2">
@@ -627,7 +663,6 @@ export default function Reports({ identifier }) {
                                                                                           remaining: remaining
                                                                                     });
                                                                               }}
-
                                                                         >
                                                                               دفع
                                                                         </button>
@@ -650,106 +685,110 @@ export default function Reports({ identifier }) {
                                           <td>{totalSessionCost.toLocaleString()}</td>
                                           <td>{totalPaid.toLocaleString()}</td>
                                           <td>{totalRemaining.toLocaleString()}</td>
-                                          <td colSpan="3"></td>
+                                          <td colSpan="4"></td>
                                     </tr>
                               </tfoot>
-                        </table>
-                  </section>
-
+                        </table >
+                  </section >
 
                   {isOpen && (
                         <Lightbox
                               open={isOpen}
                               close={() => setIsOpen(false)}
                               slides={slides}
-                              index={photoIndex}
-                              on={{ view: ({ index }) => setPhotoIndex(index) }}
-                              plugins={[Zoom]} // ✅ تفعيل البلجن
-                              zoom={{
-                                    maxZoomPixelRatio: 3, // أقصى تكبير للصورة (3x)
-                                    zoomInMultiplier: 1.3, // سرعة التكبير
-                                    doubleTapDelay: 300, // دبل كليك للتكبير
+                              plugins={[Zoom]}
+                              render={{
+                                    slide: ({ slide }) => {
+                                          if (slide.type === "video") {
+                                                return <video src={slide.src} controls autoPlay style={{ maxWidth: "100%", maxHeight: "100%" }} />;
+                                          }
+                                          return <img src={slide.src} style={{ maxWidth: "100%", maxHeight: "100%" }} />;
+                                    }
                               }}
                         />
-                  )}
 
-                  {payingSession && (
-                        <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
-                              <div className="modal-dialog modal-dialog-centered">
-                                    <div className="modal-content p-3">
+                  )
+                  }
 
-                                          <h3 className="mb-3 fw-bold">دفع مبلغ الجلسة</h3>
+                  {
+                        payingSession && (
+                              <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.4)" }}>
+                                    <div className="modal-dialog modal-dialog-centered">
+                                          <div className="modal-content p-3">
 
-                                          <Row className="mb-4 p-2">
-                                                <h4 className="text-end fw-bold">المبلغ المدفوع</h4>
-                                                <input
-                                                      type="number"
-                                                      className="form-control"
-                                                      max={payingSession.remaining} // أقصى مبلغ ممكن
-                                                      value={paymentData.amount}
-                                                      onChange={(e) => {
-                                                            let val = Number(e.target.value);
-                                                            if (val > payingSession.remaining) val = payingSession.remaining; // منع الزيادة
-                                                            if (val < 0) val = 0; // منع القيم السالبة
-                                                            setPaymentData({ ...paymentData, amount: val });
-                                                      }}
-                                                />
-                                                <small className="text-muted">أقصى مبلغ متبقي: {payingSession.remaining.toLocaleString()} جنيه</small>
-                                          </Row>
+                                                <h3 className="mb-3 fw-bold">دفع مبلغ الجلسة</h3>
 
-                                          <Row className="mb-4 p-2">
-                                                <h4 className="fw-bold">طريقة الدفع</h4>
-                                                <select
-                                                      className="form-control"
-                                                      value={paymentData.paymentMethod}
-                                                      onChange={(e) => setPaymentData({ ...paymentData, paymentMethod: e.target.value })}
-                                                >
-                                                      <option value="cash">كاش</option>
-                                                      <option value="visa">فيزا</option>
-                                                      <option value="transfer">تحويل</option>
-                                                </select>
-                                          </Row>
+                                                <Row className="mb-4 p-2">
+                                                      <h4 className="text-end fw-bold">المبلغ المدفوع</h4>
+                                                      <input
+                                                            type="number"
+                                                            className="form-control"
+                                                            max={payingSession.remaining} // أقصى مبلغ ممكن
+                                                            value={paymentData.amount}
+                                                            onChange={(e) => {
+                                                                  let val = Number(e.target.value);
+                                                                  if (val > payingSession.remaining) val = payingSession.remaining; // منع الزيادة
+                                                                  if (val < 0) val = 0; // منع القيم السالبة
+                                                                  setPaymentData({ ...paymentData, amount: val });
+                                                            }}
+                                                      />
+                                                      <small className="text-muted">أقصى مبلغ متبقي: {payingSession.remaining.toLocaleString()} جنيه</small>
+                                                </Row>
 
-                                          <Row className="mb-4 p-2">
-                                                <h4 className="fw-bold">ملاحظات (اختياري)</h4>
-                                                <textarea
-                                                      className="form-control"
-                                                      rows="2"
-                                                      value={paymentData.notes}
-                                                      onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
-                                                ></textarea>
-                                          </Row>
+                                                <Row className="mb-4 p-2">
+                                                      <h4 className="fw-bold">طريقة الدفع</h4>
+                                                      <select
+                                                            className="form-control"
+                                                            value={paymentData.paymentMethod}
+                                                            onChange={(e) => setPaymentData({ ...paymentData, paymentMethod: e.target.value })}
+                                                      >
+                                                            <option value="cash">كاش</option>
+                                                            <option value="visa">فيزا</option>
+                                                            <option value="transfer">تحويل</option>
+                                                      </select>
+                                                </Row>
 
-                                          <div className="d-flex justify-content-end gap-2">
+                                                <Row className="mb-4 p-2">
+                                                      <h4 className="fw-bold">ملاحظات (اختياري)</h4>
+                                                      <textarea
+                                                            className="form-control"
+                                                            rows="2"
+                                                            value={paymentData.notes}
+                                                            onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
+                                                      ></textarea>
+                                                </Row>
 
-                                                <button
-                                                      className="btn btn-secondary"
-                                                      onClick={() => setPayingSession(null)}
-                                                >
-                                                      إلغاء
-                                                </button>
+                                                <div className="d-flex justify-content-end gap-2">
 
-                                                <button
-                                                      className="btn btn-success"
-                                                      onClick={() =>
-                                                            handlePayment({
-                                                                  payingSession,
-                                                                  paymentData,
-                                                                  apiUrl,
-                                                                  fetchAppointments,
-                                                                  setPayingSession,
-                                                                  setPaymentData
-                                                            })
-                                                      }
-                                                      disabled={loading || paymentData.amount <= 0}
-                                                >
-                                                      {loading ? "جاري الدفع..." : "تأكيد الدفع"}
-                                                </button>
+                                                      <button
+                                                            className="btn btn-secondary"
+                                                            onClick={() => setPayingSession(null)}
+                                                      >
+                                                            إلغاء
+                                                      </button>
+
+                                                      <button
+                                                            className="btn btn-success"
+                                                            onClick={() =>
+                                                                  handlePayment({
+                                                                        payingSession,
+                                                                        paymentData,
+                                                                        apiUrl,
+                                                                        fetchAppointments,
+                                                                        setPayingSession,
+                                                                        setPaymentData
+                                                                  })
+                                                            }
+                                                            disabled={loading || paymentData.amount <= 0}
+                                                      >
+                                                            {loading ? "جاري الدفع..." : "تأكيد الدفع"}
+                                                      </button>
+                                                </div>
                                           </div>
                                     </div>
                               </div>
-                        </div>
-                  )}
+                        )
+                  }
             </>
       )
 }

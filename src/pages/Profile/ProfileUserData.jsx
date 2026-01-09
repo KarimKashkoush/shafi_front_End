@@ -112,7 +112,7 @@ export default function ProfileUserData() {
       if (error) return <p className="text-danger">{error}</p>;
 
       return (
-            <section className="profile-user-data position-relative">
+            <section className="profile-user-data">
                   <section className="content">
                         <h2>بيانات الحساب</h2>
                         <div className="user-data">
@@ -206,20 +206,35 @@ export default function ProfileUserData() {
                                     </form>
                               ) : (
                                     <>
-                                          {showPassword &&
-                                                <section className="position-absolute bg-white p-5 rounded shadow" style={{ top: "50%", right: "50%", transform: "translate(50%, -50%)", width: "60%" }}>
-                                                      
-                                                      <button className="btn btn-sm btn-danger position-absolute" style={{ top: "10px", right: "10px" }} onClick={() => { setShowPassword(false) }}>X</button>
-                                                      <p className="text-center">
-                                                            تغيير كلمة المرور
-                                                      </p>
+                                          {showPassword && (
+                                                <section
+                                                      className="bg-white p-5 rounded shadow"
+                                                      style={{
+                                                            position: "fixed",       // مهم عشان يثبت في النص مهما كان scroll
+                                                            top: "50%",
+                                                            left: "50%",
+                                                            transform: "translate(-50%, -50%)",
+                                                            width: "90%",            // تقريبًا عرض الشاشة
+                                                            maxWidth: "500px",       // أقصى عرض عشان ما يكونش كبير جدًا على الشاشات الكبيرة
+                                                            zIndex: 1050             // فوق أي عناصر تانية
+                                                      }}
+                                                >
+                                                      <button
+                                                            className="btn btn-sm btn-danger position-absolute"
+                                                            style={{ top: "10px", right: "10px" }}
+                                                            onClick={() => setShowPassword(false)}
+                                                      >
+                                                            X
+                                                      </button>
+                                                      <p className="text-center fw-bold mb-3">تغيير كلمة المرور</p>
+
                                                       <form onSubmit={handleSubmit(onChangePassword)}>
                                                             {[
                                                                   { name: "currentPassword", placeholder: "كلمة المرور الحالية" },
                                                                   { name: "newPassword", placeholder: "كلمة المرور الجديدة" },
                                                                   { name: "confirmPassword", placeholder: "إعادة إدخال كلمة السر الجديدة" },
                                                             ].map((item, index) => (
-                                                                  <Row className="mb-2 p-2" key={index}>
+                                                                  <Row className="mb-2" key={index}>
                                                                         <div className="input-group" dir="ltr">
                                                                               <input
                                                                                     type={show ? "text" : "password"}
@@ -241,12 +256,17 @@ export default function ProfileUserData() {
                                                                   </Row>
                                                             ))}
 
-                                                            <button type="submit" className="btn btn-warning w-100" disabled={loadingPassword}>
+                                                            <button
+                                                                  type="submit"
+                                                                  className="btn btn-warning w-100"
+                                                                  disabled={loadingPassword}
+                                                            >
                                                                   {loadingPassword ? "جاري التغيير..." : "تغيير كلمة المرور"}
                                                             </button>
                                                       </form>
                                                 </section>
-                                          }
+                                          )}
+
 
                                           <table className="table w-100">
                                                 <tbody>

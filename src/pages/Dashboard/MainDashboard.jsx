@@ -14,6 +14,7 @@ export default function MainDashboard() {
       const [customEnd, setCustomEnd] = useState("");
 
 
+
       const fetchAppointments = useCallback(async () => {
             setLoading(true);
             try {
@@ -76,7 +77,6 @@ export default function MainDashboard() {
             const d = new Date(date);
             return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
       };
-
 
       const isInRange = (date, start, end) => {
             const d = new Date(date);
@@ -195,7 +195,6 @@ export default function MainDashboard() {
       const todayStats = getVisitStats(todaysAppointments);
       const totalStats = getVisitStats(filteredAppointments);
 
-
       const getCurrentWeekDates = () => {
             const now = new Date();
             const day = now.getDay();
@@ -209,6 +208,7 @@ export default function MainDashboard() {
             }
             return weekDates;
       };
+
       const getWeeklyCases = (appointments = []) => {
             const weekDates = getCurrentWeekDates();
 
@@ -275,13 +275,42 @@ export default function MainDashboard() {
             return acc + (Number(a.sessionCost) || 0);
       }, 0);
 
+      const totalPrice = doctorFilteredAppointments.reduce((acc, a) => {
+            return acc + (Number(a.price) || 0);
+      }, 0);
+
       { loading && <p>Loading...</p> }
 
       return (
+
             <section className="main-dashboard">
                   <section className='section-header'>
                         <h3 className='section-title'>لـــوحة القيادة</h3>
                   </section>
+
+
+                  <div className="box col-12 col-md-6 col-lg-3 p-3 text-center">
+                        <div className="box-content p-3 rounded-3 shadow-sm">
+                              <h4 className="mb-2 main-color"></h4>
+
+                              <table className="w-100">
+                                    <tbody>
+                                          <tr>
+                                                <th className="text-end main-color">زيارات اليوم</th>
+                                                <td className="fw-bold">{todaysAppointments.length}</td>
+                                          </tr>
+                                          <tr>
+                                                <th className="text-end main-color">الزيارات الجديدة</th>
+                                                <td className="fw-bold">{todayStats.newVisits}</td>
+                                          </tr>
+                                          <tr>
+                                                <th className="text-end main-color">إعادة الزيارة</th>
+                                                <td className="fw-bold">{todayStats.revisits}</td>
+                                          </tr>
+                                    </tbody>
+                              </table>
+                        </div>
+                  </div>
 
                   <div className="row my-3 " >
                         <div className="col-md-4">
@@ -321,32 +350,7 @@ export default function MainDashboard() {
                               </>
                         )}
                   </div>
-
                   <section className="boxs row border-bottom border-3 mb-3">
-                        <div className="box col-12 col-md-6 col-lg-3 p-3 text-center">
-                              <div className="box-content p-3 rounded-3 shadow-sm">
-                                    <h4 className="mb-2 main-color"></h4>
-
-                                    <table className="w-100">
-                                          <tbody>
-                                                <tr>
-                                                      <th className="text-end main-color">زيارات اليوم</th>
-                                                      <td className="fw-bold">{todaysAppointments.length}</td>
-                                                </tr>
-                                                <tr>
-                                                      <th className="text-end main-color">الزيارات الجديدة</th>
-                                                      <td className="fw-bold">{todayStats.newVisits}</td>
-                                                </tr>
-                                                <tr>
-                                                      <th className="text-end main-color">إعادة الزيارة</th>
-                                                      <td className="fw-bold">{todayStats.revisits}</td>
-                                                </tr>
-                                          </tbody>
-                                    </table>
-                              </div>
-                        </div>
-
-
                         <div className="box col-12 col-md-6 col-lg-3 p-3 text-center">
                               <div className="box-content p-3 rounded-3 shadow-sm">
                                     <table className="w-100">
@@ -442,6 +446,7 @@ export default function MainDashboard() {
                                           <th>الحاله</th>
                                           <th>تاريخ الحجز</th>
                                           <th>تكلفة الجلسة</th>
+                                          <th>سعر الكشف</th>
                                     </tr>
                               </thead>
                               <tbody>
@@ -451,8 +456,17 @@ export default function MainDashboard() {
                                                 <td>{appt.caseName}</td>
                                                 <td>{appt.doctorName || "لم يتم تعيين دكتور"}</td>
                                                 <td>{appt.isRevisit ? 'إعادة' : 'جديد'}</td>
-                                                <td dir='ltr'>{new Date(appt.createdAt).toLocaleString()}</td>
+                                                <td dir="ltr">
+                                                      {new Date(appt.dateTime).toLocaleDateString("en-GB")}
+                                                      {' , '}
+                                                      {new Date(appt.dateTime).toLocaleTimeString("en-US", {
+                                                            hour: "numeric",
+                                                            minute: "2-digit",
+                                                            hour12: true,
+                                                      })}
+                                                </td>
                                                 <td>{appt.sessionCost || 0}$</td>
+                                                <td>{appt.price || 0}$</td>
                                           </tr>
                                     ))}
                               </tbody>
@@ -460,6 +474,7 @@ export default function MainDashboard() {
                                     <tr>
                                           <td colSpan={5}>عدد الحالات: {doctorFilteredAppointments.length}</td>
                                           <td>الإجمالي: ${totalMoney.toLocaleString()}</td>
+                                          <td>الإجمالي: ${totalPrice.toLocaleString()}</td>
                                     </tr>
                               </tfoot>
 
@@ -476,5 +491,7 @@ export default function MainDashboard() {
                         </div>
                   </section>
             </section>
+
       )
 }
+
