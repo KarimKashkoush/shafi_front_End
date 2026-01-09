@@ -266,10 +266,11 @@ const handleEditAppointment = async (appt) => {
                   {loading ? (
                         <div className="text-center my-4 fw-bold">جاري التحميل...</div>
                   ) : (
-                        <section className="table overflow-x-auto">
+                        <section className="table overflow-x-auto" style={{ maxHeight: "45vh", overflowY: "auto" }}>
                               <table
                                     className="table table-bordered table-striped text-center"
-                                    style={{ width: "100%", minWidth: "1050px" }}
+                                    style={{ width: "100%", minWidth: "1050px", height: "100px", overflowY: "auto" }}
+
                               >
                                     <thead className="table-dark" style={{ verticalAlign: "middle" }}>
                                           <tr>
