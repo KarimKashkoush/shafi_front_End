@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/Home/Home";
@@ -21,7 +22,6 @@ import AddUserByAdmin from "../pages/Profile/AdminProfile/AddUserByAdmin";
 import Users from "../pages/Profile/AdminProfile/Users";
 import UserInfo from "../pages/Profile/AdminProfile/UserInfo";
 import FinancialAccounts from "../pages/Profile/AdminProfile/FinancialAccounts";
-import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/Auth.Context";
 import AppointmentDetails from "../pages/Profile/AppointmentDetails/AppointmentDetails";
 import DoctorLayout from "../layouts/DoctorLayout";
@@ -35,16 +35,10 @@ import MainDashboard from "../pages/Dashboard/MainDashboard";
 import PatientReportsPage from "../pages/Profile/PatientProfile/PatientReportsPage";
 
 function AppRouter() {
-      const { user } = useContext(AuthContext);
-      const [loading, setLoading] = useState(true);
+      const { user, loading } = useContext(AuthContext);
 
-      useEffect(() => {
-            const timer = setTimeout(() => setLoading(false), 300);
-            return () => clearTimeout(timer);
-      }, [user]);
 
       if (loading) return <div>Loading...</div>;
-
       const profileRoutes = user
             ? [
                   {

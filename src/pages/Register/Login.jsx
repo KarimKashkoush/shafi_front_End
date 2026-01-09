@@ -8,7 +8,7 @@ import api from "../../lib/api";
 import { AuthContext } from '../../context/Auth.Context';
 
 export default function Login() {
-      const { setUser, setToken } = useContext(AuthContext)
+      const { login } = useContext(AuthContext)
       const navigate = useNavigate();
       const [validated, setValidated] = useState(false);
       const [emailOrPhone, setEmailOrPhone] = useState('');
@@ -34,10 +34,7 @@ export default function Login() {
 
 
                   if (res.data.message === "success") {
-                        localStorage.setItem("token", res.data.token);
-                        localStorage.setItem("user", JSON.stringify(res.data.user));
-                        setUser(res.data.user)
-                        setToken(res.data.token)
+                        login(res.data.user, res.data.token);
                         setLoading(false);
                         toast.success("تم تسجيل الدخول بنجاح");
                         navigate("/", { replace: true });
