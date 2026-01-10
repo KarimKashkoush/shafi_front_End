@@ -85,9 +85,7 @@ export default function Reports({ identifier }) {
       const schema = z.object({
             report: z.string().min(1, "التقرير مطلوب"),
             nextAction: z.string().optional(),
-            sessionCost: z
-                  .number({ invalid_type_error: "يجب إدخال رقم" }) // يتحقق إنها رقم
-                  .min(0, "القيمة يجب أن تكون 0 أو أكبر"),
+            sessionCost: z.any().optional(),
 
             medications: z.array(z.object({
                   name: z.string().optional(),
