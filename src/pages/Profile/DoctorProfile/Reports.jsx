@@ -23,7 +23,7 @@ export default function Reports({ identifier }) {
       const [files, setFiles] = useState([]);
       const [loading, setLoading] = useState(false);
       const [uploadProgress, setUploadProgress] = useState({});
-
+      const [editingReportId, setEditingReportId] = useState(null);
 
 
       // جوه الـ component
@@ -83,9 +83,12 @@ export default function Reports({ identifier }) {
       }, [fetchAppointments]);
 
       const schema = z.object({
-            report: z.string().min(1, "التقرير مطلوب"),
-            nextAction: z.string().optional(),
-            sessionCost: z.any().optional(),
+            report: z.array(z.object({ text: z.string().optional() }))
+                  .refine(arr => arr.some(x => (x.text || "").trim() !== ""), { message: "التقرير مطلوب" }),
+
+            nextAction: z.array(z.object({ text: z.string().optional() })).optional(),
+
+            sessionCost: z.coerce.number().optional(),
 
             medications: z.array(z.object({
                   name: z.string().optional(),
@@ -106,16 +109,18 @@ export default function Reports({ identifier }) {
       });
 
 
+
       const {
             register,
             handleSubmit,
             formState: { errors },
-            control
+            control,
+            reset
       } = useForm({
             resolver: zodResolver(schema),
             defaultValues: {
-                  report: "",
-                  nextAction: "",
+                  report: [{ text: "" }],
+                  nextAction: [{ text: "" }],
                   sessionCost: 0,
                   pharmaceutical: "",
                   medications: [{ name: "", startDate: "", endDate: "", times: "" }],
@@ -124,63 +129,98 @@ export default function Reports({ identifier }) {
             },
       });
 
-      const onSubmit = async (data, e) => {
+      const onSubmit = async (data) => {
             try {
                   const token = localStorage.getItem("token");
                   setUploading(true);
                   setLoading(true);
 
                   const formData = new FormData();
-                  formData.append("report", data.report);
-                  formData.append("nextAction", data.nextAction);
-                  formData.append("sessionCost", data.sessionCost);
+
+                  // ✅ تحويل report و nextAction لنصوص
+                  const reportTexts = (data.report || [])
+                        .map(item => item.text)
+                        .filter(Boolean);
+
+                  const nextActionTexts = (data.nextAction || [])
+                        .map(item => item.text)
+                        .filter(Boolean);
+
+                  formData.append("report", JSON.stringify(reportTexts));
+                  formData.append("nextAction", JSON.stringify(nextActionTexts));
+
+                  // ✅ باقي الداتا
+                  formData.append("sessionCost", data.sessionCost || 0);
                   formData.append("userId", userId);
                   formData.append("medicalCenterId", medicalCenterId);
-                  formData.append("medications", JSON.stringify(data.medications));
-                  formData.append("radiology", JSON.stringify(data.radiology));
-                  formData.append("labTests", JSON.stringify(data.labTests));
 
-                  files.forEach((file) => formData.append("files", file));
-
-                  await axios.post(
-                        `${apiUrl}/appointments/${uploadingId}/addResultAppointment`,
-                        formData,
-                        {
-                              headers: {
-                                    "Content-Type": "multipart/form-data",
-                                    Authorization: `Bearer ${token}`,
-                              },
-                              onUploadProgress: (progressEvent) => {
-                                    const total = progressEvent.total;
-                                    const current = progressEvent.loaded;
-                                    const percentCompleted = Math.round((current / total) * 100);
-
-                                    const progressObj = {};
-                                    files.forEach((f, i) => {
-                                          progressObj[i] = percentCompleted;
-                                    });
-                                    setUploadProgress(progressObj);
-                              },
-                        }
+                  formData.append(
+                        "medications",
+                        JSON.stringify(data.medications || [])
+                  );
+                  formData.append(
+                        "radiology",
+                        JSON.stringify(data.radiology || [])
+                  );
+                  formData.append(
+                        "labTests",
+                        JSON.stringify(data.labTests || [])
                   );
 
-                  // ✅ Swal بعد ما الرفع يخلص
-                  Swal.fire("تم", "تم رفع تقرير الحالة بنجاح ✅", "success");
+                  files.forEach(file => formData.append("files", file));
 
-                  e.target.reset();
+                  const config = {
+                        headers: {
+                              Authorization: `Bearer ${token}`,
+                        },
+                        onUploadProgress: (progressEvent) => {
+                              const percent = Math.round(
+                                    (progressEvent.loaded / progressEvent.total) * 100
+                              );
+                              const progressObj = {};
+                              files.forEach((_, i) => (progressObj[i] = percent));
+                              setUploadProgress(progressObj);
+                        },
+                  };
+
+                  console.log("REPORT:", reportTexts);
+                  console.log("NEXT:", nextActionTexts);
+                  console.log("FORM DATA:", Object.fromEntries(formData.entries()));
+
+                  if (editingReportId) {
+                        await axios.put(
+                              `${apiUrl}/appointments/${uploadingId}/updateResultAppointment/${editingReportId}`,
+                              formData,
+                              config
+                        );
+                  } else {
+                        await axios.post(
+                              `${apiUrl}/appointments/${uploadingId}/addResultAppointment`,
+                              formData,
+                              config
+                        );
+                  }
+
+                  Swal.fire("تم", "تم حفظ تقرير الحالة بنجاح ✅", "success");
+
+                  reset();
                   setFiles([]);
                   setUploadProgress({});
+                  setEditingReportId(null);
+                  setUploadingId(null);
+
                   await fetchAppointments();
 
-                  setUploadingId(null);
             } catch (err) {
-                  console.error("- خطأ أثناء رفع النتيجة:", err);
+                  console.error("❌ خطأ أثناء رفع النتيجة:", err);
                   Swal.fire("خطأ", "حدث خطأ أثناء الرفع", "error");
             } finally {
                   setLoading(false);
                   setUploading(false);
             }
       };
+
+
 
       const [isOpen, setIsOpen] = useState(false);
       const [slides, setSlides] = useState([]);
@@ -197,7 +237,6 @@ export default function Reports({ identifier }) {
             setSlides(formattedSlides);
             setIsOpen(true);
       };
-
 
       // لينك صفحة المريض
       const [payingSession, setPayingSession] = useState(null);
@@ -219,7 +258,7 @@ export default function Reports({ identifier }) {
                   setLoading(true);
                   const token = localStorage.getItem("token");
                   await axios.post(`${apiUrl}/addPayment`, {
-                        appointmentId: payingSession.appointmentId,  // <<==== أهو
+                        appointmentId: payingSession.appointmentId,
                         patientNationalId: payingSession.patientNationalId,
                         doctorId: userId,
                         sessionId: payingSession.sessionId,
@@ -238,7 +277,7 @@ export default function Reports({ identifier }) {
                   setPayingSession(null);
                   setPaymentData({ amount: "", paymentMethod: "cash", notes: "" });
 
-                  await fetchAppointments(); // تحديث بعد الدفع
+                  await fetchAppointments();
 
             } catch {
                   setLoading(false);
@@ -250,15 +289,53 @@ export default function Reports({ identifier }) {
       const { fields: medFields, append: addMedication } = useFieldArray({ control, name: "medications" });
       const { fields: radFields, append: addRadiology } = useFieldArray({ control, name: "radiology" });
       const { fields: labFields, append: addLabTest } = useFieldArray({ control, name: "labTests" });
+      const { fields, append, remove } = useFieldArray({
+            control,
+            name: "report"
+      });
+      const {
+            fields: nextFields,
+            append: appendNext,
+            remove: removeNext
+      } = useFieldArray({
+            control,
+            name: "nextAction"
+      });
 
 
+
+      const openEditReport = (reportData, appointmentId) => {
+            setUploadingId(appointmentId); // ✅ نفس شرط فتح المودال
+            setEditingReportId(reportData.id);
+            setUploadingId(appointmentId);
+
+            const toTextArray = (arrOrStr) => {
+                  if (Array.isArray(arrOrStr)) {
+                        return arrOrStr.map(x => (typeof x === "string" ? { text: x } : x));
+                  }
+                  if (typeof arrOrStr === "string") return [{ text: arrOrStr }];
+                  return [{ text: "" }];
+            };
+
+            reset({
+                  report: toTextArray(reportData.report),
+                  nextAction: toTextArray(reportData.nextAction),
+                  sessionCost: reportData.sessionCost ?? 0,
+                  medications: reportData.medications?.length ? reportData.medications : [{ name: "", startDate: "", endDate: "", times: "" }],
+                  radiology: reportData.radiology?.length ? reportData.radiology : [{ name: "", notes: "" }],
+                  labTests: reportData.labTests?.length ? reportData.labTests : [{ name: "", notes: "" }],
+            });
+
+      };
+
+      console.log(appointments)
 
       return (
             <>
                   <section className="table overflow-auto">
                         <table
                               className="table table-bordered table-striped text-center"
-                              style={{ width: "100%", minWidth: "1050px" }}
+                              style={{ width: "100%", minWidth: "1500px" }}
                         >
                               <thead className="table-dark" style={{ verticalAlign: "middle" }}>
                                     <tr>
@@ -272,6 +349,7 @@ export default function Reports({ identifier }) {
                                           <th>تاريخ الإضافة</th>
                                           <th>اضافة تقرير</th>
                                           <th>الدفع</th>
+                                          <th>تعديل</th>
                                     </tr>
                               </thead>
                               <tbody style={{ verticalAlign: "middle" }}>
@@ -283,8 +361,16 @@ export default function Reports({ identifier }) {
                                                       {/* التقرير */}
                                                       <td>
                                                             {r.result && r.result.length > 0 ? (
-                                                                  [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
-                                                                        <div key={res.id}>{res.report}</div>
+                                                                  r.result.map((res) => (
+                                                                        <ul key={res.id} className="text-start mb-0 list-unstyled" dir='auto' >
+                                                                              {Array.isArray(res.report) && res.report.length > 0 ? (
+                                                                                    res.report.map((item, i) => (
+                                                                                          <li key={i} dir='auto' className='text-start'>{item}</li>
+                                                                                    ))
+                                                                              ) : (
+                                                                                    <li className="text-danger text-start" dir='auto'>-</li>
+                                                                              )}
+                                                                        </ul>
                                                                   ))
                                                             ) : (
                                                                   <span className="text-danger fw-bold">-</span>
@@ -293,26 +379,33 @@ export default function Reports({ identifier }) {
 
                                                       {/* الإجراء التالي */}
                                                       <td>
-                                                            {r.result && r.result.length > 0 ? (
-                                                                  [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
-                                                                        <div key={res.id}>{res.nextAction}</div>
+                                                            {r.result?.length ? (
+                                                                  r.result.map((res) => (
+                                                                        <ul key={res.id} className="mb-0 text-start list-unstyled" dir='auto'>
+                                                                              {Array.isArray(res.nextAction) && res.nextAction.length > 0 ? (
+                                                                                    res.nextAction.map((item, i) => <li key={i}  dir='auto'>{item}</li>)
+                                                                              ) : (
+                                                                                    <li className="text-danger text-start"  dir='auto'>-</li>
+                                                                              )}
+                                                                        </ul>
                                                                   ))
                                                             ) : (
                                                                   <span className="text-danger fw-bold">-</span>
                                                             )}
                                                       </td>
 
+
                                                       {/* الملفات */}
                                                       <td>
                                                             {r.result && r.result.length > 0 ? (
                                                                   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
-                                                                        {[...new Map(r.result.map(item => [item.id, item])).values()].map((res, idx) =>
+                                                                        {[...new Map(r.result.map(item => [item.id, item])).values()].map((res) =>
                                                                               Array.isArray(res.files) && res.files.length > 0 ? (
                                                                                     res.files.map((file, i) => {
                                                                                           const lowerFile = file.toLowerCase();
                                                                                           if (lowerFile.endsWith(".pdf")) {
                                                                                                 return (
-                                                                                                      <a key={`${idx}-${i}`} href={file} target="_blank" rel="noopener noreferrer">
+                                                                                                      <a key={`${res.id}-${i}`} href={file} target="_blank" rel="noopener noreferrer">
                                                                                                             <img src={pdfImage} alt="PDF" style={{ width: 40, height: 40, cursor: "pointer" }} />
                                                                                                       </a>
                                                                                                 );
@@ -320,8 +413,8 @@ export default function Reports({ identifier }) {
                                                                                                 // صور وفيديوهات
                                                                                                 return (
                                                                                                       <img
-                                                                                                            key={`${idx}-${i}`}
-                                                                                                            src={lowerFile.endsWith(".mp4") ? "https://cdn-icons-png.flaticon.com/512/727/727245.png" : file} // أيقونة فيديو للـ thumbnail
+                                                                                                            key={`${res.id}-${i}`}
+                                                                                                            src={lowerFile.endsWith(".mp4") ? "https://cdn-icons-png.flaticon.com/512/727/727245.png" : file}
                                                                                                             alt="file"
                                                                                                             style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 5, cursor: "pointer" }}
                                                                                                             onClick={() => openGallery(res.files, i)}
@@ -449,7 +542,7 @@ export default function Reports({ identifier }) {
                                                             <button
                                                                   className="btn btn-sm btn-warning"
                                                                   onClick={() => setUploadingId(r.id)}
-                                                                  disabled={r.result && r.result.length > 0} // قفل الزر لو فيه نتيجة
+                                                                  disabled={r.result && r.result.length > 0 && !editingReportId}
                                                             >
                                                                   {r.result && r.result.length > 0 ? "تم اضافة تقرير ✅" : "اضافة تقرير 📤"}
                                                             </button>
@@ -467,27 +560,59 @@ export default function Reports({ identifier }) {
                                                                                           <h3 className="mb-3 fw-bold">رفع تقرير الحالة</h3>
                                                                                           <Row className="mb-2">
                                                                                                 <Col xs={12} md={6} className='p-1'>
-                                                                                                      <p className="text-end fw-bold mb-1">التقرير</p>
-                                                                                                      <textarea
-                                                                                                            className="form-control"
-                                                                                                            placeholder="التقرير"
-                                                                                                            rows={2}
-                                                                                                            {...register("report")}
-                                                                                                      />
+                                                                                                      <h5>التقرير</h5>
+
+                                                                                                      {fields.map((field, index) => (
+                                                                                                            <div key={field.id} className="d-flex gap-2 mb-2">
+                                                                                                                  <input
+                                                                                                                        {...register(`report.${index}.text`)}
+                                                                                                                        className="form-control"
+                                                                                                                        placeholder="التشخيص"
+                                                                                                                  />
+                                                                                                                  <button type="button" className='btn' onClick={() => remove(index)}>❌</button>
+                                                                                                            </div>
+                                                                                                      ))}
+
+
+                                                                                                      <button type="button"
+                                                                                                            className="btn btn-warning w-100"
+                                                                                                            onClick={(e) => {
+                                                                                                                  e.preventDefault();   // احتياطي
+                                                                                                                  append({ text: "" });
+                                                                                                            }}>
+                                                                                                            إضافة
+                                                                                                      </button>
+
                                                                                                       {errors.report && <p className="text-danger">{errors.report.message}</p>}
                                                                                                 </Col>
 
                                                                                                 <Col xs={12} md={6} className='p-1'>
-                                                                                                      <p className="text-end fw-bold mb-1">الإجراء التالي</p>
-                                                                                                      <textarea
-                                                                                                            className="form-control"
-                                                                                                            placeholder="الإجراء التالي"
-                                                                                                            rows={2}
-                                                                                                            {...register("nextAction")}
-                                                                                                      />
-                                                                                                      {errors.nextAction && (
-                                                                                                            <p className="text-danger">{errors.nextAction.message}</p>
-                                                                                                      )}
+                                                                                                      <h5>الإجراء المتبع</h5>
+
+                                                                                                      {nextFields.map((field, index) => (
+                                                                                                            <div key={field.id} className="d-flex gap-2 mb-2">
+                                                                                                                  <input
+                                                                                                                        {...register(`nextAction.${index}.text`)}
+                                                                                                                        className="form-control"
+                                                                                                                        placeholder="إجراء"
+                                                                                                                  />
+                                                                                                                  <button type="button" className='btn' onClick={() => removeNext(index)}>❌</button>
+                                                                                                            </div>
+                                                                                                      ))}
+
+
+                                                                                                      <button
+                                                                                                            type="button"
+                                                                                                            className="btn btn-warning w-100"
+                                                                                                            onClick={(e) => {
+                                                                                                                  e.preventDefault();   // احتياطي
+                                                                                                                  appendNext({ text: "" });
+                                                                                                            }}
+                                                                                                      >
+                                                                                                            إضافة 
+                                                                                                      </button>
+
+
                                                                                                 </Col>
                                                                                           </Row>
 
@@ -666,6 +791,22 @@ export default function Reports({ identifier }) {
                                                                         </button>
                                                                   );
                                                             })() : <span className="text-danger fw-bold">-</span>}
+                                                      </td>
+
+                                                      <td>
+                                                            {r.result && r.result.length > 0 ? (
+                                                                  [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
+                                                                        <button
+                                                                              key={res.id}
+                                                                              className="btn btn-warning btn-sm mb-1"
+                                                                              onClick={() => openEditReport(res, r.id)}
+                                                                        >
+                                                                              تعديل التقرير
+                                                                        </button>
+                                                                  ))
+                                                            ) : (
+                                                                  <span className="text-danger fw-bold">-</span>
+                                                            )}
                                                       </td>
                                                 </tr>
                                           ))

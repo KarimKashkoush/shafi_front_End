@@ -249,22 +249,20 @@ export default function MainDashboard() {
             });
       };
 
-
       const monthlyCases = getMonthlyCases(appointments);
-
-
 
       const [selectedDoctor, setSelectedDoctor] = useState("all");
       const doctors = [
             { id: "all", name: "كل الدكاترة" },
             ...Array.from(
                   new Map(
-                        appointments
+                        filteredAppointments
                               .filter(a => a.doctorId)
                               .map(a => [a.doctorId, { id: a.doctorId, name: a.doctorName }])
                   ).values()
             )
       ];
+
 
       const doctorFilteredAppointments = selectedDoctor === "all"
             ? filteredAppointments

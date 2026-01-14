@@ -34,6 +34,8 @@ const schema = z.object({
 
 export default function DoctorAddAppointments() {
       const [loading, setLoading] = useState(false);
+      const [userAppointments, setUserAppointments] = useState([]);
+      const [filteredNames, setFilteredNames] = useState([]);
 
       // تحديث الوقت الحالي كل ثانية
       const [currentDateTime, setCurrentDateTime] = useState(
@@ -122,15 +124,73 @@ export default function DoctorAddAppointments() {
             }
       }, [watchNationalId, setValue]);
 
+      useEffect(() => {
+            const fetchAppointments = async () => {
+                  try {
+                        const token = localStorage.getItem("token");
+                        const response = await api.get("/appointments/user", {
+                              headers: { Authorization: `Bearer ${token}` }
+                        });
+                        if (response.data.data) {
+                              setUserAppointments(response.data.data);
+                        }
+                  } catch (err) {
+                        console.error("❌ خطأ في جلب الحجوزات:", err);
+                  }
+            };
+            fetchAppointments();
+      }, []);
+
+      const handleCaseNameChange = (value) => {
+            setValue("caseName", value);
+
+            if (value) {
+                  const matches = userAppointments.filter(appt =>
+                        appt.caseName.toLowerCase().includes(value.toLowerCase())
+                  );
+                  setFilteredNames(matches);
+            } else {
+                  setFilteredNames([]);
+            }
+      };
+
+      // عند اختيار اسم موجود
+      const handleSelectName = (appt) => {
+            setValue("caseName", appt.caseName);
+            setValue("phone", appt.phone || "");
+            setValue("nationalId", appt.nationalId || "");
+            setValue("birthDate", appt.birthDate || "");
+            setValue("hasChronicDisease", appt.hasChronicDisease || false);
+            setValue("chronicDiseaseDetails", appt.chronicDiseaseDetails || "");
+            setValue("price", appt.price || "");
+            setFilteredNames([]);
+      };
+
       return (
             <section className="staf-add-appointment">
                   <h4 className="fw-bold">إضافة حجز جديد</h4>
                   <form className="p-2 border rounded" onSubmit={handleSubmit(onSubmit)}>
-                        {/* اسم الحالة */}
-                        <Row className="mb-4 p-2">
+                        <Row className="mb-4 p-2 position-relative">
                               <h4 className="text-end fw-bold">اسم الحالة</h4>
-                              <input className="form-control" placeholder="اسم الحالة" {...register("caseName")} />
-                              {errors.caseName && <p className="text-danger">{errors.caseName.message}</p>}
+                              <input
+                                    className="form-control"
+                                    placeholder="اسم الحالة"
+                                    {...register("caseName")}
+                                    onChange={(e) => handleCaseNameChange(e.target.value)}
+                              />
+                              {filteredNames.length > 0 && (
+                                    <ul className="autocomplete-list position-absolute bg-white border w-100" style={{ zIndex: 1000 }}>
+                                          {filteredNames.map((appt, idx) => (
+                                                <li
+                                                      key={idx}
+                                                      className="p-2 hover:bg-gray-200 cursor-pointer"
+                                                      onClick={() => handleSelectName(appt)}
+                                                >
+                                                      {appt.caseName}
+                                                </li>
+                                          ))}
+                                    </ul>
+                              )}
                         </Row>
 
                         {/* رقم الهاتف */}
@@ -172,7 +232,6 @@ export default function DoctorAddAppointments() {
                                     />
                               </div>
                         </Row>
-
 
                         {/* سعر الكشف */}
                         <Row className="mb-4 p-2">

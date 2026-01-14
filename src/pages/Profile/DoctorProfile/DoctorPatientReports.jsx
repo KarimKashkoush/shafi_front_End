@@ -23,8 +23,6 @@ export default function DoctorPatientReports() {
                         headers: { Authorization: `Bearer ${token}` }
                   });
 
-                  console.log(res.data)
-
                   const userAppointments = res.data.data.filter(
                         (appt) => appt.userId === userId || appt.userId === medicalCenterId
                   );
