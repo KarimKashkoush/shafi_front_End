@@ -1,6 +1,7 @@
 import axios from "axios";
 const apiUrl = import.meta.env.VITE_API_URL;
 const token = localStorage.getItem("token");
+
 // appointments.js
 export const getAppointments = async (userId, medicalCenterId) => {
       const res = await axios.get(`${apiUrl}/appointments`, {

@@ -24,6 +24,7 @@ export default function Reports({ identifier }) {
       const [loading, setLoading] = useState(false);
       const [uploadProgress, setUploadProgress] = useState({});
       const [editingReportId, setEditingReportId] = useState(null);
+      const [lightboxIndex, setLightboxIndex] = useState(0);
 
 
       // جوه الـ component
@@ -225,18 +226,27 @@ export default function Reports({ identifier }) {
       const [isOpen, setIsOpen] = useState(false);
       const [slides, setSlides] = useState([]);
 
-      const openGallery = (files) => {
-            const formattedSlides = files.map(file => {
-                  const lowerFile = file.toLowerCase();
-                  if (lowerFile.endsWith(".mp4") || lowerFile.endsWith(".webm") || lowerFile.endsWith(".ogg")) {
+
+      const cleanUrl = (url) => (url || "").split("?")[0];
+      const getExt = (url) => cleanUrl(url).toLowerCase().split(".").pop();
+
+      const openGallery = (filesArr, startIndex = 0) => {
+            const formattedSlides = (filesArr || []).map((file) => {
+                  const fileExt = getExt(file);
+
+                  if (["mp4", "webm", "ogg"].includes(fileExt)) {
                         return { type: "video", src: file };
                   }
+
+                  // images
                   return { type: "image", src: file.startsWith("http") ? file : `${apiUrl}${file}` };
             });
 
             setSlides(formattedSlides);
             setIsOpen(true);
+            setLightboxIndex(startIndex);
       };
+
 
       // لينك صفحة المريض
       const [payingSession, setPayingSession] = useState(null);
@@ -325,7 +335,6 @@ export default function Reports({ identifier }) {
                   radiology: reportData.radiology?.length ? reportData.radiology : [{ name: "", notes: "" }],
                   labTests: reportData.labTests?.length ? reportData.labTests : [{ name: "", notes: "" }],
             });
-
       };
 
       console.log(appointments)
@@ -346,7 +355,7 @@ export default function Reports({ identifier }) {
                                           <th>مبلغ الجلسة</th>
                                           <th>المدفوع</th>
                                           <th>المتبقي</th>
-                                          <th>تاريخ الإضافة</th>
+                                          <th>تاريخ الكشف</th>
                                           <th>اضافة تقرير</th>
                                           <th>الدفع</th>
                                           <th>تعديل</th>
@@ -383,9 +392,9 @@ export default function Reports({ identifier }) {
                                                                   r.result.map((res) => (
                                                                         <ul key={res.id} className="mb-0 text-start list-unstyled" dir='auto'>
                                                                               {Array.isArray(res.nextAction) && res.nextAction.length > 0 ? (
-                                                                                    res.nextAction.map((item, i) => <li key={i}  dir='auto'>{item}</li>)
+                                                                                    res.nextAction.map((item, i) => <li key={i} dir='auto'>{item}</li>)
                                                                               ) : (
-                                                                                    <li className="text-danger text-start"  dir='auto'>-</li>
+                                                                                    <li className="text-danger text-start" dir='auto'>-</li>
                                                                               )}
                                                                         </ul>
                                                                   ))
@@ -394,7 +403,6 @@ export default function Reports({ identifier }) {
                                                             )}
                                                       </td>
 
-
                                                       {/* الملفات */}
                                                       <td>
                                                             {r.result && r.result.length > 0 ? (
@@ -402,25 +410,39 @@ export default function Reports({ identifier }) {
                                                                         {[...new Map(r.result.map(item => [item.id, item])).values()].map((res) =>
                                                                               Array.isArray(res.files) && res.files.length > 0 ? (
                                                                                     res.files.map((file, i) => {
-                                                                                          const lowerFile = file.toLowerCase();
-                                                                                          if (lowerFile.endsWith(".pdf")) {
+                                                                                          const fileExt = getExt(file);
+
+                                                                                          if (fileExt === "pdf") {
                                                                                                 return (
                                                                                                       <a key={`${res.id}-${i}`} href={file} target="_blank" rel="noopener noreferrer">
                                                                                                             <img src={pdfImage} alt="PDF" style={{ width: 40, height: 40, cursor: "pointer" }} />
                                                                                                       </a>
                                                                                                 );
-                                                                                          } else {
-                                                                                                // صور وفيديوهات
+                                                                                          }
+
+                                                                                          // mp4 icon
+                                                                                          if (["mp4", "webm", "ogg"].includes(fileExt)) {
                                                                                                 return (
                                                                                                       <img
                                                                                                             key={`${res.id}-${i}`}
-                                                                                                            src={lowerFile.endsWith(".mp4") ? "https://cdn-icons-png.flaticon.com/512/727/727245.png" : file}
-                                                                                                            alt="file"
+                                                                                                            src="https://cdn-icons-png.flaticon.com/512/727/727245.png"
+                                                                                                            alt="video"
                                                                                                             style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 5, cursor: "pointer" }}
                                                                                                             onClick={() => openGallery(res.files, i)}
                                                                                                       />
                                                                                                 );
                                                                                           }
+
+                                                                                          // image
+                                                                                          return (
+                                                                                                <img
+                                                                                                      key={`${res.id}-${i}`}
+                                                                                                      src={file}
+                                                                                                      alt="file"
+                                                                                                      style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 5, cursor: "pointer" }}
+                                                                                                      onClick={() => openGallery(res.files, i)}
+                                                                                                />
+                                                                                          );
                                                                                     })
                                                                               ) : (
                                                                                     <span key={res.id} className="text-danger fw-bold">-</span>
@@ -535,7 +557,17 @@ export default function Reports({ identifier }) {
                                                       </td>
 
                                                       {/* تاريخ الإضافة */}
-                                                      <td dir="ltr">{formatUtcDateTime(r.resultCreatedAt || r.createdAt)}</td>
+                                                      <td dir="ltr">
+                                                            {r.result?.length ? (
+                                                                  [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => (
+                                                                        <div key={res.id}>
+                                                                              {res.createdAt ? formatUtcDateTime(res.createdAt) : "-"}
+                                                                        </div>
+                                                                  ))
+                                                            ) : (
+                                                                  <span className="text-danger fw-bold">-</span>
+                                                            )}
+                                                      </td>
 
                                                       {/* زر إضافة تقرير */}
                                                       <td>
@@ -609,7 +641,7 @@ export default function Reports({ identifier }) {
                                                                                                                   appendNext({ text: "" });
                                                                                                             }}
                                                                                                       >
-                                                                                                            إضافة 
+                                                                                                            إضافة
                                                                                                       </button>
 
 
@@ -835,19 +867,27 @@ export default function Reports({ identifier }) {
                               open={isOpen}
                               close={() => setIsOpen(false)}
                               slides={slides}
+                              index={lightboxIndex}
                               plugins={[Zoom]}
                               render={{
                                     slide: ({ slide }) => {
                                           if (slide.type === "video") {
-                                                return <video src={slide.src} controls autoPlay style={{ maxWidth: "100%", maxHeight: "100%" }} />;
+                                                return (
+                                                      <video
+                                                            src={slide.src}
+                                                            controls
+                                                            autoPlay
+                                                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                                                      />
+                                                );
                                           }
-                                          return <img src={slide.src} style={{ maxWidth: "100%", maxHeight: "100%" }} />;
-                                    }
+                                          // خلي الصور default (عشان Zoom)
+                                          return undefined;
+                                    },
                               }}
                         />
+                  )}
 
-                  )
-                  }
 
                   {
                         payingSession && (

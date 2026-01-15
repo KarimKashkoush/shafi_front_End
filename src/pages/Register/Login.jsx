@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Container, Col, Row, Form, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
@@ -8,12 +8,20 @@ import api from "../../lib/api";
 import { AuthContext } from '../../context/Auth.Context';
 
 export default function Login() {
-      const { login } = useContext(AuthContext)
+      const { login, token } = useContext(AuthContext); // ✅ خد token من الكونتكست
       const navigate = useNavigate();
+
       const [validated, setValidated] = useState(false);
       const [emailOrPhone, setEmailOrPhone] = useState('');
       const [password, setPassword] = useState('');
       const [loading, setLoading] = useState(false);
+
+      // ✅ لما التوكن يبقى موجود فعلًا اعمل redirect
+      useEffect(() => {
+            if (token) {
+                  setTimeout(() => navigate("/", { replace: true }), 0);
+            }
+      }, [token, navigate]);
 
       const handleSubmit = async (event) => {
             event.preventDefault();
@@ -26,20 +34,20 @@ export default function Login() {
 
             try {
                   setLoading(true);
+
                   const payload = emailOrPhone.includes("@")
                         ? { email: emailOrPhone, password }
                         : { phoneNumber: emailOrPhone, password };
 
                   const res = await api.post(`/login`, payload);
 
-
                   if (res.data.message === "success") {
+                        // ✅ خزّن المستخدم والتوكن
                         login(res.data.user, res.data.token);
-                        setLoading(false);
+
                         toast.success("تم تسجيل الدخول بنجاح");
-                        navigate("/", { replace: true });
+                        // ❌ متعملش navigate هنا (هنتحرك في useEffect لما token يتحدث)
                   } else {
-                        setLoading(false);
                         toast.error(res.data.message);
                   }
             } catch (error) {
@@ -52,6 +60,7 @@ export default function Login() {
       return (
             <section className="py-5 register-login min-vh-100 d-flex flex-column align-items-center justify-content-center">
                   <h3 className='fw-semibold'><span>تسجيل</span> الدخول</h3>
+
                   <Container className='row mx-auto align-items-center py-4'>
                         <Form noValidate validated={validated} onSubmit={handleSubmit} className="form col-md-6 p-3">
                               <Row className="mb-2">

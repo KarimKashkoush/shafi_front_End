@@ -7,43 +7,41 @@ export default function MainDashboard() {
       const user = JSON.parse(localStorage.getItem("user"));
       const medicalCenterId = user?.medicalCenterId;
       const [appointments, setAppointments] = useState([]);
-      const [loading, setLoading] = useState(false);
       const [payments, setPayments] = useState([]);
       const [filterType, setFilterType] = useState("today");
       const [customStart, setCustomStart] = useState("");
       const [customEnd, setCustomEnd] = useState("");
+      const [loadingAppointments, setLoadingAppointments] = useState(true);
+      const [loadingPayments, setLoadingPayments] = useState(true);
+      const [isFiltering, setIsFiltering] = useState(false);
 
 
 
       const fetchAppointments = useCallback(async () => {
-            setLoading(true);
+            setLoadingAppointments(true);
             try {
                   const data = await getAppointmentsForDashboard(medicalCenterId);
                   setAppointments(Array.isArray(data) ? data : []);
-                  setLoading(false);
             } catch (err) {
-                  setLoading(false);
                   console.error("Error fetching appointments", err);
+                  setAppointments([]);
             } finally {
-                  setLoading(false);
+                  setLoadingAppointments(false);
             }
       }, [medicalCenterId]);
 
       const fetchPayments = useCallback(async () => {
-            setLoading(true);
+            setLoadingPayments(true);
             try {
                   const data = await getPaymentsByMedicalCenter(medicalCenterId);
-                  setPayments(data);
-                  setLoading(false);
-                  // معالجة البيانات حسب الحاجة
+                  setPayments(Array.isArray(data) ? data : []);
             } catch (err) {
-                  setLoading(false);
                   console.error("Error fetching payments", err);
+                  setPayments([]);
             } finally {
-                  setLoading(false);
+                  setLoadingPayments(false);
             }
       }, [medicalCenterId]);
-
 
       useEffect(() => {
             fetchAppointments();
@@ -251,6 +249,7 @@ export default function MainDashboard() {
 
       const monthlyCases = getMonthlyCases(appointments);
 
+
       const [selectedDoctor, setSelectedDoctor] = useState("all");
       const doctors = [
             { id: "all", name: "كل الدكاترة" },
@@ -263,11 +262,9 @@ export default function MainDashboard() {
             )
       ];
 
-
       const doctorFilteredAppointments = selectedDoctor === "all"
             ? filteredAppointments
-            : appointments.filter(a => a.doctorId === selectedDoctor);
-
+            : filteredAppointments.filter(a => a.doctorId === selectedDoctor);
 
       const totalMoney = doctorFilteredAppointments.reduce((acc, a) => {
             return acc + (Number(a.sessionCost) || 0);
@@ -277,10 +274,25 @@ export default function MainDashboard() {
             return acc + (Number(a.price) || 0);
       }, 0);
 
-      { loading && <p>Loading...</p> }
+      useEffect(() => {
+            setIsFiltering(true);
+            const t = setTimeout(() => setIsFiltering(false), 150); // 150ms كفاية يعطي إحساس تحميل
+            return () => clearTimeout(t);
+      }, [filterType, customStart, customEnd, selectedDoctor]);
+
+      const pageLoading = loadingAppointments || loadingPayments || isFiltering;
+
+      if (pageLoading) {
+            return (
+                  <section className="main-dashboard d-flex align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
+                        <div className="text-center">
+                              <div className="spinner-border" role="status" />
+                        </div>
+                  </section>
+            );
+      }
 
       return (
-
             <section className="main-dashboard">
                   <section className='section-header'>
                         <h3 className='section-title'>لـــوحة القيادة</h3>

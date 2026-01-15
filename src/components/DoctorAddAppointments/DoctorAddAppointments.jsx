@@ -34,8 +34,6 @@ const schema = z.object({
 
 export default function DoctorAddAppointments() {
       const [loading, setLoading] = useState(false);
-      const [userAppointments, setUserAppointments] = useState([]);
-      const [filteredNames, setFilteredNames] = useState([]);
 
       // تحديث الوقت الحالي كل ثانية
       const [currentDateTime, setCurrentDateTime] = useState(
@@ -124,153 +122,99 @@ export default function DoctorAddAppointments() {
             }
       }, [watchNationalId, setValue]);
 
-      useEffect(() => {
-            const fetchAppointments = async () => {
-                  try {
-                        const token = localStorage.getItem("token");
-                        const response = await api.get("/appointments/user", {
-                              headers: { Authorization: `Bearer ${token}` }
-                        });
-                        if (response.data.data) {
-                              setUserAppointments(response.data.data);
-                        }
-                  } catch (err) {
-                        console.error("❌ خطأ في جلب الحجوزات:", err);
-                  }
-            };
-            fetchAppointments();
-      }, []);
 
-      const handleCaseNameChange = (value) => {
-            setValue("caseName", value);
 
-            if (value) {
-                  const matches = userAppointments.filter(appt =>
-                        appt.caseName.toLowerCase().includes(value.toLowerCase())
-                  );
-                  setFilteredNames(matches);
-            } else {
-                  setFilteredNames([]);
-            }
-      };
-
-      // عند اختيار اسم موجود
-      const handleSelectName = (appt) => {
-            setValue("caseName", appt.caseName);
-            setValue("phone", appt.phone || "");
-            setValue("nationalId", appt.nationalId || "");
-            setValue("birthDate", appt.birthDate || "");
-            setValue("hasChronicDisease", appt.hasChronicDisease || false);
-            setValue("chronicDiseaseDetails", appt.chronicDiseaseDetails || "");
-            setValue("price", appt.price || "");
-            setFilteredNames([]);
-      };
 
       return (
             <section className="staf-add-appointment">
                   <h4 className="fw-bold">إضافة حجز جديد</h4>
                   <form className="p-2 border rounded" onSubmit={handleSubmit(onSubmit)}>
-                        <Row className="mb-4 p-2 position-relative">
-                              <h4 className="text-end fw-bold">اسم الحالة</h4>
-                              <input
-                                    className="form-control"
-                                    placeholder="اسم الحالة"
-                                    {...register("caseName")}
-                                    onChange={(e) => handleCaseNameChange(e.target.value)}
-                              />
-                              {filteredNames.length > 0 && (
-                                    <ul className="autocomplete-list position-absolute bg-white border w-100" style={{ zIndex: 1000 }}>
-                                          {filteredNames.map((appt, idx) => (
-                                                <li
-                                                      key={idx}
-                                                      className="p-2 hover:bg-gray-200 cursor-pointer"
-                                                      onClick={() => handleSelectName(appt)}
-                                                >
-                                                      {appt.caseName}
-                                                </li>
-                                          ))}
-                                    </ul>
-                              )}
-                        </Row>
-
-                        {/* رقم الهاتف */}
                         <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold">رقم الهاتف</h4>
-                              <input className="form-control" placeholder="رقم الهاتف" {...register("phone")} />
-                              {errors.phone && <p className="text-danger">{errors.phone.message}</p>}
-                        </Row>
-
-                        {/* الرقم القومي */}
-                        <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold">الرقم القومي (اختياري)</h4>
-                              <input className="form-control" placeholder="الرقم القومي" {...register("nationalId")} />
-                        </Row>
-
-                        {/* تاريخ الميلاد */}
-                        <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold">تاريخ الميلاد</h4>
-                              <input type="date" className="form-control" {...register("birthDate")} />
-                        </Row>
-
-                        {/* التاريخ / الوقت */}
-                        <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold"> تاريخ / وقت الحجز (اختياري)</h4>
-                              <input type="datetime-local" className="form-control" {...register("dateTime")} />
-                              {errors.dateTime && <p className="text-danger">{errors.dateTime.message}</p>}
-                        </Row>
-
-                        <Row className="mb-4 p-2">
-                              <div className="form-check text-end">
-                                    <label className="form-check-label" htmlFor="revisitCheckbox">
-                                          إعادة كشف ؟
-                                    </label>
-                                    <input
-                                          type="checkbox"
-                                          className="form-check-input"
-                                          id="revisitCheckbox"
-                                          {...register("isRevisit")}
-                                    />
-                              </div>
-                        </Row>
-
-                        {/* سعر الكشف */}
-                        <Row className="mb-4 p-2">
-                              <h4 className="text-end fw-bold">سعر الكشف</h4>
-                              <input type="number" className="form-control" placeholder="سعر الكشف" {...register("price")} />
-                              {errors.price && <p className="text-danger">{errors.price.message}</p>}
-                        </Row>
-
-                        {/* أمراض مزمنة */}
-                        <Row className="mb-4 p-2">
-                              <div className="form-check text-end">
-                                    <label className="form-check-label" htmlFor="chronicDiseaseCheckbox">
-                                          يعاني من أمراض مزمنة
-                                    </label>
-                                    <input
-                                          type="checkbox"
-                                          className="form-check-input"
-                                          {...register("hasChronicDisease")}
-                                          id="chronicDiseaseCheckbox"
-                                    />
-                              </div>
-                        </Row>
-
-                        {/* خانة تفاصيل المرض تظهر لو checkbox مفعل */}
-                        {watchChronic && (
-                              <Row className="mb-4 p-2">
-                                    <h4 className="text-end fw-bold">تفاصيل المرض المزمن</h4>
-                                    <input
-                                          type="text"
-                                          className="form-control"
-                                          placeholder="اكتب تفاصيل المرض"
-                                          {...register("chronicDiseaseDetails")}
-                                    />
+                              <Row className="mb-4 p-2 position-relative">
+                                    <h4 className="text-end fw-bold">اسم الحالة</h4>
+                                    <input className="form-control" placeholder="اسم الحالة" {...register("caseName")} />
+                                    {errors.caseName && <p className="text-danger">{errors.caseName.message}</p>}
                               </Row>
-                        )}
 
-                        <button className="btn btn-primary px-4 py-2 w-100" type="submit" disabled={loading}>
-                              {loading ? "جاري الإرسال..." : "إضافة الحجز"}
-                        </button>
+                              {/* رقم الهاتف */}
+                              <Row className="mb-4 p-2">
+                                    <h4 className="text-end fw-bold">رقم الهاتف</h4>
+                                    <input className="form-control" placeholder="رقم الهاتف" {...register("phone")} />
+                                    {errors.phone && <p className="text-danger">{errors.phone.message}</p>}
+                              </Row>
+
+                              {/* الرقم القومي */}
+                              <Row className="mb-4 p-2">
+                                    <h4 className="text-end fw-bold">الرقم القومي (اختياري)</h4>
+                                    <input className="form-control" placeholder="الرقم القومي" {...register("nationalId")} />
+                              </Row>
+
+                              {/* تاريخ الميلاد */}
+                              <Row className="mb-4 p-2">
+                                    <h4 className="text-end fw-bold">تاريخ الميلاد</h4>
+                                    <input type="date" className="form-control" {...register("birthDate")} />
+                              </Row>
+
+                              {/* التاريخ / الوقت */}
+                              <Row className="mb-4 p-2">
+                                    <h4 className="text-end fw-bold"> تاريخ / وقت الحجز (اختياري)</h4>
+                                    <input type="datetime-local" className="form-control" {...register("dateTime")} />
+                                    {errors.dateTime && <p className="text-danger">{errors.dateTime.message}</p>}
+                              </Row>
+
+                              <Row className="mb-4 p-2">
+                                    <div className="form-check text-end">
+                                          <label className="form-check-label" htmlFor="revisitCheckbox">
+                                                إعادة كشف ؟
+                                          </label>
+                                          <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id="revisitCheckbox"
+                                                {...register("isRevisit")}
+                                          />
+                                    </div>
+                              </Row>
+
+                              {/* سعر الكشف */}
+                              <Row className="mb-4 p-2">
+                                    <h4 className="text-end fw-bold">سعر الكشف</h4>
+                                    <input type="number" className="form-control" placeholder="سعر الكشف" {...register("price")} />
+                                    {errors.price && <p className="text-danger">{errors.price.message}</p>}
+                              </Row>
+
+                              {/* أمراض مزمنة */}
+                              <Row className="mb-4 p-2">
+                                    <div className="form-check text-end">
+                                          <label className="form-check-label" htmlFor="chronicDiseaseCheckbox">
+                                                يعاني من أمراض مزمنة
+                                          </label>
+                                          <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                {...register("hasChronicDisease")}
+                                                id="chronicDiseaseCheckbox"
+                                          />
+                                    </div>
+                              </Row>
+
+                              {/* خانة تفاصيل المرض تظهر لو checkbox مفعل */}
+                              {watchChronic && (
+                                    <Row className="mb-4 p-2">
+                                          <h4 className="text-end fw-bold">تفاصيل المرض المزمن</h4>
+                                          <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="اكتب تفاصيل المرض"
+                                                {...register("chronicDiseaseDetails")}
+                                          />
+                                    </Row>
+                              )}
+
+                              <button className="btn btn-primary px-4 py-2 w-100" type="submit" disabled={loading}>
+                                    {loading ? "جاري الإرسال..." : "إضافة الحجز"}
+                              </button>
+                        </Row>
                   </form>
             </section>
       );
