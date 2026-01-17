@@ -14,7 +14,6 @@ export default function DoctorPatientReports() {
       const userId = user?.id;
       const medicalCenterId = user?.medicalCenterId;
 
-
       const fetchAppointments = useCallback(async () => {
             const token = localStorage.getItem("token");
             try {

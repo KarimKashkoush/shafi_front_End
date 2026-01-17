@@ -58,26 +58,28 @@ export default function Reports({ identifier }) {
             ...new Map(allResults.map(res => [res.id, res])).values()
       ];
       // قبل return
-      const totalSessionCost = uniqueResults.reduce(
-            (sum, res) => sum + Number(res.sessionCost || 0),
-            0
-      );
+// هنجمع الداتا per sessionId عشان مايحصلش تلخبط
+const sessionSummary = uniqueResults.map((res) => {
+  const cost = Number(res.sessionCost || 0);
 
-      const totalPaid = uniqueResults.reduce((sum, res) => {
-            // دور على الـ appointments اللي تخص نفس الـ session
-            const payments = appointments
-                  .flatMap(a => a.payments || [])
-                  .filter(p => p.sessionId === res.id);
+  const paymentsForSession = appointments
+    .flatMap(a => a.payments || [])
+    .filter(p => p.sessionId === res.id);
 
-            const paidAmount = payments.reduce(
-                  (s, p) => s + Number(p.amount || 0),
-                  0
-            );
+  const paid = paymentsForSession.reduce((s, p) => s + Number(p.amount || 0), 0);
 
-            return sum + paidAmount;
-      }, 0);
+  // ✅ لو مفيش sessionCost بس فيه دفع -> خليه cost = paid (عشان الإجمالي مايبقاش سالب)
+  const effectiveCost = Math.max(cost, paid);
 
-      const totalRemaining = totalSessionCost - totalPaid;
+  const remaining = Math.max(0, effectiveCost - paid);
+
+  return { effectiveCost, paid, remaining };
+});
+
+const totalSessionCost = sessionSummary.reduce((s, x) => s + x.effectiveCost, 0);
+const totalPaid = sessionSummary.reduce((s, x) => s + x.paid, 0);
+const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
+
 
       useEffect(() => {
             fetchAppointments();
@@ -355,6 +357,7 @@ export default function Reports({ identifier }) {
                                           <th>مبلغ الجلسة</th>
                                           <th>المدفوع</th>
                                           <th>المتبقي</th>
+                                          <th>تاريخ الحجز</th>
                                           <th>تاريخ الكشف</th>
                                           <th>اضافة تقرير</th>
                                           <th>الدفع</th>
@@ -547,7 +550,8 @@ export default function Reports({ identifier }) {
                                                                   [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => {
                                                                         const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
                                                                         const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-                                                                        const remaining = res.sessionCost ? Number(res.sessionCost) - paidAmount : 0;
+                                                                        const cost = Number(res.sessionCost || 0);
+                                                                        const remaining = Math.max(0, cost - paidAmount);
 
                                                                         return <div key={res.id}>{remaining.toLocaleString()}</div>;
                                                                   })
@@ -555,6 +559,11 @@ export default function Reports({ identifier }) {
                                                                   <div>0</div>
                                                             )}
                                                       </td>
+                                                      {/* تاريخ الإضافة */}
+                                                      <td dir="ltr">
+                                                            {r.dateTime ? formatUtcDateTime(r.dateTime) : "-"}
+                                                      </td>
+
 
                                                       {/* تاريخ الإضافة */}
                                                       <td dir="ltr">
@@ -568,6 +577,7 @@ export default function Reports({ identifier }) {
                                                                   <span className="text-danger fw-bold">-</span>
                                                             )}
                                                       </td>
+
 
                                                       {/* زر إضافة تقرير */}
                                                       <td>
@@ -791,38 +801,24 @@ export default function Reports({ identifier }) {
 
                                                       {/* الدفع */}
                                                       <td>
-                                                            {r.result && r.result.length > 0 ? (() => {
-                                                                  const allRemaining = r.result.map((res) => {
-                                                                        const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
-                                                                        const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-                                                                        return res.sessionCost ? Number(res.sessionCost) - paidAmount : 0;
-                                                                  });
+                                                            <button
+                                                                  className="btn btn-sm btn-primary"
+                                                                  onClick={() => {
+                                                                        // لو في result هندفع على أول session (أو اختار أنت)
+                                                                        const target = r.result?.length ? r.result[0] : null;
 
-                                                                  const hasRemaining = allRemaining.some(x => x > 0);
-
-                                                                  return (
-                                                                        <button
-                                                                              className="btn btn-sm btn-primary"
-                                                                              disabled={!hasRemaining}
-                                                                              onClick={() => {
-                                                                                    if (!hasRemaining) return;
-
-                                                                                    const target = r.result.find((res, i) => allRemaining[i] > 0);
-                                                                                    const remaining = allRemaining[r.result.indexOf(target)];
-
-                                                                                    setPayingSession({
-                                                                                          appointmentId: r.id,
-                                                                                          sessionId: target.id,
-                                                                                          patientNationalId: r.nationalId,
-                                                                                          doctorId: r.doctorId,
-                                                                                          remaining: remaining
-                                                                                    });
-                                                                              }}
-                                                                        >
-                                                                              دفع
-                                                                        </button>
-                                                                  );
-                                                            })() : <span className="text-danger fw-bold">-</span>}
+                                                                        setPayingSession({
+                                                                              appointmentId: r.id,
+                                                                              sessionId: target?.id || null,          // ممكن تبقى null
+                                                                              patientNationalId: r.nationalId,
+                                                                              doctorId: r.doctorId,
+                                                                              remaining: null,                        // مفيش سقف
+                                                                              sessionCost: target?.sessionCost ?? 0,  // بس للعرض
+                                                                        });
+                                                                  }}
+                                                            >
+                                                                  دفع
+                                                            </button>
                                                       </td>
 
                                                       <td>
@@ -844,7 +840,7 @@ export default function Reports({ identifier }) {
                                           ))
                                     ) : (
                                           <tr>
-                                                <td colSpan="10" className="text-center">
+                                                <td colSpan="12" className="text-center">
                                                       لا توجد بيانات
                                                 </td>
                                           </tr>
@@ -856,7 +852,7 @@ export default function Reports({ identifier }) {
                                           <td>{totalSessionCost.toLocaleString()}</td>
                                           <td>{totalPaid.toLocaleString()}</td>
                                           <td>{totalRemaining.toLocaleString()}</td>
-                                          <td colSpan="4"></td>
+                                          <td colSpan="5"></td>
                                     </tr>
                               </tfoot>
                         </table >
@@ -902,16 +898,20 @@ export default function Reports({ identifier }) {
                                                       <input
                                                             type="number"
                                                             className="form-control"
-                                                            max={payingSession.remaining} // أقصى مبلغ ممكن
                                                             value={paymentData.amount}
                                                             onChange={(e) => {
                                                                   let val = Number(e.target.value);
-                                                                  if (val > payingSession.remaining) val = payingSession.remaining; // منع الزيادة
-                                                                  if (val < 0) val = 0; // منع القيم السالبة
+                                                                  if (val < 0) val = 0;
                                                                   setPaymentData({ ...paymentData, amount: val });
                                                             }}
                                                       />
-                                                      <small className="text-muted">أقصى مبلغ متبقي: {payingSession.remaining.toLocaleString()} جنيه</small>
+
+                                                      <small className="text-muted">
+                                                            {payingSession?.sessionCost
+                                                                  ? `مبلغ الجلسة: ${Number(payingSession.sessionCost).toLocaleString()} جنيه`
+                                                                  : "اضافة مبلغ"}
+                                                      </small>
+
                                                 </Row>
 
                                                 <Row className="mb-4 p-2">
@@ -958,7 +958,7 @@ export default function Reports({ identifier }) {
                                                                         setPaymentData
                                                                   })
                                                             }
-                                                            disabled={loading || paymentData.amount <= 0}
+
                                                       >
                                                             {loading ? "جاري الدفع..." : "تأكيد الدفع"}
                                                       </button>

@@ -4,10 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Row } from "react-bootstrap";
 import api from "../../lib/api";
 import { toast } from "react-toastify";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { getAppointments } from "../../api";
+import { useMemo } from "react";
+
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -34,6 +37,95 @@ const schema = z.object({
 
 export default function DoctorAddAppointments() {
       const [loading, setLoading] = useState(false);
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = user?.id;
+      const medicalCenterId = user?.medicalCenterId;
+      const [appointments, setAppointments] = useState([]);
+      const [phoneMatches, setPhoneMatches] = useState([]);
+      const [nidMatches, setNidMatches] = useState([]);
+      const [showSuggestions, setShowSuggestions] = useState(false);
+
+
+
+      const fetchAppointments = useCallback(async () => {
+            try {
+                  setLoading(true);
+                  const data = await getAppointments(userId, medicalCenterId);
+                  setAppointments(data);
+
+            } catch (err) {
+                  console.error("Error fetching appointments", err);
+            } finally {
+                  setLoading(false);
+            }
+      }, [userId, medicalCenterId]);
+
+      useEffect(() => {
+            fetchAppointments();
+      }, [fetchAppointments]);
+
+      const normalizePhone = (v) => String(v ?? "").replace(/\s+/g, "").trim();
+      const normalizeNID = (v) => String(v ?? "").replace(/\s+/g, "").trim();
+
+
+      const pickPatientFields = (appt) => ({
+            caseName: appt.caseName || "",
+            phone: appt.phone || "",
+            nationalId: appt.nationalId || "",
+            // birthDate عندك جاية ISO، نخليها YYYY-MM-DD عشان input date
+            birthDate: appt.birthDate ? dayjs(appt.birthDate).format("YYYY-MM-DD") : "",
+            hasChronicDisease: !!appt.hasChronicDisease,
+            chronicDiseaseDetails: appt.chronicDiseaseDetails || "",
+            isRevisit: !!appt.isRevisit,
+      });
+
+      const patients = useMemo(() => {
+            // هنطلع patients unique على أساس phone + nationalId + caseName (أو أي مفتاح يعجبك)
+            const seen = new Set();
+            const list = [];
+
+            for (const appt of appointments || []) {
+                  const phone = normalizePhone(appt?.phone);
+                  const nid = normalizeNID(appt?.nationalId);
+                  const name = String(appt?.caseName ?? "").trim();
+
+                  if (!phone && !nid) continue;
+
+                  const key = `${phone}|${nid}|${name}`;// يضمن uniqueness بشكل معقول
+                  if (seen.has(key)) continue;
+                  seen.add(key);
+
+                  list.push({
+                        key,
+                        id: appt.id,
+                        phone,
+                        nationalId: nid,
+                        name,
+                        data: pickPatientFields(appt),
+                  });
+            }
+
+            return list;
+      }, [appointments]);
+
+      const applyPatient = (p) => {
+            // عبّي البيانات القديمة
+            setValue("caseName", p.data.caseName, { shouldValidate: true });
+            setValue("phone", p.data.phone, { shouldValidate: true });
+            setValue("nationalId", p.data.nationalId, { shouldValidate: true });
+            setValue("birthDate", p.data.birthDate);
+            setValue("hasChronicDisease", p.data.hasChronicDisease);
+            setValue("chronicDiseaseDetails", p.data.chronicDiseaseDetails);
+            setValue("isRevisit", p.data.isRevisit);
+
+            // اقفل الليست
+            setShowSuggestions(false);
+
+            // لو عايز كمان تمسح الماتشز:
+            setPhoneMatches([]);
+            setNidMatches([]);
+      };
+
 
       // تحديث الوقت الحالي كل ثانية
       const [currentDateTime, setCurrentDateTime] = useState(
@@ -86,6 +178,13 @@ export default function DoctorAddAppointments() {
                   });
 
                   if (response.data.message === "success") {
+                        setValue("caseName", "");
+                        setValue("phone", "");
+                        setValue("nationalId", "");
+                        setValue("birthDate", "");
+                        setValue("hasChronicDisease", "");
+                        setValue("chronicDiseaseDetails", "");
+                        setValue("isRevisit", "");
                         setLoading(false);
                         toast.success("✅ تم تسجيل الحجز بنجاح");
                   }
@@ -122,32 +221,103 @@ export default function DoctorAddAppointments() {
             }
       }, [watchNationalId, setValue]);
 
-
-
-
       return (
             <section className="staf-add-appointment">
                   <h4 className="fw-bold">إضافة حجز جديد</h4>
                   <form className="p-2 border rounded" onSubmit={handleSubmit(onSubmit)}>
                         <Row className="mb-4 p-2">
+                              {/* رقم الهاتف */}
+                              <Row className="mb-4 p-2 position-relative">
+                                    <h4 className="text-end fw-bold">رقم الهاتف</h4>
+
+                                    <input
+                                          className="form-control"
+                                          autoComplete="off"
+                                          placeholder="رقم الهاتف"
+                                          {...register("phone", {
+                                                onChange: (e) => {
+                                                      const value = normalizePhone(e.target.value);
+
+                                                      if (value.length < 6) { // حد أدنى عشان متبقاش بتفرفر
+                                                            setPhoneMatches([]);
+                                                            return;
+                                                      }
+
+                                                      const matches = patients.filter(p => p.phone && p.phone.includes(value));
+                                                      setPhoneMatches(matches);
+                                                      setShowSuggestions(true);
+                                                },
+                                          })}
+                                    />
+
+                                    {errors.phone && <p className="text-danger">{errors.phone.message}</p>}
+
+                                    {showSuggestions && phoneMatches.length > 0 && (
+                                          <div
+                                                className="border rounded bg-white shadow position-absolute w-100"
+                                                style={{ top: "100%", right: 0, zIndex: 50 }}
+                                          >
+                                                {phoneMatches.slice(0, 6).map((p) => (
+                                                      <button
+                                                            key={p.key}
+                                                            type="button"
+                                                            className="w-100 text-end btn btn-light border-0"
+                                                            onClick={() => applyPatient(p)}
+                                                      >
+                                                            {p.name || "بدون اسم"} — {p.phone}
+                                                      </button>
+                                                ))}
+                                          </div>
+                                    )}
+                              </Row>
+
                               <Row className="mb-4 p-2 position-relative">
                                     <h4 className="text-end fw-bold">اسم الحالة</h4>
                                     <input className="form-control" placeholder="اسم الحالة" {...register("caseName")} />
                                     {errors.caseName && <p className="text-danger">{errors.caseName.message}</p>}
                               </Row>
 
-                              {/* رقم الهاتف */}
-                              <Row className="mb-4 p-2">
-                                    <h4 className="text-end fw-bold">رقم الهاتف</h4>
-                                    <input className="form-control" placeholder="رقم الهاتف" {...register("phone")} />
-                                    {errors.phone && <p className="text-danger">{errors.phone.message}</p>}
+                              <Row className="mb-4 p-2 position-relative">
+                                    <h4 className="text-end fw-bold">الرقم القومي (اختياري)</h4>
+
+                                    <input
+                                          className="form-control"
+                                          placeholder="الرقم القومي"
+                                          {...register("nationalId", {
+                                                onChange: (e) => {
+                                                      const value = normalizeNID(e.target.value);
+
+                                                      if (value.length < 10) {
+                                                            setNidMatches([]);
+                                                            return;
+                                                      }
+
+                                                      const matches = patients.filter(p => p.nationalId && p.nationalId.includes(value));
+                                                      setNidMatches(matches);
+                                                      setShowSuggestions(true);
+                                                },
+                                          })}
+                                    />
+
+                                    {showSuggestions && nidMatches.length > 0 && (
+                                          <div
+                                                className="border rounded bg-white shadow position-absolute w-100"
+                                                style={{ top: "100%", right: 0, zIndex: 50 }}
+                                          >
+                                                {nidMatches.slice(0, 6).map((p) => (
+                                                      <button
+                                                            key={p.key}
+                                                            type="button"
+                                                            className="w-100 text-end btn btn-light border-0"
+                                                            onClick={() => applyPatient(p)}
+                                                      >
+                                                            {p.name || "بدون اسم"} — {p.nationalId}
+                                                      </button>
+                                                ))}
+                                          </div>
+                                    )}
                               </Row>
 
-                              {/* الرقم القومي */}
-                              <Row className="mb-4 p-2">
-                                    <h4 className="text-end fw-bold">الرقم القومي (اختياري)</h4>
-                                    <input className="form-control" placeholder="الرقم القومي" {...register("nationalId")} />
-                              </Row>
 
                               {/* تاريخ الميلاد */}
                               <Row className="mb-4 p-2">
