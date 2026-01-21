@@ -59,6 +59,13 @@ export default function Reports({ identifier }) {
       ];
       // قبل return
       // هنجمع الداتا per sessionId عشان مايحصلش تلخبط
+
+      const paymentsNoSession = appointments
+            .flatMap(a => a.payments || [])
+            .filter(p => !p.sessionId);
+
+      const paidNoSessionTotal = paymentsNoSession.reduce((s, p) => s + Number(p.amount || 0), 0);
+
       const sessionSummary = uniqueResults.map((res) => {
             const cost = Number(res.sessionCost || 0);
 
@@ -77,7 +84,7 @@ export default function Reports({ identifier }) {
       });
 
       const totalSessionCost = sessionSummary.reduce((s, x) => s + x.effectiveCost, 0);
-      const totalPaid = sessionSummary.reduce((s, x) => s + x.paid, 0);
+      const totalPaid = sessionSummary.reduce((s, x) => s + x.paid, 0) + paidNoSessionTotal;
       const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
 
 
@@ -296,7 +303,7 @@ export default function Reports({ identifier }) {
                   Swal.fire("خطأ", "حدث خطأ أثناء الدفع", "error");
             }
       };
-      
+
       const { fields: medFields, append: addMedication } = useFieldArray({ control, name: "medications" });
       const { fields: radFields, append: addRadiology } = useFieldArray({ control, name: "radiology" });
       const { fields: labFields, append: addLabTest } = useFieldArray({ control, name: "labTests" });
@@ -312,8 +319,6 @@ export default function Reports({ identifier }) {
             control,
             name: "nextAction"
       });
-
-
 
       const openEditReport = (reportData, appointmentId) => {
             setUploadingId(appointmentId); // ✅ نفس شرط فتح المودال
@@ -331,7 +336,7 @@ export default function Reports({ identifier }) {
             reset({
                   report: toTextArray(reportData.report),
                   nextAction: toTextArray(reportData.nextAction),
-                  sessionCost: reportData.sessionCost ?? 0,                  
+                  sessionCost: reportData.sessionCost ?? 0,
                   // ✅ جديد
                   notes: reportData.notes ?? "",
 
@@ -339,9 +344,7 @@ export default function Reports({ identifier }) {
                   radiology: reportData.radiology?.length ? reportData.radiology : [{ name: "", notes: "" }],
                   labTests: reportData.labTests?.length ? reportData.labTests : [{ name: "", notes: "" }],
             });
-
       };
-
 
       return (
             <>
@@ -474,7 +477,7 @@ export default function Reports({ identifier }) {
                                                       <td>
                                                             {r.result && r.result.length > 0 ? (
                                                                   [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => {
-                                                                        const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
+                                                                        const paymentsForSession = (r.payments || []).filter(p => p.sessionId === res.id);
                                                                         const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
                                                                         return (
@@ -482,12 +485,7 @@ export default function Reports({ identifier }) {
                                                                                     <span
                                                                                           style={{ cursor: "pointer" }}
                                                                                           className="fw-bold"
-                                                                                          onClick={() =>
-                                                                                                setPaymentModal({
-                                                                                                      isOpen: true,
-                                                                                                      payments: paymentsForSession,
-                                                                                                })
-                                                                                          }
+                                                                                          onClick={() => setPaymentModal({ isOpen: true, payments: paymentsForSession })}
                                                                                     >
                                                                                           {paidAmount.toLocaleString()}
                                                                                     </span>
@@ -495,7 +493,22 @@ export default function Reports({ identifier }) {
                                                                         );
                                                                   })
                                                             ) : (
-                                                                  <div>0</div>
+                                                                  (() => {
+                                                                        const paymentsNoSession = (r.payments || []).filter(p => !p.sessionId);
+                                                                        const paidAmount = paymentsNoSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+                                                                        return (
+                                                                              <div>
+                                                                                    <span
+                                                                                          style={{ cursor: "pointer" }}
+                                                                                          className="fw-bold"
+                                                                                          onClick={() => setPaymentModal({ isOpen: true, payments: paymentsNoSession })}
+                                                                                    >
+                                                                                          {paidAmount.toLocaleString()}
+                                                                                    </span>
+                                                                              </div>
+                                                                        );
+                                                                  })()
                                                             )}
                                                             <Modal
                                                                   show={paymentModal.isOpen}
@@ -550,7 +563,9 @@ export default function Reports({ identifier }) {
                                                       <td>
                                                             {r.result && r.result.length > 0 ? (
                                                                   [...new Map(r.result.map(item => [item.id, item])).values()].map((res) => {
-                                                                        const paymentsForSession = r.payments?.filter(p => p.sessionId === res.id) || [];
+                                                                        const paymentsForSession = (r.payments || []).filter(p =>
+                                                                              res?.id ? (p.sessionId === res.id) : (!p.sessionId)
+                                                                        );
                                                                         const paidAmount = paymentsForSession.reduce((sum, p) => sum + Number(p.amount || 0), 0);
                                                                         const cost = Number(res.sessionCost || 0);
                                                                         const remaining = Math.max(0, cost - paidAmount);
