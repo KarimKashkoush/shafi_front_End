@@ -21,19 +21,37 @@ const schema = z.object({
       dateTime: z.string().min(1, "التاريخ والوقت مطلوب"),
       nationalId: z.string().optional(),
       birthDate: z.string().optional(),
-      hasChronicDisease: z.boolean().optional(),
+
+      hasChronicDisease: z.coerce.boolean().default(false),
       chronicDiseaseDetails: z.string().optional(),
-      isRevisit: z.boolean().optional(),
-      price: z
-            .union([
-                  z.coerce.number()
-                        .refine((val) => !isNaN(val), { message: "سعر الكشف مطلوب" })
-                        .min(0, "سعر الكشف لا يمكن أن يكون سالبًا"),
-                  z.literal("").transform(() => null),
-                  z.null(),
-                  z.undefined(),
-            ]),
+
+      isRevisit: z.coerce.boolean().default(false),
+
+      isReferred: z.coerce.boolean().default(false),
+      referredFromDoctor: z.string().trim().optional(),
+
+      price: z.union([
+            z.coerce.number()
+                  .refine((val) => !isNaN(val), { message: "سعر الكشف مطلوب" })
+                  .min(0, "سعر الكشف لا يمكن أن يكون سالبًا"),
+            z.literal("").transform(() => null),
+            z.null(),
+            z.undefined(),
+      ]),
+}).superRefine((data, ctx) => {
+      if (data.isReferred) {
+            if (!data.referredFromDoctor) {
+                  ctx.addIssue({
+                        code: "custom",
+                        path: ["referredFromDoctor"],
+                        message: "اكتب اسم الدكتور اللي محوّل الحالة",
+                  });
+            }
+      }
 });
+
+
+
 
 export default function DoctorAddAppointments() {
       const [loading, setLoading] = useState(false);
@@ -44,7 +62,6 @@ export default function DoctorAddAppointments() {
       const [phoneMatches, setPhoneMatches] = useState([]);
       const [nidMatches, setNidMatches] = useState([]);
       const [showSuggestions, setShowSuggestions] = useState(false);
-
 
 
       const fetchAppointments = useCallback(async () => {
@@ -139,9 +156,15 @@ export default function DoctorAddAppointments() {
             return () => clearInterval(interval);
       }, []);
 
-      const { register, setValue, handleSubmit, watch, formState: { errors } } = useForm({
+      const {
+            register,
+            setValue,
+            handleSubmit,
+            watch,
+            formState: { errors },
+      } = useForm({
             resolver: zodResolver(schema),
-            defaultValues: {
+            defaultValues: { // ✅ كان مكتوب ddefaultValues
                   caseName: "",
                   phone: "",
                   nationalId: "",
@@ -151,10 +174,17 @@ export default function DoctorAddAppointments() {
                   chronicDiseaseDetails: "",
                   dateTime: currentDateTime,
                   price: "",
+                  isReferred: false,
+                  referredFromDoctor: "",
             },
       });
 
       const watchChronic = watch("hasChronicDisease", false);
+      const watchReferred = watch("isReferred", false); // ✅ لازم قبل useEffect
+
+      useEffect(() => {
+            if (!watchReferred) setValue("referredFromDoctor", "");
+      }, [watchReferred, setValue]);
 
       const onSubmit = async (data) => {
             try {
@@ -184,7 +214,10 @@ export default function DoctorAddAppointments() {
                         setValue("birthDate", "");
                         setValue("hasChronicDisease", "");
                         setValue("chronicDiseaseDetails", "");
-                        setValue("isRevisit", "");
+                        setValue("hasChronicDisease", false);
+                        setValue("isRevisit", false);
+                        setValue("isReferred", false);
+                        setValue("referredFromDoctor", "");
                         setLoading(false);
                         toast.success("✅ تم تسجيل الحجز بنجاح");
                   }
@@ -220,6 +253,8 @@ export default function DoctorAddAppointments() {
                   setValue("birthDate", birthDateStr);
             }
       }, [watchNationalId, setValue]);
+
+
 
       return (
             <section className="staf-add-appointment">
@@ -332,7 +367,47 @@ export default function DoctorAddAppointments() {
                                     {errors.dateTime && <p className="text-danger">{errors.dateTime.message}</p>}
                               </Row>
 
-                              <Row className="mb-4 p-2">
+                              <Row className="mb-4 p-2 border border-1 rounded">
+                                    <div className="form-check text-end">
+                                          <label className="form-check-label" htmlFor="referredCheckbox">
+                                                الحالة محوّلة؟
+                                          </label>
+                                          <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id="referredCheckbox"
+                                                {...register("isReferred", {
+                                                      onChange: (e) => {
+                                                            const checked = e.target.checked;
+                                                            setValue("isReferred", checked, { shouldValidate: true });
+
+                                                            if (!checked) {
+                                                                  setValue("referredFromDoctor", "", { shouldValidate: true });
+                                                            }
+                                                      }
+                                                })}
+
+                                          />
+                                    </div>
+
+                                    {watchReferred && (
+                                          <div className="mt-2">
+                                                <h4 className="text-end fw-bold">اسم الدكتور المُحوِّل</h4>
+                                                <input
+                                                      type="text"
+                                                      className="form-control"
+                                                      placeholder="مثال: د/ أحمد محمد"
+                                                      {...register("referredFromDoctor")}
+                                                />
+                                                {errors.referredFromDoctor && (
+                                                      <p className="text-danger">{errors.referredFromDoctor.message}</p>
+                                                )}
+                                          </div>
+                                    )}
+                              </Row>
+
+
+                              <Row className="mb-4 p-2 border border-1 rounded">
                                     <div className="form-check text-end">
                                           <label className="form-check-label" htmlFor="revisitCheckbox">
                                                 إعادة كشف ؟
@@ -346,15 +421,8 @@ export default function DoctorAddAppointments() {
                                     </div>
                               </Row>
 
-                              {/* سعر الكشف */}
-                              <Row className="mb-4 p-2">
-                                    <h4 className="text-end fw-bold">سعر الكشف</h4>
-                                    <input type="number" className="form-control" placeholder="سعر الكشف" {...register("price")} />
-                                    {errors.price && <p className="text-danger">{errors.price.message}</p>}
-                              </Row>
-
                               {/* أمراض مزمنة */}
-                              <Row className="mb-4 p-2">
+                              <Row className="mb-4 p-2 border border-1 rounded">
                                     <div className="form-check text-end">
                                           <label className="form-check-label" htmlFor="chronicDiseaseCheckbox">
                                                 يعاني من أمراض مزمنة
@@ -366,6 +434,13 @@ export default function DoctorAddAppointments() {
                                                 id="chronicDiseaseCheckbox"
                                           />
                                     </div>
+                              </Row>
+
+                              {/* سعر الكشف */}
+                              <Row className="mb-4 p-2">
+                                    <h4 className="text-end fw-bold">سعر الكشف</h4>
+                                    <input type="number" className="form-control" placeholder="سعر الكشف" {...register("price")} />
+                                    {errors.price && <p className="text-danger">{errors.price.message}</p>}
                               </Row>
 
                               {/* خانة تفاصيل المرض تظهر لو checkbox مفعل */}

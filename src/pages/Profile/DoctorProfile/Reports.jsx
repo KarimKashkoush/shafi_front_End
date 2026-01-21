@@ -58,27 +58,27 @@ export default function Reports({ identifier }) {
             ...new Map(allResults.map(res => [res.id, res])).values()
       ];
       // قبل return
-// هنجمع الداتا per sessionId عشان مايحصلش تلخبط
-const sessionSummary = uniqueResults.map((res) => {
-  const cost = Number(res.sessionCost || 0);
+      // هنجمع الداتا per sessionId عشان مايحصلش تلخبط
+      const sessionSummary = uniqueResults.map((res) => {
+            const cost = Number(res.sessionCost || 0);
 
-  const paymentsForSession = appointments
-    .flatMap(a => a.payments || [])
-    .filter(p => p.sessionId === res.id);
+            const paymentsForSession = appointments
+                  .flatMap(a => a.payments || [])
+                  .filter(p => p.sessionId === res.id);
 
-  const paid = paymentsForSession.reduce((s, p) => s + Number(p.amount || 0), 0);
+            const paid = paymentsForSession.reduce((s, p) => s + Number(p.amount || 0), 0);
 
-  // ✅ لو مفيش sessionCost بس فيه دفع -> خليه cost = paid (عشان الإجمالي مايبقاش سالب)
-  const effectiveCost = Math.max(cost, paid);
+            // ✅ لو مفيش sessionCost بس فيه دفع -> خليه cost = paid (عشان الإجمالي مايبقاش سالب)
+            const effectiveCost = Math.max(cost, paid);
 
-  const remaining = Math.max(0, effectiveCost - paid);
+            const remaining = Math.max(0, effectiveCost - paid);
 
-  return { effectiveCost, paid, remaining };
-});
+            return { effectiveCost, paid, remaining };
+      });
 
-const totalSessionCost = sessionSummary.reduce((s, x) => s + x.effectiveCost, 0);
-const totalPaid = sessionSummary.reduce((s, x) => s + x.paid, 0);
-const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
+      const totalSessionCost = sessionSummary.reduce((s, x) => s + x.effectiveCost, 0);
+      const totalPaid = sessionSummary.reduce((s, x) => s + x.paid, 0);
+      const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
 
 
       useEffect(() => {
@@ -90,8 +90,10 @@ const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
                   .refine(arr => arr.some(x => (x.text || "").trim() !== ""), { message: "التقرير مطلوب" }),
 
             nextAction: z.array(z.object({ text: z.string().optional() })).optional(),
-
             sessionCost: z.coerce.number().optional(),
+
+            // ✅ جديد
+            notes: z.string().optional(),
 
             medications: z.array(z.object({
                   name: z.string().optional(),
@@ -112,7 +114,6 @@ const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
       });
 
 
-
       const {
             register,
             handleSubmit,
@@ -126,6 +127,7 @@ const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
                   nextAction: [{ text: "" }],
                   sessionCost: 0,
                   pharmaceutical: "",
+                  notes: "",
                   medications: [{ name: "", startDate: "", endDate: "", times: "" }],
                   radiology: [{ name: "", notes: "" }],
                   labTests: [{ name: "", notes: "" }]
@@ -157,6 +159,8 @@ const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
                   formData.append("userId", userId);
                   formData.append("medicalCenterId", medicalCenterId);
 
+                  formData.append("notes", (data.notes || "").trim());
+
                   formData.append(
                         "medications",
                         JSON.stringify(data.medications || [])
@@ -185,10 +189,6 @@ const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
                               setUploadProgress(progressObj);
                         },
                   };
-
-                  console.log("REPORT:", reportTexts);
-                  console.log("NEXT:", nextActionTexts);
-                  console.log("FORM DATA:", Object.fromEntries(formData.entries()));
 
                   if (editingReportId) {
                         await axios.put(
@@ -296,8 +296,7 @@ const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
                   Swal.fire("خطأ", "حدث خطأ أثناء الدفع", "error");
             }
       };
-
-
+      
       const { fields: medFields, append: addMedication } = useFieldArray({ control, name: "medications" });
       const { fields: radFields, append: addRadiology } = useFieldArray({ control, name: "radiology" });
       const { fields: labFields, append: addLabTest } = useFieldArray({ control, name: "labTests" });
@@ -332,14 +331,17 @@ const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
             reset({
                   report: toTextArray(reportData.report),
                   nextAction: toTextArray(reportData.nextAction),
-                  sessionCost: reportData.sessionCost ?? 0,
+                  sessionCost: reportData.sessionCost ?? 0,                  
+                  // ✅ جديد
+                  notes: reportData.notes ?? "",
+
                   medications: reportData.medications?.length ? reportData.medications : [{ name: "", startDate: "", endDate: "", times: "" }],
                   radiology: reportData.radiology?.length ? reportData.radiology : [{ name: "", notes: "" }],
                   labTests: reportData.labTests?.length ? reportData.labTests : [{ name: "", notes: "" }],
             });
+
       };
 
-      console.log(appointments)
 
       return (
             <>
@@ -656,6 +658,16 @@ const totalRemaining = sessionSummary.reduce((s, x) => s + x.remaining, 0);
 
 
                                                                                                 </Col>
+                                                                                          </Row>
+
+                                                                                          <Row className="mb-2">
+                                                                                                <p className="text-end fw-bold mb-1">ملاحظات</p>
+                                                                                                <textarea
+                                                                                                      className="form-control"
+                                                                                                      rows={1}
+                                                                                                      placeholder="اكتب ملاحظات إضافية..."
+                                                                                                      {...register("notes")}
+                                                                                                />
                                                                                           </Row>
 
                                                                                           {/* الأدوية */}

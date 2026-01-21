@@ -83,64 +83,75 @@ export default function DoctorCases() {
       };
 
       // تعديل الرقم القومي
-      const handleEditAppointment = async (appt) => {
-            // تحويل التاريخ للعرض في input datetime-local
-            const localDateTime = appt.dateTime
-                  ? new Date(appt.dateTime).toISOString().slice(0, 16) // yyyy-MM-ddTHH:mm
-                  : "";
+const handleEditAppointment = async (appt) => {
+  // datetime-local (yyyy-MM-ddTHH:mm)
+  const localDateTime = appt.dateTime
+    ? new Date(appt.dateTime).toISOString().slice(0, 16)
+    : "";
 
-            const { value: formValues } = await Swal.fire({
-                  title: "تعديل بيانات الحالة",
-                  html: `
-                  <input id="caseName" class="swal2-input" placeholder="اسم الحالة" value="${appt.caseName || ""}">
-                  <input id="phone" class="swal2-input" placeholder="رقم الهاتف" value="${appt.phone || ""}">
-                  <input id="nationalId" class="swal2-input" placeholder="الرقم القومي" value="${appt.nationalId || ""}">
-                  <input id="chronicDiseaseDetails" class="swal2-input" placeholder="أمراض مزمنة" value="${appt.chronicDiseaseDetails || ""}">
-                  <input type="datetime-local" id="dateTime" class="swal2-input" placeholder="تاريخ ووقت الموعد" value="${localDateTime}">
-            `,
-                  focusConfirm: false,
-                  showCancelButton: true,
-                  confirmButtonText: "حفظ",
-                  cancelButtonText: "إلغاء",
-                  preConfirm: () => {
-                        return {
-                              caseName: document.getElementById("caseName").value,
-                              phone: document.getElementById("phone").value,
-                              nationalId: document.getElementById("nationalId").value,
-                              chronicDiseaseDetails: document.getElementById("chronicDiseaseDetails").value,
-                              dateTime: document.getElementById("dateTime").value, // هي بترجع بالصيغة: "2026-01-07T18:36"
-                        };
-                  }
-            });
+  // ✅ date (yyyy-MM-dd)
+  const localBirthDate = appt.birthDate
+    ? new Date(appt.birthDate).toISOString().slice(0, 10)
+    : "";
 
-            if (!formValues) return;
+  const { value: formValues } = await Swal.fire({
+    title: "تعديل بيانات الحالة",
+    html: `
+      <input id="caseName" class="swal2-input" placeholder="اسم الحالة" value="${appt.caseName || ""}">
+      <input id="phone" class="swal2-input" placeholder="رقم الهاتف" value="${appt.phone || ""}">
+      <input id="nationalId" class="swal2-input" placeholder="الرقم القومي" value="${appt.nationalId || ""}">
+      <input id="chronicDiseaseDetails" class="swal2-input" placeholder="أمراض مزمنة" value="${appt.chronicDiseaseDetails || ""}">
 
-            try {
-                  const token = localStorage.getItem("token");
+      <!-- ✅ جديد: تاريخ الميلاد -->
+      <input type="date" id="birthDate" class="swal2-input" placeholder="تاريخ الميلاد" value="${localBirthDate}">
 
-                  const res = await axios.put(
-                        `${apiUrl}/appointments/${appt.id}`,
-                        formValues,
-                        { headers: { Authorization: `Bearer ${token}` } }
-                  );
+      <input type="datetime-local" id="dateTime" class="swal2-input" placeholder="تاريخ ووقت الموعد" value="${localDateTime}">
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: "حفظ",
+    cancelButtonText: "إلغاء",
+    preConfirm: () => {
+      return {
+        caseName: document.getElementById("caseName").value,
+        phone: document.getElementById("phone").value,
+        nationalId: document.getElementById("nationalId").value,
+        chronicDiseaseDetails: document.getElementById("chronicDiseaseDetails").value,
 
-                  if (res.data.message === "success") {
-                        setAppointments(prev =>
-                              prev.map(a =>
-                                    a.id === appt.id ? { ...a, ...formValues } : a
-                              )
-                        );
+        // ✅ جديد
+        birthDate: document.getElementById("birthDate").value, // "YYYY-MM-DD"
 
-                        Swal.fire("تم التحديث", "تم تعديل بيانات الحالة", "success");
-                  }
-            } catch (err) {
-                  console.error(err);
-                  Swal.fire("خطأ", "حدث خطأ أثناء التعديل", "error");
-            }
+        dateTime: document.getElementById("dateTime").value, // "YYYY-MM-DDTHH:mm"
       };
+    },
+  });
+
+  if (!formValues) return;
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.put(
+      `${apiUrl}/appointments/${appt.id}`,
+      formValues,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (res.data.message === "success") {
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === appt.id ? { ...a, ...formValues } : a))
+      );
+
+      Swal.fire("تم التحديث", "تم تعديل بيانات الحالة", "success");
+    }
+  } catch (err) {
+    console.error(err);
+    Swal.fire("خطأ", "حدث خطأ أثناء التعديل", "error");
+  }
+};
 
 
-      console.log(appointments)
+
 
       // البحث
       const filteredAppointments = appointments.filter((appt) => {

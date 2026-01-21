@@ -135,9 +135,20 @@ export default function ManageReceptionists() {
             { value: "cardiology", label: "القلب والأوعية الدموية (Cardiology)" },
             { value: "pulmonology", label: "الصدر (Pulmonology)" },
             { value: "neurology", label: "المخ والأعصاب (Neurology)" },
-            { value: "psychiatry", label: "النفسية والعصبية (Psychiatry)" },
-            { value: "nutrition", label: "التغذية والسمنة (Nutrition & Obesity)" },
+            { value: "psychiatry", label: "الطب النفسي (Psychiatry)" },
+            { value: "nutrition", label: "التغذية العلاجية والسمنة (Clinical Nutrition)" },
             { value: "general practice", label: "الطب العام (General Practice)" },
+            { value: "physical therapy", label: "العلاج الطبيعي (Physical Therapy)" },
+            { value: "radiology", label: "الأشعة (Radiology)" },
+            { value: "anesthesiology", label: "التخدير (Anesthesiology)" },
+            { value: "emergency medicine", label: "الطوارئ (Emergency Medicine)" },
+            { value: "family medicine", label: "طب الأسرة (Family Medicine)" },
+            { value: "nephrology", label: "الكلى (Nephrology)" },
+            { value: "gastroenterology", label: "الجهاز الهضمي (Gastroenterology)" },
+            { value: "endocrinology", label: "الغدد الصماء (Endocrinology)" },
+            { value: "oncology", label: "الأورام (Oncology)" },
+            { value: "rheumatology", label: "الروماتيزم والمناعة (Rheumatology)" },
+            { value: "rehabilitation", label: "التأهيل الطبي (Rehabilitation Medicine)" },
       ];
 
       return (
@@ -145,7 +156,6 @@ export default function ManageReceptionists() {
                   <h2 className="mb-3">إدارة الموظفين</h2>
 
                   <form onSubmit={handleSubmit} className="mb-4 flex flex-col gap-2">
-
                         <Row className="m-3 py-2">
                               <Form.Group as={Col} md='12' controlId="fullName">
                                     <Form.Label>الاسم<span>*</span></Form.Label>
@@ -291,8 +301,8 @@ export default function ManageReceptionists() {
                                                             <Button
                                                                   onClick={() => handleToggleStatus(r.id, r.status)}
                                                                   className={`border-0 px-2 w-50 ${r.status === "false"
-                                                                              ? "bg-warning text-dark"
-                                                                              : "bg-success text-white"
+                                                                        ? "bg-warning text-dark"
+                                                                        : "bg-success text-white"
                                                                         }`}
                                                             >
                                                                   {r.status === "true" ? "تجميد" : "تنشيط"}
