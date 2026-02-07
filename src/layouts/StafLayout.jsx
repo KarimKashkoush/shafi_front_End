@@ -8,11 +8,13 @@ import registeredImg from "../assets/images/registered.png";
 import ProfileImg from "../assets/images/profile.png";
 import { useEffect, useState } from "react";
 import Loading from "../pages/Loading/Loading";
+import takeoverImage from "../assets/images/takeover.png";
 
 const links = [
       { to: "/profile/:id", label: "الحالات", icon: usersImg },
       { to: "add-appointment", label: "تسجيل حالة", icon: registeredImg },
       { to: "userData", label: "بيانات الحساب", icon: ProfileImg },
+      { to: "cash-out", label: "إضافة منصرف", icon: takeoverImage },
 ];
 
 export default function StafLayout() {

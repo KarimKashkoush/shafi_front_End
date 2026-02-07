@@ -1,22 +1,21 @@
-import { useContext, useEffect, useState } from 'react';
-import { Container, Col, Row, Form, Button } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-import Lottie from 'lottie-react';
+import { useContext, useEffect, useState } from "react";
+import { Container, Col, Row, Form, Button } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import Lottie from "lottie-react";
 import LoginAnimation from "../../assets/animation/login.json";
 import { toast } from "react-toastify";
 import api from "../../lib/api";
-import { AuthContext } from '../../context/Auth.Context';
+import { AuthContext } from "../../context/Auth.Context";
 
 export default function Login() {
-      const { login, token } = useContext(AuthContext); // ✅ خد token من الكونتكست
+      const { login, token } = useContext(AuthContext);
       const navigate = useNavigate();
 
       const [validated, setValidated] = useState(false);
-      const [emailOrPhone, setEmailOrPhone] = useState('');
-      const [password, setPassword] = useState('');
+      const [emailOrPhone, setEmailOrPhone] = useState("");
+      const [password, setPassword] = useState("");
       const [loading, setLoading] = useState(false);
 
-      // ✅ لما التوكن يبقى موجود فعلًا اعمل redirect
       useEffect(() => {
             if (token) {
                   setTimeout(() => navigate("/", { replace: true }), 0);
@@ -39,14 +38,28 @@ export default function Login() {
                         ? { email: emailOrPhone, password }
                         : { phoneNumber: emailOrPhone, password };
 
+                  // لو عندك route هو /auth/login خليها "/auth/login"
                   const res = await api.post(`/login`, payload);
 
                   if (res.data.message === "success") {
-                        // ✅ خزّن المستخدم والتوكن
-                        login(res.data.user, res.data.token);
+                        const { user, accessToken, refreshToken } = res.data;
+
+                        if (!accessToken || !refreshToken) {
+                              toast.error("التوكن مش راجع من السيرفر بشكل صحيح");
+                              return;
+                        }
+
+                        // ✅ خزّن الاتنين (مهم للـ interceptor)
+                        localStorage.setItem("token", accessToken);
+                        localStorage.setItem("refreshToken", refreshToken);
+                        localStorage.setItem("user", JSON.stringify(user));
+
+                        // ✅ حدّث الكونتكست
+                        // لازم تعدل login في الكونتكست يقبل (user, accessToken, refreshToken)
+                        login(user, accessToken, refreshToken);
 
                         toast.success("تم تسجيل الدخول بنجاح");
-                        // ❌ متعملش navigate هنا (هنتحرك في useEffect لما token يتحدث)
+                        // متعملش navigate هنا — هيتعمل من useEffect لما token يتحدث
                   } else {
                         toast.error(res.data.message);
                   }
@@ -59,12 +72,14 @@ export default function Login() {
 
       return (
             <section className="py-5 register-login min-vh-100 d-flex flex-column align-items-center justify-content-center">
-                  <h3 className='fw-semibold'><span>تسجيل</span> الدخول</h3>
+                  <h3 className="fw-semibold">
+                        <span>تسجيل</span> الدخول
+                  </h3>
 
-                  <Container className='row mx-auto align-items-center py-4'>
+                  <Container className="row mx-auto align-items-center py-4">
                         <Form noValidate validated={validated} onSubmit={handleSubmit} className="form col-md-6 p-3">
                               <Row className="mb-2">
-                                    <Form.Group as={Col} md="12" className='p-2'>
+                                    <Form.Group as={Col} md="12" className="p-2">
                                           <Form.Label>البريد الإلكتروني أو رقم الهاتف</Form.Label>
                                           <Form.Control
                                                 required
@@ -80,7 +95,7 @@ export default function Login() {
                               </Row>
 
                               <Row className="mb-2">
-                                    <Form.Group as={Col} md="12" className='p-2'>
+                                    <Form.Group as={Col} md="12" className="p-2">
                                           <Form.Label>كلمة المرور</Form.Label>
                                           <Form.Control
                                                 required
@@ -90,9 +105,7 @@ export default function Login() {
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
                                           />
-                                          <Form.Control.Feedback type="invalid">
-                                                كلمة المرور مطلوبة
-                                          </Form.Control.Feedback>
+                                          <Form.Control.Feedback type="invalid">كلمة المرور مطلوبة</Form.Control.Feedback>
                                     </Form.Group>
                               </Row>
 
@@ -101,7 +114,7 @@ export default function Login() {
                               </Button>
 
                               <Row className="mt-2">
-                                    <Link to='/register'>انشاء حساب</Link>
+                                    <Link to="/register">انشاء حساب</Link>
                               </Row>
                         </Form>
 

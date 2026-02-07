@@ -25,7 +25,11 @@ export default function Reports({ identifier }) {
       const [uploadProgress, setUploadProgress] = useState({});
       const [editingReportId, setEditingReportId] = useState(null);
       const [lightboxIndex, setLightboxIndex] = useState(0);
-
+      const [printModal, setPrintModal] = useState({
+            isOpen: false,
+            appointment: null,
+            result: null,
+      });
 
       // جوه الـ component
       const [paymentModal, setPaymentModal] = useState({
@@ -222,19 +226,15 @@ export default function Reports({ identifier }) {
                   await fetchAppointments();
 
             } catch (err) {
-                  console.error("❌ خطأ أثناء رفع النتيجة:", err);
-                  Swal.fire("خطأ", "حدث خطأ أثناء الرفع", "error");
+                  err.response.data.message === "غير مسموح" ? Swal.fire("غير مسموح", " التعديل فقط من قبل الحساب الرئيسي ", "error") : Swal.fire("خطأ", "حدث خطأ أثناء الرفع", "error");
             } finally {
                   setLoading(false);
                   setUploading(false);
             }
       };
 
-
-
       const [isOpen, setIsOpen] = useState(false);
       const [slides, setSlides] = useState([]);
-
 
       const cleanUrl = (url) => (url || "").split("?")[0];
       const getExt = (url) => cleanUrl(url).toLowerCase().split(".").pop();
@@ -255,7 +255,6 @@ export default function Reports({ identifier }) {
             setIsOpen(true);
             setLightboxIndex(startIndex);
       };
-
 
       // لينك صفحة المريض
       const [payingSession, setPayingSession] = useState(null);
@@ -346,6 +345,259 @@ export default function Reports({ identifier }) {
             });
       };
 
+      const escapeHtml = (str = "") =>
+            String(str)
+                  .replaceAll("&", "&amp;")
+                  .replaceAll("<", "&lt;")
+                  .replaceAll(">", "&gt;")
+                  .replaceAll('"', "&quot;")
+                  .replaceAll("'", "&#039;");
+
+      const formatDateAR = (d) => {
+            try {
+                  return new Intl.DateTimeFormat("ar-EG", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                  }).format(d);
+            } catch {
+                  return "";
+            }
+      };
+
+      const printPrescription = ({ appointment, result }) => {
+            const meds = Array.isArray(result?.medications) ? result.medications : [];
+
+            const medsRows = meds
+                  .filter((m) => m && (m.name || m.times || m.startDate || m.endDate))
+                  .map(
+                        (m, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${escapeHtml(m.name || "-")}</td>
+        <td>${escapeHtml(m.times || "-")}</td>
+        <td>${escapeHtml(m.startDate || "-")}</td>
+        <td>${escapeHtml(m.endDate || "-")}</td>
+      </tr>
+    `
+                  )
+                  .join("");
+
+            const w = window.open("", "_blank", "width=900,height=650");
+            if (!w) return;
+
+            const clinicName = "العيادة"; // عدّلها لو عندك اسم المركز
+            const doctorName = user?.fullName || ""; // أو اسم الدكتور الحقيقي عندك
+
+            w.document.open();
+            w.document.write(`
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>روشتة أدوية</title>
+  <style>
+    @page { size: A4; margin: 12mm; }
+    body { font-family: Arial, sans-serif; color: #111; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+    .clinic { font-size: 18px; font-weight: 700; }
+    .doctor { font-size: 14px; margin-top: 6px; }
+    .meta { font-size: 13px; line-height: 1.9; }
+    .box { border: 1px solid #222; border-radius: 10px; padding: 10px 12px; margin-top: 12px; }
+    h2 { margin: 0 0 8px; font-size: 16px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #222; padding: 8px; font-size: 13px; vertical-align: top; }
+    th { background: #f2f2f2; }
+    .footer { margin-top: 14px; display:flex; justify-content:space-between; font-size: 12px; }
+    @media print { .no-print { display:none !important; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="clinic">${escapeHtml(clinicName)}</div>
+      <div class="doctor">${escapeHtml(doctorName)}</div>
+    </div>
+    <div class="meta">
+      <div><b>التاريخ:</b> ${escapeHtml(formatDateAR(new Date()))}</div>
+      <div><b>اسم المريض:</b> ${escapeHtml(appointment?.caseName || "-")}</div>
+      <div><b>رقم الملف:</b> ${escapeHtml(appointment?.fileNumber ?? "-")}</div>
+      <div><b>هاتف:</b> ${escapeHtml(appointment?.phone || "-")}</div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>Rx</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50px;">#</th>
+          <th>اسم الدواء</th>
+          <th style="width:180px;">الجرعة / الأوقات</th>
+          <th style="width:120px;">من</th>
+          <th style="width:120px;">إلى</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${medsRows || `<tr><td colspan="5" style="text-align:center;">لا توجد أدوية</td></tr>`}
+      </tbody>
+    </table>
+
+    ${result?.notes
+                        ? `<div style="margin-top:10px; font-size:13px;"><b>ملاحظات:</b> ${escapeHtml(
+                              result.notes
+                        )}</div>`
+                        : ""
+                  }
+  </div>
+ب
+  <div class="footer">
+    <div>التوقيع: ____________________</div>
+    <div>الختم: ____________________</div>
+  </div>
+
+  <div class="no-print" style="margin-top:10px; display:flex; gap:10px;">
+    <button onclick="window.print()" style="padding:8px 12px;">طباعة</button>
+    <button onclick="window.close()" style="padding:8px 12px;">إغلاق</button>
+  </div>
+
+  <script>
+    setTimeout(() => window.print(), 250);
+  </script>
+</body>
+</html>
+  `);
+            w.document.close();
+      };
+
+      const printRadiology = ({ appointment, report }) => {
+            const items = Array.isArray(report?.radiology) ? report.radiology : [];
+
+            // نفس escapeHtml و formatDateAR بتوعك
+            const rows = items
+                  .filter(x => x && (x.name || x.notes))
+                  .map((x, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${escapeHtml(x.name || "-")}</td>
+        <td>${escapeHtml(x.notes || "-")}</td>
+      </tr>
+    `).join("");
+
+            const w = window.open("", "_blank", "width=900,height=650");
+            if (!w) return;
+
+            w.document.open();
+            w.document.write(`
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>طلب أشعة</title>
+  <style>
+    @page { size: A4; margin: 12mm; }
+    body { font-family: Arial, sans-serif; color:#111; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid #222; padding:8px; font-size:13px; }
+    th { background:#f2f2f2; }
+    .meta { font-size:13px; line-height:1.9; }
+  </style>
+</head>
+<body>
+  <div class="meta">
+    <div><b>التاريخ:</b> ${escapeHtml(formatDateAR(new Date()))}</div>
+    <div><b>اسم المريض:</b> ${escapeHtml(appointment?.caseName || "-")}</div>
+    <div><b>رقم الملف:</b> ${escapeHtml(appointment?.fileNumber ?? "-")}</div>
+    <div><b>هاتف:</b> ${escapeHtml(appointment?.phone || "-")}</div>
+  </div>
+
+  <h3 style="margin-top:12px;">طلب أشعة</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:50px;">#</th>
+        <th>اسم الأشعة</th>
+        <th>ملاحظات</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows || `<tr><td colspan="3" style="text-align:center;">لا توجد أشعة</td></tr>`}
+    </tbody>
+  </table>
+
+  <script>setTimeout(() => window.print(), 250);</script>
+</body>
+</html>
+  `);
+            w.document.close();
+      };
+
+      const printLabTests = ({ appointment, report }) => {
+            const items = Array.isArray(report?.labTests) ? report.labTests : [];
+
+            const rows = items
+                  .filter(x => x && (x.name || x.notes))
+                  .map((x, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${escapeHtml(x.name || "-")}</td>
+        <td>${escapeHtml(x.notes || "-")}</td>
+      </tr>
+    `).join("");
+
+            const w = window.open("", "_blank", "width=900,height=650");
+            if (!w) return;
+
+            w.document.open();
+            w.document.write(`
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>طلب تحاليل</title>
+  <style>
+    @page { size: A4; margin: 12mm; }
+    body { font-family: Arial, sans-serif; color:#111; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid #222; padding:8px; font-size:13px; }
+    th { background:#f2f2f2; }
+    .meta { font-size:13px; line-height:1.9; }
+  </style>
+</head>
+<body>
+  <div class="meta">
+    <div><b>التاريخ:</b> ${escapeHtml(formatDateAR(new Date()))}</div>
+    <div><b>اسم المريض:</b> ${escapeHtml(appointment?.caseName || "-")}</div>
+    <div><b>رقم الملف:</b> ${escapeHtml(appointment?.fileNumber ?? "-")}</div>
+    <div><b>هاتف:</b> ${escapeHtml(appointment?.phone || "-")}</div>
+  </div>
+
+  <h3 style="margin-top:12px;">طلب تحاليل</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:50px;">#</th>
+        <th>اسم التحليل</th>
+        <th>ملاحظات</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows || `<tr><td colspan="3" style="text-align:center;">لا توجد تحاليل</td></tr>`}
+    </tbody>
+  </table>
+
+  <script>setTimeout(() => window.print(), 250);</script>
+</body>
+</html>
+  `);
+            w.document.close();
+      };
+
+
+
       return (
             <>
                   <section className="table overflow-auto">
@@ -367,6 +619,7 @@ export default function Reports({ identifier }) {
                                           <th>اضافة تقرير</th>
                                           <th>الدفع</th>
                                           <th>تعديل</th>
+                                          <th>طباعة</th>
                                     </tr>
                               </thead>
                               <tbody style={{ verticalAlign: "middle" }}>
@@ -613,8 +866,21 @@ export default function Reports({ identifier }) {
                                                                         tabIndex="-1"
                                                                         style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
                                                                   >
-                                                                        <div className="modal-dialog modal-dialog-centered modal-xl w-100">
-                                                                              <div className="modal-content p-3">
+                                                                        <div
+                                                                              className="modal-dialog m-0"
+                                                                              style={{
+                                                                                    width: "calc(100vw - 30px)",
+                                                                                    maxWidth: "calc(100vw - 30px)",
+                                                                                    height: "calc(100vh - 30px)",
+                                                                                    maxHeight: "calc(100vh - 30px)",
+                                                                                    position: "fixed",
+                                                                                    top: "50%",
+                                                                                    left: "50%",
+                                                                                    transform: "translate(-50%, -50%)",
+                                                                              }}
+                                                                        >
+
+                                                                              <div className="modal-content p-3" style={{ height: "100%", overflow: "auto" }}>
                                                                                     <form onSubmit={handleSubmit(onSubmit)}>
                                                                                           <h3 className="mb-3 fw-bold">رفع تقرير الحالة</h3>
                                                                                           <Row className="mb-2">
@@ -670,8 +936,6 @@ export default function Reports({ identifier }) {
                                                                                                       >
                                                                                                             إضافة
                                                                                                       </button>
-
-
                                                                                                 </Col>
                                                                                           </Row>
 
@@ -716,7 +980,7 @@ export default function Reports({ identifier }) {
                                                                                           {/* الأشعة */}
                                                                                           <Row className='mb-2'>
                                                                                                 <Col xs={12} md={6}>
-                                                                                                      <div className="rounded border p-1">
+                                                                                                      <div className="rounded border p-1 m-1">
                                                                                                             <p className='text-end fw-bold mb-1'>طلب اشعة</p>
                                                                                                             {radFields.map((item, index) => (
                                                                                                                   <Row className="mb-3" key={item.id}>
@@ -736,7 +1000,7 @@ export default function Reports({ identifier }) {
 
                                                                                                 {/* التحاليل */}
                                                                                                 <Col xs={12} md={6}>
-                                                                                                      <div className="rounded border p-1">
+                                                                                                      <div className="rounded border p-1 m-1">
                                                                                                             <p className='text-end fw-bold mb-1'>طلب تحليل</p>
                                                                                                             {labFields.map((item, index) => (
                                                                                                                   <Row className="mb-3" key={item.id}>
@@ -764,7 +1028,6 @@ export default function Reports({ identifier }) {
                                                                                                       placeholder="تكلفة الجلسة"
                                                                                                       {...register("sessionCost")}
                                                                                                 />
-
                                                                                           </Row>
 
                                                                                           <Row className="mb-2">
@@ -863,6 +1126,94 @@ export default function Reports({ identifier }) {
                                                                   <span className="text-danger fw-bold">-</span>
                                                             )}
                                                       </td>
+
+                                                      <td>
+                                                            {r.result?.length ? (
+                                                                  [...new Map(r.result.map(x => [x.id, x])).values()].map((res) => (
+                                                                        <button
+                                                                              key={res.id}
+                                                                              className="btn btn-sm btn-success mb-1"
+                                                                              onClick={() => setPrintModal({ isOpen: true, appointment: r, result: res })}
+                                                                              title={res?.createdAt ? `تقرير بتاريخ ${formatUtcDateTime(res.createdAt)}` : "تقرير"}
+                                                                        >
+                                                                              🖨️ طباعة
+                                                                        </button>
+                                                                  ))
+                                                            ) : (
+                                                                  <span className="text-danger fw-bold">-</span>
+                                                            )}
+
+                                                            <Modal
+                                                                  show={printModal.isOpen}
+                                                                  onHide={() => setPrintModal({ isOpen: false, appointment: null, result: null })}
+                                                                  centered
+                                                            >
+                                                                  <Modal.Header closeButton>
+                                                                        <Modal.Title>اختار نوع الطباعة</Modal.Title>
+                                                                  </Modal.Header>
+
+                                                                  <Modal.Body>
+                                                                        <div className="d-grid gap-2">
+                                                                              <Button
+                                                                                    variant="success"
+                                                                                    onClick={() => {
+                                                                                          printPrescription({ appointment: printModal.appointment, result: printModal.result });
+                                                                                          setPrintModal({ isOpen: false, appointment: null, result: null });
+                                                                                    }}
+                                                                                    disabled={
+                                                                                          !(printModal.result?.medications || []).some(m => (m?.name || "").trim())
+                                                                                    }
+                                                                              >
+                                                                                    طباعة الأدوية
+                                                                              </Button>
+
+                                                                              <Button
+                                                                                    variant="primary"
+                                                                                    onClick={() => {
+                                                                                          printRadiology({ appointment: printModal.appointment, report: printModal.result });
+                                                                                          setPrintModal({ isOpen: false, appointment: null, result: null });
+                                                                                    }}
+                                                                                    disabled={
+                                                                                          !(printModal.result?.radiology || []).some(x => (x?.name || "").trim())
+                                                                                    }
+                                                                              >
+                                                                                    طباعة الأشعة
+                                                                              </Button>
+
+                                                                              <Button
+                                                                                    variant="warning"
+                                                                                    onClick={() => {
+                                                                                          printLabTests({ appointment: printModal.appointment, report: printModal.result });
+                                                                                          setPrintModal({ isOpen: false, appointment: null, result: null });
+                                                                                    }}
+                                                                                    disabled={
+                                                                                          !(printModal.result?.labTests || []).some(x => (x?.name || "").trim())
+                                                                                    }
+                                                                              >
+                                                                                    طباعة التحاليل
+                                                                              </Button>
+                                                                        </div>
+
+                                                                        <small className="text-muted d-block mt-3">
+                                                                              {printModal.result?.createdAt
+                                                                                    ? `التقرير بتاريخ: ${formatUtcDateTime(printModal.result.createdAt, "DD/MM/YYYY - hh:mm A")}`
+                                                                                    : ""}
+                                                                        </small>
+                                                                  </Modal.Body>
+
+                                                                  <Modal.Footer>
+                                                                        <Button
+                                                                              variant="secondary"
+                                                                              onClick={() => setPrintModal({ isOpen: false, appointment: null, result: null })}
+                                                                        >
+                                                                              إلغاء
+                                                                        </Button>
+                                                                  </Modal.Footer>
+                                                            </Modal>
+
+                                                      </td>
+
+
                                                 </tr>
                                           ))
                                     ) : (
@@ -879,7 +1230,7 @@ export default function Reports({ identifier }) {
                                           <td>{totalSessionCost.toLocaleString()}</td>
                                           <td>{totalPaid.toLocaleString()}</td>
                                           <td>{totalRemaining.toLocaleString()}</td>
-                                          <td colSpan="5"></td>
+                                          <td colSpan="6"></td>
                                     </tr>
                               </tfoot>
                         </table >

@@ -33,6 +33,8 @@ import DoctorStafLayout from "../layouts/DoctorStafLayout";
 import MedicalCenter from "../layouts/MedicalCenter";
 import MainDashboard from "../pages/Dashboard/MainDashboard";
 import PatientReportsPage from "../pages/Profile/PatientProfile/PatientReportsPage";
+import Wallet from "../pages/Dashboard/Wallet";
+import ChashOut from "../pages/Dashboard/ChashOut";
 
 function AppRouter() {
       const { user, loading } = useContext(AuthContext);
@@ -72,12 +74,14 @@ function AppRouter() {
                                                       { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                       { path: "add-result", element: <DoctorAddResults /> },
                                                       { path: "patientReports/:identifier", element: <DoctorPatientReports /> },
+                                                      { path: "cash-out", element: <ChashOut /> },
                                                 ] : user.role === "receptionist"
                                                       ? [
                                                             { index: true, element: <DoctorCases /> },
                                                             { path: "userData", element: <ProfileUserData /> },
                                                             { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                             { path: "patientReports/:identifier", element: <DoctorPatientReports /> },
+                                                            { path: "cash-out", element: <ChashOut /> },
                                                       ]
                                                       :
                                                       user.role === "medicalCenter"
@@ -88,6 +92,8 @@ function AppRouter() {
                                                                   { path: "add-appointment", element: <DoctorAddAppointments /> },
                                                                   { path: "manage-receptionists", element: <ManageReceptionists /> },
                                                                   { path: "patientReports/:identifier", element: <DoctorPatientReports /> },
+                                                                  { path: "wallet", element: <Wallet /> },
+                                                                  { path: "cash-out", element: <ChashOut /> },
                                                             ]
                                                             : [
                                                                   { index: true, element: <StafProfile /> },

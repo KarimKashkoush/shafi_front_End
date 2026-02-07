@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getAppointmentsForDashboard, getPaymentsByMedicalCenter } from '../../api';
+import { getAppointmentsForDashboard } from '../../api';
 import WeeklyReportGraph from './WeeklyReportGraph';
 import MonthlyReportGraph from './MonthlyReportGraph';
 
@@ -7,12 +7,10 @@ export default function MainDashboard() {
       const user = JSON.parse(localStorage.getItem("user"));
       const medicalCenterId = user?.medicalCenterId;
       const [appointments, setAppointments] = useState([]);
-      const [payments, setPayments] = useState([]);
       const [filterType, setFilterType] = useState("today");
       const [customStart, setCustomStart] = useState("");
       const [customEnd, setCustomEnd] = useState("");
       const [loadingAppointments, setLoadingAppointments] = useState(true);
-      const [loadingPayments, setLoadingPayments] = useState(true);
       const [isFiltering, setIsFiltering] = useState(false);
 
 
@@ -30,26 +28,11 @@ export default function MainDashboard() {
             }
       }, [medicalCenterId]);
 
-      const fetchPayments = useCallback(async () => {
-            setLoadingPayments(true);
-            try {
-                  const data = await getPaymentsByMedicalCenter(medicalCenterId);
-                  setPayments(Array.isArray(data) ? data : []);
-            } catch (err) {
-                  console.error("Error fetching payments", err);
-                  setPayments([]);
-            } finally {
-                  setLoadingPayments(false);
-            }
-      }, [medicalCenterId]);
 
       useEffect(() => {
             fetchAppointments();
-            fetchPayments();
       },
-            [fetchAppointments
-                  , fetchPayments
-            ]
+            [fetchAppointments]
       );
 
       const today = new Date().toISOString().split("T")[0];
@@ -144,27 +127,10 @@ export default function MainDashboard() {
                   : filterByDate(appointments, filterType);
 
 
-      const filteredPayments =
-            filterType === "custom"
-                  ? payments.filter(p =>
-                        isInRange(p.paymentdate || p.createdAt, new Date(customStart), new Date(customEnd))
-                  )
-                  : filterByDate(payments, filterType);
 
-      const totalIncome = filteredAppointments.reduce((acc, item) => {
-            let price = parseFloat(item.price) || 0;
-            let session = parseFloat(item.sessionCost) || 0;
 
-            return acc + price + session;
-      }, 0);
 
-      const totalVisitsPaid = filteredAppointments.reduce((acc, item) => {
-            return acc + (parseFloat(item.price) || 0);
-      }, 0);
 
-      const totalPaid = filteredPayments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0) + totalVisitsPaid;
-
-      const totalRemaining = Math.abs(totalIncome - totalPaid);
 
       const getVisitStats = (list) => {
             const newVisits = list.filter(a => !a.isRevisit).length;
@@ -280,7 +246,7 @@ export default function MainDashboard() {
             return () => clearTimeout(t);
       }, [filterType, customStart, customEnd, selectedDoctor]);
 
-      const pageLoading = loadingAppointments || loadingPayments || isFiltering;
+      const pageLoading = loadingAppointments || isFiltering;
 
       if (pageLoading) {
             return (
@@ -305,15 +271,15 @@ export default function MainDashboard() {
 
                               <table className="w-100">
                                     <tbody>
-                                          <tr>
+                                          <tr className='border-bottom'>
                                                 <th className="text-end main-color">زيارات اليوم</th>
                                                 <td className="fw-bold">{todaysAppointments.length}</td>
                                           </tr>
-                                          <tr>
+                                          <tr className='border-bottom'>
                                                 <th className="text-end main-color">الزيارات الجديدة</th>
                                                 <td className="fw-bold">{todayStats.newVisits}</td>
                                           </tr>
-                                          <tr>
+                                          <tr className='border-bottom'>
                                                 <th className="text-end main-color">إعادة الزيارة</th>
                                                 <td className="fw-bold">{todayStats.revisits}</td>
                                           </tr>
@@ -324,56 +290,65 @@ export default function MainDashboard() {
 
                   <div className="row my-3 " >
                         <div className="col-md-4">
-                              <select
-                                    className="form-control"
-                                    value={filterType}
-                                    onChange={(e) => setFilterType(e.target.value)}
-                              >
-                                    <option value="today">اليوم</option>
-                                    <option value="yesterday">أمس</option>
-                                    <option value="last7">آخر 7 أيام</option>
-                                    <option value="last30">آخر 30 يوم</option>
-                                    <option value="thisMonth">هذا الشهر</option>
-                                    <option value="thisYear">هذه السنة</option>
-                                    <option value="custom">تحديد مدة</option>
-                              </select>
+                              <div className="m-1">
+                                    <label className='mb-1 text-black fw-bold'>تحديد مده</label>
+                                    <select
+                                          className="form-control"
+                                          value={filterType}
+                                          onChange={(e) => setFilterType(e.target.value)}
+label                                    >
+                                          <option value="today">اليوم</option>
+                                          <option value="yesterday">أمس</option>
+                                          <option value="last7">آخر 7 أيام</option>
+                                          <option value="last30">آخر 30 يوم</option>
+                                          <option value="thisMonth">هذا الشهر</option>
+                                          <option value="thisYear">هذه السنة</option>
+                                          <option value="custom">تحديد مدة</option>
+                                    </select>
+                              </div>
                         </div>
 
                         {filterType === "custom" && (
                               <>
                                     <div className="col-md-4">
-                                          <input
-                                                type="date"
-                                                className="form-control"
-                                                value={customStart}
-                                                onChange={(e) => setCustomStart(e.target.value)}
-                                          />
+                                          <div className="m-1">
+                                                <label className='mb-1 text-black fw-bold'>من تاريخ</label>
+                                                <input
+                                                      type="date"
+                                                      className="form-control"
+                                                      value={customStart}
+                                                      onChange={(e) => setCustomStart(e.target.value)}
+                                                />
+                                          </div>
                                     </div>
                                     <div className="col-md-4">
-                                          <input
-                                                type="date"
-                                                className="form-control"
-                                                value={customEnd}
-                                                onChange={(e) => setCustomEnd(e.target.value)}
-                                          />
+                                          <div className="m-1">
+                                                <label className='mb-1 text-black fw-bold'>الي تاريخ</label>
+                                                <input
+                                                      type="date"
+                                                      className="form-control"
+                                                      value={customEnd}
+                                                      onChange={(e) => setCustomEnd(e.target.value)}
+                                                />
+                                          </div>
                                     </div>
                               </>
                         )}
                   </div>
                   <section className="boxs row border-bottom border-3 mb-3">
-                        <div className="box col-12 col-md-6 col-lg-3 p-3 text-center">
+                        <div className="box col-12 col-md-6 p-3 text-center">
                               <div className="box-content p-3 rounded-3 shadow-sm">
                                     <table className="w-100">
                                           <tbody>
-                                                <tr>
+                                                <tr className='border-bottom'>
                                                       <th className="text-end main-color">إجمالي الزيارات</th>
                                                       <td className="fw-bold">{filteredAppointments.length}</td>
                                                 </tr>
-                                                <tr>
+                                                <tr className='border-bottom'>
                                                       <th className="text-end main-color">الزيارات الجديدة</th>
                                                       <td className="fw-bold">{totalStats.newVisits}</td>
                                                 </tr>
-                                                <tr>
+                                                <tr className='border-bottom'>
                                                       <th className="text-end main-color">إعادة الزيارة</th>
                                                       <td className="fw-bold">{totalStats.revisits}</td>
                                                 </tr>
@@ -382,40 +357,19 @@ export default function MainDashboard() {
                               </div>
                         </div>
 
-                        <div className="box col-12 col-md-6 col-lg-3 p-3 text-center">
+                        <div className="box col-12 col-md-6 p-3 text-center">
                               <div className="box-content p-3 rounded-3 shadow-sm">
                                     <table className="w-100">
                                           <tbody>
-                                                <tr>
-                                                      <th className="text-end main-color">إجمالي الإرادات</th>
-                                                      <td className="fw-bold">{`${totalIncome}$`}</td>
-                                                </tr>
-                                                <tr>
-                                                      <th className="text-end text-success">إجمالي المدفوع</th>
-                                                      <td className="fw-bold text-success">{`${totalPaid.toLocaleString()}$`}</td>
-                                                </tr>
-                                                <tr>
-                                                      <th className="text-end text-danger">إجمالي المتبقي</th>
-                                                      <td className="fw-bold text-danger">{`${totalRemaining.toLocaleString()}$`}</td>
-                                                </tr>
-                                          </tbody>
-                                    </table>
-                              </div>
-                        </div>
-
-                        <div className="box col-12 col-md-6 col-lg-3 p-3 text-center">
-                              <div className="box-content p-3 rounded-3 shadow-sm">
-                                    <table className="w-100">
-                                          <tbody>
-                                                <tr>
+                                                <tr className='border-bottom'>
                                                       <th className="text-end main-color">شـــافي</th>
                                                       <td className="fw-bold">{`${totalNet}$`}</td>
                                                 </tr>
-                                                <tr>
+                                                <tr className='border-bottom'>
                                                       <th className="text-end text-success">إجمالي المدفوع</th>
                                                       <td className="fw-bold text-success">{`0$`}</td>
                                                 </tr>
-                                                <tr>
+                                                <tr className='border-bottom'>
                                                       <th className="text-end text-danger">إجمالي المتبقي</th>
                                                       <td className="fw-bold text-danger">{`0$`}</td>
                                                 </tr>
